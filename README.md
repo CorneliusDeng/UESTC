@@ -2,7 +2,7 @@
 
 - #### Who am I？
 
-​		CS Master, UESTC
+​		CorneliusDeng, CS Master of UESTC.
 
 - #### Why did I create this repository？
 
