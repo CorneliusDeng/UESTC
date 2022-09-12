@@ -2,7 +2,7 @@
 
 - ### 课程
 
-  - #### 高级算法设计与分析
+  - #### Design and Analysis of Algorithms
 
     - **Kinds**
 
@@ -21,7 +21,7 @@
 
       - **Different Classes of Problems**
 
-        P: a solution can be solved in polynomial time.
+        P: a solution can be solved in polynomial time.（多项式时间）
 
         NP: a solution can be checked in polynomial time.
 
@@ -50,7 +50,7 @@
         						   `w rejects m`
         `}`
 
-  - #### 分布式系统
+  - #### Distributed Systems
 
     - **Why do we need Distributed System?**
 
@@ -91,8 +91,6 @@
       NAME:《International Conference on Machine Learning》, PRESS: ACM
     
       NAME:《International Joint Conference on Artificial Intelligence》, PRESS: Morgan Kaufmann
-
-
 
 - ### 自研
 
@@ -156,34 +154,46 @@
 
 - ### 课程
 
+  - #### Design and Analysis of Algorithms
+
+    ​	review, consider more possibilities about The Stable Matching Problem
+
+  - - 
+
+  - #### Thrifles
+
+    Daily nucleic acid test, ordered MacBook Pro arrived
+
+    Think more about the future 
+
 - ### 自研
 
   - #### 分布式组件SpringCloud Alibaba
-  
+
     Spring Cloud 是一个服务治理平台，是若干个框架的集合，提供了全套的分布式系统解决方案。包含了：服务注册与发现、配置中心、服务网关、智能路由、负载均衡、断路器、监控跟踪、分布式消息队列等等。Spring Cloud Alibaba 致力于提供微服务开发的一站式解决方案。此项目包含开发分布式应用微服务的必需组件，方便开发者通过 Spring Cloud 编程模型轻松使用这些组件来开发分布式应用服务。
-  
+
     - **GuliMall技术搭配方案**
-  
+
       SpringCloud Alibaba - Nacos：注册中心（服务发现/注册）、配置中心（动态配置管理）
-  
+
       SpringCloud - Ribbon：负载均衡
-  
+
       SpringCloud - Feign：声明式HTTP客户端（调用远程服务）
-  
+
       SpringCloud Alibaba - Sentinel：服务容错（限流、降级、熔断）
-  
+
       SpringCloud - Gateway：API网关（webflux编程模式）
-  
+
       SpringCloud - Sleuth：调用链监控
-  
+
       SpringCloud Alibaba - Seata：分布式事务解决方案
-  
+
     - **Nacos**
-  
+
       Nacos默认级群启动，测试时需要修改为单机启动，使用命令startup.cmd -m standalone
-  
+
       **注册中心：**
-  
+
       ​	微服务注册到Nacos只需三步：引入依赖，各微服务的application.yml中配置Nacos Server 地址：spring.cloud.nacos.discovery.server-addr=127.0.0.1:8848，然后使用 @EnableDiscoveryClient 注解开启服务注册与发现功能。
       
       **配置中心：**
@@ -220,11 +230,11 @@
       ​		1）开启服务注册发现@EnableDiscoveryClient
       
       ​		2）在applicaion.properties配置nacos注册中心地址
-  
+
   - #### ECMAScript6（ES6）
-  
-    ECMAScript是浏览器脚本语言的规范，JS的规范的具体实现
-  
+
+    ECMAScript是浏览器脚本语言的规范，JS是规范的具体实现
+
     - let&const
     
       var 声明的变量往往会越域， let 声明的变量有严格局部作用域
@@ -253,31 +263,69 @@
     
       函数不定参数function fun(...values)
     
-      箭头函数：var print = obj => console.log(obj); print("hello");
+      箭头函数：var print = obj => console.log(obj); print("hello");   在一个对象里，箭头函数this不能使用，要想获取必须是对象.属性
     
     - 对象优化
     
+      可以获取map的键值对等Object.keys()、values、entries
+    
+      Object.assgn(target,source1,source2) 合并
+    
+      const person = { age, name } //声明对象简写
+    
+      //  拷贝对象（深拷贝） let p1 = { name: "Amy", age: 15 }       let someone = { ...p1 }
+    
     - map、reduce
+    
+      map()：接收一个函数，将原数组中的所有元素用这个函数处理后放入新数组返回。
+    
+      reduce() 为数组中的每一个元素依次执行回调函数，不包括数组中被删除或从未被赋值的元素
+    
+      arr.reduce(callback,[initialValue])其参数意义
+           1、previousValue （上一次调用回调返回的值，或者是提供的初始值（initialValue））
+          2、currentValue （数组中当前被处理的元素）
+          3、index （当前元素在数组中的索引）
+          4、array （调用 reduce 的数组）*/
     
     - promise异步编排
     
+      嵌套ajax的时候很繁琐。解决方案：1、把Ajax封装到Promise中，let p = new Promise(resolve, reject){...}。2、在Ajax中成功使用resolve(data)，交给then处理。3、失败使用reject(err)，交给catch处理p.then().catch()
+    
     - 模块化
     
-  - #### VUE
-  
+      模块化就是把代码进行拆分，方便重复利用。类似于java中的导包，而JS换了个概念，是导模块。模块功能主要有两个命令构成 export 和import：export用于规定模块的对外接口、import用于导入其他模块提供的功能。export不仅可以导出对象，一切JS变量都可以导出。比如：基本类型变量、函数、数组、对象。
+    
+    
+    
+
+
+## Week 3_2022.9.12~2022.9.18
+
+- ### 课程
+
+  - #### Linear algebra
+
+    - 行列式
+
+    - 矩阵
+    - 向量
+    - 方程组求解
+    - 特征值和特征向量
+    - 二次型
+
   - #### TEMP
-  
-    
-  
-    
-  
-  
-  
-  
-  
-  
-  
-  
+
+- ### 自研
+
+  - #### VUE
+
+  - #### TEMP
+
+
+
+
+
+
 
 组会：
 
@@ -289,5 +337,7 @@
 
 学习大型项目的分布式方案SpringCloud Alibaba，目前正在学习其中的注册中心/配置中心Nacos组件、以及调用远程服务的Feign组件
 
-向李志圆师兄请教了一些看论文的问题，师兄推荐了一些人工智能方向CCF A类的期刊和会议
+学习了JavaScript语言的新规范ECMAScript 6.0
+
+
 
