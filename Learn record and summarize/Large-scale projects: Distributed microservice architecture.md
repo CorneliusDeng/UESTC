@@ -66,62 +66,72 @@ Spring Cloud 是一个服务治理平台，是若干个框架的集合，提供�
 
 - **GuliMall技术搭配方案**
 
-  SpringCloud Alibaba - Nacos：注册中心（服务发现/注册）、配置中心（动态配置管理）
+  - SpringCloud Alibaba - Nacos：注册中心（服务发现/注册）、配置中心（动态配置管理）
 
-  SpringCloud - Ribbon：负载均衡
 
-  SpringCloud - Feign：声明式HTTP客户端（调用远程服务）
+  - SpringCloud - Ribbon：负载均衡
 
-  SpringCloud Alibaba - Sentinel：服务容错（限流、降级、熔断）
 
-  SpringCloud - Gateway：API网关（webflux编程模式）
+  - SpringCloud - Feign：声明式HTTP客户端（调用远程服务）
 
-  SpringCloud - Sleuth：调用链监控
 
-  SpringCloud Alibaba - Seata：分布式事务解决方案
+  - SpringCloud Alibaba - Sentinel：服务容错（限流、降级、熔断）
 
-- **Nacos**
 
-  Nacos默认级群启动，测试时需要修改为单机启动，使用命令startup.cmd -m standalone
+  - SpringCloud - Gateway：API网关（webflux编程模式）
 
-  **注册中心：**
 
-  ​	微服务注册到Nacos只需三步：引入依赖，各微服务的application.yml中配置Nacos Server 地址：spring.cloud.nacos.discovery.server-addr=127.0.0.1:8848，然后使用 @EnableDiscoveryClient 注解开启服务注册与发现功能。
+  - SpringCloud - Sleuth：调用链监控
 
-  **配置中心：**
 
-  ​	使用Nacos作为配置中心统一管理配置：修改 pom.xml 文件，引入 Nacos Config Starter；创建bootstrap.properties 配置文件，其中配置 Nacos Config 元数据；需要给配置中心默认添加一个数据集（默认规则：微服务名.properties）；给微服务名.properties添加任何配置；动态获取配置：在controller文件中添加注解@RefreshScope（动态获取并刷新配置），以及使用@value（“￥{配置项的名}”）获取配置数据，而nacos配置中心内容优先级高于项目本地的配置内容。对于高版本的springboot需要导入spring-cloud-starter-bootstrap依赖。
+  - SpringCloud Alibaba - Seata：分布式事务解决方案
 
-  ​	**配置中心进阶：**	
+    
 
-  ​		命名空间：用作配置隔离（一般每个微服务创建一个命名空间，只加载自己命名空间下的配置），默认新增的配置都在public空间下，开发、测试、生产环境可以用命名空间分割，properties每个空间有一份。注意须在bootstrap.properties配置具体使用哪个命名空间（默认为puhlic）：spring.cloud.nacos.config.namespace=xxx # 命名空间ID
+## Nacos
 
-  ​		配置集：一组相关或不相关配置项的集合
+Nacos默认级群启动，测试时需要修改为单机启动，使用命令startup.cmd -m standalone
 
-  ​		配置集ID：类似于配置文件名，即Data ID
+**注册中心：**
 
-  ​		配置分组：默认所有的配置集都属于DEFAULT_GROUP，可在bootstrap.properties指定配置分组。每个微服务创建自己的命名空间，然后使用配置分组区分环境（dev/test/prod）
+​	微服务注册到Nacos只需三步：引入依赖，各微服务的application.yml中配置Nacos Server 地址：spring.cloud.nacos.discovery.server-addr=127.0.0.1:8848，然后使用 @EnableDiscoveryClient 注解开启服务注册与发现功能。
 
-  ​		加载多配置集：把一个冗长的application.yml配置文件拆分，将其内容都分类别抽离出去。微服务任何配置信息，任何配置文件都可以放在配置中心里，只需要在bootstrap.properties说明加载配置中心里哪些配置文件即可；以前SpringBoot任何方法从配置文件中获取值，都能使用；配置中心有的有优先使用配置中心里的。
+**配置中心：**
 
-- **网关：**
+​	使用Nacos作为配置中心统一管理配置：修改 pom.xml 文件，引入 Nacos Config Starter；创建bootstrap.properties 配置文件，其中配置 Nacos Config 元数据；需要给配置中心默认添加一个数据集（默认规则：微服务名.properties）；给微服务名.properties添加任何配置；动态获取配置：在controller文件中添加注解@RefreshScope（动态获取并刷新配置），以及使用@value（“￥{配置项的名}”）获取配置数据，而nacos配置中心内容优先级高于项目本地的配置内容。对于高版本的springboot需要导入spring-cloud-starter-bootstrap依赖。
 
-  ​	网关是请求浏览的入口，常用功能包括路由转发，权限校验，限流控制等，网关动态地管理每个微服务的地址，他能从注册中心中实时地感知某个服务上线还是下线。
+​	**配置中心进阶：**	
 
-  ​	**三大核心概念：**
+​		命名空间：用作配置隔离（一般每个微服务创建一个命名空间，只加载自己命名空间下的配置），默认新增的配置都在public空间下，开发、测试、生产环境可以用命名空间分割，properties每个空间有一份。注意须在bootstrap.properties配置具体使用哪个命名空间（默认为puhlic）：spring.cloud.nacos.config.namespace=xxx # 命名空间ID
 
-  ​		**Ⅰ、路由Route:** The basic building block of the gateway. It is defined by an ID, a destination URI, a collection of predicates, and a collection of filters. A route is matched if the aggregate predicate is true.发一个请求给网关，网关要将请求路由到指定的服务。路由有id，目的地uri，断言的集合，匹配了断言就能到达指定位置。
-  ​		**Ⅱ、断言Predicate:** This is a Java 8 Function Predicate. The input type is a Spring Framework ServerWebExchange. This lets you match on anything from the HTTP request, such as headers or parameters. java里的断言函数，匹配请求里的任何信息，包括请求头等。
+​		配置集：一组相关或不相关配置项的集合
 
-  ​		**Ⅲ、过滤器Filter:** These are instances of GatewayFilter that have been constructed with a specific factory. Here, you can modify requests and responses before or after sending the downstream request.过滤器请求和响应都可以被修改。
+​		配置集ID：类似于配置文件名，即Data ID
 
-  ​		**总结：**客户端发请求给服务端，中间有网关。先交给映射器，如果能处理就交给handler处理，然后交给一系列filer，然后给指定的服务，再返回回来给客户端。
+​		配置分组：默认所有的配置集都属于DEFAULT_GROUP，可在bootstrap.properties指定配置分组。每个微服务创建自己的命名空间，然后使用配置分组区分环境（dev/test/prod）
 
-  ​	**网关使用：**
+​		加载多配置集：把一个冗长的application.yml配置文件拆分，将其内容都分类别抽离出去。微服务任何配置信息，任何配置文件都可以放在配置中心里，只需要在bootstrap.properties说明加载配置中心里哪些配置文件即可；以前SpringBoot任何方法从配置文件中获取值，都能使用；配置中心有的有优先使用配置中心里的。
 
-  ​		1）开启服务注册发现@EnableDiscoveryClient
 
-  ​		2）在applicaion.properties配置nacos注册中心地址
+
+## 网关
+
+​	网关是请求浏览的入口，常用功能包括路由转发，权限校验，限流控制等，网关动态地管理每个微服务的地址，他能从注册中心中实时地感知某个服务上线还是下线。
+
+​	**三大核心概念：**
+
+​		**Ⅰ、路由Route:** The basic building block of the gateway. It is defined by an ID, a destination URI, a collection of predicates, and a collection of filters. A route is matched if the aggregate predicate is true.发一个请求给网关，网关要将请求路由到指定的服务。路由有id，目的地uri，断言的集合，匹配了断言就能到达指定位置。
+​		**Ⅱ、断言Predicate:** This is a Java 8 Function Predicate. The input type is a Spring Framework ServerWebExchange. This lets you match on anything from the HTTP request, such as headers or parameters. java里的断言函数，匹配请求里的任何信息，包括请求头等。
+
+​		**Ⅲ、过滤器Filter:** These are instances of GatewayFilter that have been constructed with a specific factory. Here, you can modify requests and responses before or after sending the downstream request.过滤器请求和响应都可以被修改。
+
+​		**总结：**客户端发请求给服务端，中间有网关。先交给映射器，如果能处理就交给handler处理，然后交给一系列filer，然后给指定的服务，再返回回来给客户端。
+
+​	**网关使用：**
+
+​		1）开启服务注册发现@EnableDiscoveryClient
+
+​		2）在applicaion.properties配置nacos注册中心地址
 
 
 
@@ -192,6 +202,4 @@ ECMAScript是浏览器脚本语言的规范，JS是规范的具体实现
 
 
 ## VUE
-
-
 
