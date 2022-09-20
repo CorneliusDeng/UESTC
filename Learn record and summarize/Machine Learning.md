@@ -70,11 +70,24 @@
 
 ## 多变量线性回归 Linear Regression with Multiple Variables 
 
+- **多维特征 Multiple Features**
 
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Multiple%20Features.png)
 
+- **多变量梯度下降 Gradient Descent for Multiple Variables**
 
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Gradient%20Descent%20for%20Multiple%20Variables.png)
 
+- **特征缩放 Feature scaling**
 
+  特征缩放(Feature scaling)是为了确保特征在一个相近的范围内, 使得算法更快收敛。可以使用均值归一化的方法实现特征缩放。
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Feature%20scaling.png)
+
+- **学习率**
+
+- **特征和多项回归**
+
+- **正规方程 Normal Equation**
 
 
 
