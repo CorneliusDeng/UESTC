@@ -51,7 +51,7 @@
 
 - 自然演绎规则
 
-  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/%E7%AD%89%E5%80%BC%E6%BC%94%E7%AE%97.png)
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Discrete%20Mathematics/equivalent%20calculation.png)
 
 
 
@@ -60,9 +60,15 @@
 - 前提引入规则：在推理过程中，可以根据需要随时引入前提
 - 结论引入规则：在推理过程中所得到的中间结论，可作为后续推理的前提
 - 置换规则：在推理过程中，命题公式中的部分公式都可以用其等值公式来置换
-- 代入规则：如果A是重言式，使用置换规则得到公式B，则公式B也是重言式
-- 分离规则：如果已知命题公式A→B和A，则有命题公式B
-- 条件证明规则：A∧B⇒C与A⇒B→C等价
+- 分离规则（假言推理规则）：已知A→B，A，则可得B
+- 附加规则：已知A，则可附加B得到A∨B
+- 化简规则：已知A∧B，则可得到A或得到B
+- 反证规则（拒取式规则）： 已知A→B，¬B，则可得¬A
+- 假言三段论规则：已知A→B，B→C，则可得A→C
+- 析取三段论规则：已知A∨B，¬B，则可得A
+- 构造性二难推理规则：已知A→B，C→D，A∨C，则可得B∨D
+- 破坏性二难推理规则：已知A→B，C→D，¬B∨¬D，则可得¬A∨¬C
+- 合取引入规则：已知A，B，则可得A∧B
 
 
 

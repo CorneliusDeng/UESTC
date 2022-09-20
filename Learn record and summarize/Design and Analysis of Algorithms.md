@@ -84,5 +84,63 @@ A computer program is an instance, or concrete representation, for an algorithm 
 ## Three Techniques for Designing Algorithms
 
 - **Greedy Algorithms贪心算法**
-- **Divide and Conquer**
+
+  - **Basic Idea:** Build up a solution incrementally, myopically optimizing some local criterion.
+
+    In each iteration, we choose the “best” solution at that moment. This “best” solution may not yield the BEST final solution
+
+  - **Local optimal v.s. Global optimal:** Greedy algorithm is to make the locally optimal choice at each moment. In some problems, such strategy can lead to a global optimal solution
+
+  - Advantage: Simple, efficient
+
+  - Disadvantage: May be incorrect / may not be optimal
+
+  - **Interval scheduling：**Job j starts at sj and finishes at fj.Two jobs compatible if they don't overlap.Goal: find maximum subset of mutually compatible jobs
+
+    - Greedy template. Consider jobs in some order. Take each job provided it's compatible with the ones already taken
+      - [Earliest start time] Consider jobs in ascending order of start time sj.
+      - [Earliest finish time] Consider jobs in ascending order of finish time fj
+      - [Shortest interval] Consider jobs in ascending order of interval length fj - s
+      - [Fewest conflicts] For each job, count the number of conflicting jobs cj . Schedule in ascending order of conflicts cj
+
+- **Divide and Conquer分治法**
+
+  - **Basic Idea:** Break up a problem into some sub-problems, solve each sub-problem independently, and combine solution to sub-problems to form solution to original problem. 
+  - **Most common usage：**Break up problem of size n into two equal parts of size ½n. Solve two parts recursively. Combine two solutions into overall solution in linear time.
+  - **Multiply：**Given two n-digit integers a and b, compute a ×b.
+    - Brute force solution: O(n^2) bit operations.
+    - To multiply two n-digit integers: Multiply four ½n-digit integers. Add two ½n-digit integers, and shift to obtain result.
+    - Karatsuba Multiplication: Add two ½ n digit integers. Multiply three ½ n-digit integers. Add, subtract, and shift ½ n-digit integers to obtain result.
+    - Fast matrix multiplication
+      - Divide: partition A and B into ½ n-by-½ n blocks.
+      - Compute: 14 ½ n-by-½ n matrices via 10 matrix additions.
+      - Conquer: multiply 7 ½ n-by-½ n matrices recursively.
+      - Combine: 7 products into 4 terms using 8 matrix additions.
+
 - **Dynamical Programming动态规划**
+
+  - **Basic Idea:** Break up a problem into a series of overlapping sub-problems, and build up solutions to larger and larger sub-problems.
+
+  - Overlapping Subproblems:
+
+    - When a recursive algorithm re-visits the same problem over and over again, we say that the problem has overlapping subproblems.
+    - An idea to save the running time is to avoid computing the same subproblem twice.
+    - This idea is the essential of dynamic programming.
+
+  - Binary Choice
+
+    - Notation. OPT(j) = value of optimal solution to the problem consisting of job requests 1, 2, ..., j.
+
+    - Case 1: OPT selects job j.
+
+      – can't use incompatible jobs { p(j) + 1, p(j) + 2, ..., j - 1 }
+
+      – must include optimal solution to problem consisting of remaining 
+
+      compatible jobs 1, 2, ..., p(j)
+
+    - Case 2: OPT does not select job j.
+
+      – must include optimal solution to problem consisting of remaining 
+
+      compatible jobs 1, 2, ..., j-1
