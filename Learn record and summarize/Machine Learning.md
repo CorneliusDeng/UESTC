@@ -85,11 +85,15 @@
 
 - **学习率**
 
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/learn%20rate.png)
+
 - **特征和多项回归**
+
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/feature%20and%20mutilregression.png)
 
 - **正规方程 Normal Equation**
 
-
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Normal%20Equation.png)
 
 
 
