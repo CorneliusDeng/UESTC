@@ -95,7 +95,19 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
   - Disadvantage: May be incorrect / may not be optimal
 
-  - **Interval scheduling：**Job j starts at sj and finishes at fj.Two jobs compatible if they don't overlap.Goal: find maximum subset of mutually compatible jobs
+  - Greedy Analysis Strategies
+
+    - Greedy algorithm stays ahead. Show that after each step of the greedy algorithm, its solution is at least as good as any other algorithm's. 
+    - Structural. Discover a simple "structural" bound asserting that every possible solution must have a certain value. Then show that your algorithm always achieves this bound.
+    - Exchange argument. Gradually transform any solution to the one found by the greedy algorithm without hurting its quality.
+
+  - **Interval scheduling区间调度**
+
+    - Job j starts at sj and finishes at fj.
+
+      Two jobs compatible if they don't overlap.
+
+      Goal: find maximum subset of mutually compatible jobs
 
     - Greedy template. Consider jobs in some order. Take each job provided it's compatible with the ones already taken
       - [Earliest start time] Consider jobs in ascending order of start time sj.
@@ -107,7 +119,10 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
   - **Basic Idea:** Break up a problem into some sub-problems, solve each sub-problem independently, and combine solution to sub-problems to form solution to original problem. 
   - **Most common usage：**Break up problem of size n into two equal parts of size ½n. Solve two parts recursively. Combine two solutions into overall solution in linear time.
-  - **Multiply：**Given two n-digit integers a and b, compute a ×b.
+  - **Multiply乘法**
+    
+    - Given two n-digit integers a and b, compute a ×b.
+    
     - Brute force solution: O(n^2) bit operations.
     - To multiply two n-digit integers: Multiply four ½n-digit integers. Add two ½n-digit integers, and shift to obtain result.
     - Karatsuba Multiplication: Add two ½ n digit integers. Multiply three ½ n-digit integers. Add, subtract, and shift ½ n-digit integers to obtain result.
@@ -121,26 +136,142 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
   - **Basic Idea:** Break up a problem into a series of overlapping sub-problems, and build up solutions to larger and larger sub-problems.
 
-  - Overlapping Subproblems:
+  - The most important step of designing dynamic programming algorithms:To find a good way to separate the problem into many overlapping subproblems.
 
+  - Overlapping Subproblems:
+  
     - When a recursive algorithm re-visits the same problem over and over again, we say that the problem has overlapping subproblems.
     - An idea to save the running time is to avoid computing the same subproblem twice.
     - This idea is the essential of dynamic programming.
 
-  - Binary Choice
+  - **The steps of solving problem**
 
-    - Notation. OPT(j) = value of optimal solution to the problem consisting of job requests 1, 2, ..., j.
+    - separate the problem into many overlapping subproblems.
+    - construct a recurrence relation
+    - use memoization or bottom-up methods to avoid double counting of the same subproblem
 
-    - Case 1: OPT selects job j.
+  - **Weighted Interval Scheduling带权值的区间调度**
 
-      – can't use incompatible jobs { p(j) + 1, p(j) + 2, ..., j - 1 }
+    - Job j starts at sj , finishes at fj , and has weight or value vj . 
 
-      – must include optimal solution to problem consisting of remaining 
+      Two jobs compatible if they don't overlap.
 
-      compatible jobs 1, 2, ..., p(j)
+      Goal: find maximum weight subset of mutually compatible jobs
 
-    - Case 2: OPT does not select job j.
+    - Notation. Label jobs by finishing time: f1 ≤ f2 ≤ . . . ≤ fn .
+      Def. p(j) = largest index i < j such that job i is compatible with j.
+  
+      OPT(j) = value of optimal solution to the problem consisting of job requests 1, 2, ..., j
+  
+      - Case 1: OPT selects job j.
+  
+        – can't use incompatible jobs { p(j) + 1, p(j) + 2, ..., j - 1 }
+  
+        – must include optimal solution to problem consisting of remaining compatible jobs 1, 2, ..., p(j)
+  
+      - Case 2: OPT does not select job j.
+  
+        – must include optimal solution to problem consisting of remaining compatible jobs 1, 2, ..., j-1
+  
+      - *OPT*( *j*) = 
+  
+        - 0，if j = 0
+        - max(vj+OPT(p(j), OPT(j-1))，otherwise
+  
+    - Weighted Interval Scheduling: Memoization
+  
+      Memoization. Store results of each sub-problem in a cache; lookup as needed.
+  
+      - code
+  
+        `Input: n,s1,…,sn,f1,…,fn ,v1,…,vn`
+  
+        `Sort jobs by finish times so that f1 ≤ f2 ≤...≤ fn`
+  
+        `Compute p(1),p(2),……,p(n)`
+  
+        `for j = 1 to n`
+  
+        ​	`M[j] = empty`
+  
+        `M[0]=0`
+  
+        `M-Compute-Opt(n) {`
+  
+        ​	`if (M[n] is empty)`
+  
+        ​		`M[n] = max(vn + M-Compute-Opt(p(n)), M-Compute-Opt(n-1))`		
+  
+        ​	`return M[n]`
+  
+        `}`
+  
+    - Weighted Interval Scheduling: Bottom-Up
+  
+      Bottom-up dynamic programming. Unwind recursion.
+  
+      - code
+  
+        `Input: n, s1,…,sn , f1,…,fn , v1,…,vn`
+        `Sort jobs by finish times so that f1 ≤ f2 ≤ ... ≤ fn.`
+        `Compute p(1), p(2), …, p(n)`
+        `Iterative-Compute-Opt {`
+        	`M[0] = 0`
+        	`for j = 1 to n`
+        		`M[j] = max(vj + M[p(j)], M[j-1])`
+        `}`
+  
+  - **Knapsack Problem背包问题**
+  
+    - Given n objects and a "knapsack."
+  
+      Item i weighs wi > 0 kilograms and has value vi > 0.
+  
+      Knapsack has capacity of W kilograms.
+  
+      Goal: fill knapsack so as to maximize total value
+  
+    - Greedy: repeatedly add item with maximum ratio vi / wi.
+  
+      But, greedy is not optimal.
+  
+    - Def. OPT(i, w) = max profit subset of items 1, …, i with weight limit w.
+  
+      - Case 1: OPT does not select item i.
+  
+        – OPT selects best of { 1, 2, …, i-1 } using weight limit w 
+  
+      - Case 2: OPT selects item i.
+  
+        – new weight limit = w – wi 
+  
+        – OPT selects best of { 1, 2, …, i–1 } using this new weight limit
+  
+    - *OPT*(*i*, *w*) =
+  
+      - 0，if i = 0
+      - OPT(i −1, w)，if wi > w
+      - max(OPT(i −1, w), vi + OPT(i −1, w− wi))，otherwise
+  
+    - Code, Running time:O(n W)
+  
+      `Input: n, w1, ……, wn, v1, ……, vn`
+  
+      `for w = 0 to w`
+  
+      ​	`M[0,w] = 0`
+  
+       `for i = 1 to n`
+  
+      ​	`for w = 1 to w`
+  
+      ​		`if (wi > w)`
+  
+      ​			`M[i,w] = M[i-1,w]`
+  
+      ​		`else`
+  
+      ​			`M[i,w] = max(M[i-1,w], vi + M[i-1,w-wi])`
+  
+      ​	`return M[n,w]`
 
-      – must include optimal solution to problem consisting of remaining 
-
-      compatible jobs 1, 2, ..., j-1

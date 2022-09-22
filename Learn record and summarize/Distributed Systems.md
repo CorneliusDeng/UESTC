@@ -183,20 +183,20 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
 - **Chandy和Lamport的“快照”算法**
 
   - 目的：捕获一致的全局状态
+
   - 假设
     - 进程和通道均不会出现故障
     - 单向通道，提供FIFO顺序的消息传递
     - 进程之间存在强连通关系
     - 任一进程可在任一时间开始全局拍照
     - 拍照时，进程可继续执行，并发送和接收消息
+
   - 算法基本思想
     - 接入通道+外出通道
     - 进程状态+通道状态
     - 标记消息 marker message (flush message)
       - 标记接收规则：强制进程记录下自己的状态之后但在它们发送其他消息前发送一个标记，并记录接入通道消息
       - 标记发送规则：强制没有记录状态的进程去记录状态+清空信道
-
-  ------
 
   - 进程pi的标记接收规则
 
@@ -206,21 +206,8 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
       - pi记录它的进程状态；// sender rule         
       - 将c的状态记成空集；         
       - 开始记录从其他接入通道上到达的消息   
-
     - else         
       - pi把c的状态记录到从保留它的状态以来它在c上接收到的消息集合中     
-
-    - end if
-
-  - 进程pi的标记发送规则：Initiator
-
-    在pi记录了它的状态之后，对每个外出通道c:      
-
-    ​	 (在pi从c上发送任何其他消息前)       
-
-    ​	  pi在c上发送一个消息标记
-
-  ------
 
   - Propagating a snapshot
 
@@ -234,16 +221,55 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
     - Else
       - add all messages from inbound channels since we began recording to their states
 
+  - 进程pi的标记发送规则：Initiator
+
+    在pi记录了它的状态之后，对每个外出通道c:      
+
+    ​	 (在pi从c上发送任何其他消息前)       
+
+    ​	  pi在c上发送一个消息标记
+
   - Initiating a snapshot
     - Let’s say process Pi initiates the snapshot
     - Pi records its own state and prepares a special marker message (distinct from application messages)
     - Send the marker message to all other processes (using N-1 outbound channels)
     - Start recording all incoming messages from channels Cji for j not equal to i
+
+  - 算法终止分析
+
+    - 假设：一个进程已经收到了一个标记信息，在有限的时间内记录了它的状态，并在有限的时间里通过每个外出通道发送了标记信息
+    - 若存在一条从进程pi到进程pj的信道，那么pi记录它的状态之后的有限时间内pj将记录它的状态
+    - 进程和通道图是强连通的，因此在一些进程记录它的状态之后的有限时间内，所有进程将记录它们的状态和接入通道的状态
+    - 每个进程收到在它所有的输入通道上的标记之后终止
+
   - Terminating a snapshot
     - All processes have received a marker (and recorded their own state)
     - All processes have received a marker on all the N-1 incoming channels (and recorded their states)
     - Later, a central server can gather the partial state to build a global snapshot
 
-  ------
+  - 快照算法记录的全局状态是一致的，对于所有事件ej ∈ C, ei → ej ⇒ ei ∈ C 
 
-  
+    - 设ei、ej分别为进程pi、pj中的事件，且ei → ej，则: 若ej∈C ⇒ ei∈C。即如果ej在pj记录其状态之前发生，那么ei必在pi记录其状态之前发生。证明思路如下：
+      - i=j时，显然成立
+      - i≠j时。假设 ei→m1→m2→…→mn→ej为实际HB关系。若ei未被记录，则ei出现在pi记录状态且发送marker 之后，那么根据FIFO性质，每个recv(mi)都发生在此进程收到marker后，则ej也在marker后，故不被pj记录，矛盾。
+
+
+## 分布式调试
+
+目的：对系统实际执行中的暂态（一致性全局状态）作出判断
+
+方法：监控器进程（收集进程状态信息）
+
+- 全局状态谓词φ的判断
+  - 可能的φ（possibly）
+    - 存在一个一致的全局状态S，H的一个线性化走向经历了这个全局状态S，而且该S使得φ(s)为True
+    - There exists a consistent run such that predicate φ holds in a global state of the run
+  - 明确的φ（definitely）
+    - 对于H的所有线性化走向L，存在L经历的一个一致的全局状态S(对不同L可以不同)，而且该S使得φ(s)为True
+    - For every consistent run, there exists a global state of it in which predicate φ holds.
+
+- 观察一致的全局状态
+  - 进程的状态信息附有向量时钟值：monitor
+  - 全局状态的一致性判断——CGS条件
+    - 设S=(s1,s2,…,sN)是从监控器进程接收到的状态信息中得出的全局状态，V(si)是从pi接收到的状态si的向量时间戳，则S是一致的全局状态当且仅当：V(si)[i]>=V(sj)[i] 　(i,j = 1,2,…, N)
+    - 即若一个进程的状态依赖于另一个进程的状态，则全局状态也包含了它所依赖的状态。
