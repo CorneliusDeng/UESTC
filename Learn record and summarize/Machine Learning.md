@@ -76,7 +76,7 @@
 
 - **多变量梯度下降 Gradient Descent for Multiple Variables**
 
-![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Gradient%20Descent%20for%20Multiple%20Variables.png)
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Gradient%20Descent%20for%20Multiple%20Variables.png)
 
 - **特征缩放 Feature scaling**
 
@@ -93,7 +93,7 @@
 
 - **正规方程 Normal Equation**
 
-![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Normal%20Equation.png)
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Normal%20Equation.png)
 
 
 
