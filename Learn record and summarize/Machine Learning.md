@@ -177,7 +177,7 @@ Logistic回归算法是一种分类算法，它适用于标签取值离散的情
 
 
 
-# 神经网络 Neural Networks
+# 神经网络表述 Neural Networks Representation
 
 神经网络最初是一个生物学的概念，一般是指大脑神经元、触点、细胞等组成的网络，用于产生意识，帮助生物思考和行动，后来人工智能受神经网络的启发，发展出了人工神经网络。
 
@@ -187,29 +187,41 @@ Logistic回归算法是一种分类算法，它适用于标签取值离散的情
 
 ## 非线性假设 Non-linear Hypotheses
 
-
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Non-linear%20Hypotheses.png)
 
 ## 神经元和大脑 Neurons and the Brain
 
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Neurons%20and%20the%20Brain.png)
+
+## 模型表示 Model Representation
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Model%20Representation%201.png)
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Model%20Representation%202.png)
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Model%20Representation%203.png)
+
+# 神经网络 Neural Networks
+
+**代价函数 Cost Function**
+
+**反向传播算法 Backpropagation Algorithm**
+
+**展开参数 Unrolling Parameters**
+
+**梯度检验 Gradient Checking**
+
+**随即初始化 Random Initialization**
 
 
-## 模型表示I Model Representation I
 
 
 
-## 模型表示II Model Representation II
 
 
 
-## 特征和直观理解I Examples and Intuitions I
 
 
-
-## 特征和直观理解II Examples and Intuitions II
-
-
-
-## 多类别分类 Multiclass Classification
 
 
 
