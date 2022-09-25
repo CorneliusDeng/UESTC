@@ -177,7 +177,7 @@ Logistic回归算法是一种分类算法，它适用于标签取值离散的情
 
 
 
-# 神经网络表述 Neural Networks Representation
+# 神经网络 Neural Networks
 
 神经网络最初是一个生物学的概念，一般是指大脑神经元、触点、细胞等组成的网络，用于产生意识，帮助生物思考和行动，后来人工智能受神经网络的启发，发展出了人工神经网络。
 
@@ -201,17 +201,25 @@ Logistic回归算法是一种分类算法，它适用于标签取值离散的情
 
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Model%20Representation%203.png)
 
-# 神经网络 Neural Networks
+## 代价函数 Cost Function
 
-**代价函数 Cost Function**
+首先引入一些标记方法：假设神经网络的训练样本有m个，每个包含一组输入x和一组输出y，L表示神经网络层数，Sl表示第l层的单元数，即神经元的数量。神经网络的分类有两种情况：二元分类（Binary classification）和多类别分类（Multi-class classification）。
 
-**反向传播算法 Backpropagation Algorithm**
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Neural%20Network%20Cost%20function%201.png)
 
-**展开参数 Unrolling Parameters**
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Neural%20Network%20Cost%20function%202.png)
 
-**梯度检验 Gradient Checking**
+## 反向传播算法 Backpropagation Algorithm
 
-**随即初始化 Random Initialization**
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Backpropagation%20Algorithm%201.png)
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Backpropagation%20Algorithm%202.png)
+
+## 展开参数 Unrolling Parameters
+
+## 梯度检验 Gradient Checking
+
+## 随即初始化 Random Initialization
 
 
 
