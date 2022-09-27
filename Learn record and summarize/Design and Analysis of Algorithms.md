@@ -1,4 +1,4 @@
-## Question kinds
+# Question kinds
 
 - Decision Problem (with yes-no answers)
 - Optimal Value/Optimal Solution
@@ -6,7 +6,7 @@
 
 
 
-## Programs and algorithms
+# Programs and algorithms
 
 A computer program is an instance, or concrete representation, for an algorithm in some programming language.
 
@@ -16,7 +16,7 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
 
 
-## Different Classes of Problems
+# Different Classes of Problems
 
 - P: a solution can be solved in polynomial time.（多项式时间）
 
@@ -26,7 +26,7 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
   
 
-## The Stable Matching Problem
+# The Stable Matching Problem
 
 - **Goal:**  Given n men and n women, find a "suitable" matching. Participants rate members of opposite sex. Each man lists women in order of preference from best to worst. Each woman lists men in order of preference from best to worst
 
@@ -54,7 +54,7 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
 
 
-## Asymptotic Order of Growth渐进分析
+# Asymptotic Order of Growth渐进分析
 
 用渐进表达式表达数量级的差别，渐进表式的核心内容就是忽略常数，是一个被大家认同的计算机里表式运行时间和空间的方法。
 
@@ -81,197 +81,210 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
 
 
-## Three Techniques for Designing Algorithms
+# Three Techniques for Designing Algorithms
 
-- **Greedy Algorithms贪心算法**
+## **Greedy Algorithms贪心算法**
 
-  - **Basic Idea:** Build up a solution incrementally, myopically optimizing some local criterion.
+- **Basic Idea:** Build up a solution incrementally, myopically optimizing some local criterion.
 
-    In each iteration, we choose the “best” solution at that moment. This “best” solution may not yield the BEST final solution
+  In each iteration, we choose the “best” solution at that moment. This “best” solution may not yield the BEST final solution
 
-  - **Local optimal v.s. Global optimal:** Greedy algorithm is to make the locally optimal choice at each moment. In some problems, such strategy can lead to a global optimal solution
+- **Local optimal v.s. Global optimal:** Greedy algorithm is to make the locally optimal choice at each moment. In some problems, such strategy can lead to a global optimal solution
 
-  - Advantage: Simple, efficient
+- Advantage: Simple, efficient
 
-  - Disadvantage: May be incorrect / may not be optimal
+- Disadvantage: May be incorrect / may not be optimal
 
-  - Greedy Analysis Strategies
+- Greedy Analysis Strategies
 
-    - Greedy algorithm stays ahead. Show that after each step of the greedy algorithm, its solution is at least as good as any other algorithm's. 
-    - Structural. Discover a simple "structural" bound asserting that every possible solution must have a certain value. Then show that your algorithm always achieves this bound.
-    - Exchange argument. Gradually transform any solution to the one found by the greedy algorithm without hurting its quality.
+  - Greedy algorithm stays ahead. Show that after each step of the greedy algorithm, its solution is at least as good as any other algorithm's. 
+  - Structural. Discover a simple "structural" bound asserting that every possible solution must have a certain value. Then show that your algorithm always achieves this bound.
+  - Exchange argument. Gradually transform any solution to the one found by the greedy algorithm without hurting its quality.
 
-  - **Interval scheduling区间调度**
+- **Interval scheduling区间调度**
 
-    - Job j starts at sj and finishes at fj.
+  - Job j starts at sj and finishes at fj.
 
-      Two jobs compatible if they don't overlap.
+    Two jobs compatible if they don't overlap.
 
-      Goal: find maximum subset of mutually compatible jobs
+    Goal: find maximum subset of mutually compatible jobs
 
-    - Greedy template. Consider jobs in some order. Take each job provided it's compatible with the ones already taken
-      - [Earliest start time] Consider jobs in ascending order of start time sj.
-      - [Earliest finish time] Consider jobs in ascending order of finish time fj
-      - [Shortest interval] Consider jobs in ascending order of interval length fj - s
-      - [Fewest conflicts] For each job, count the number of conflicting jobs cj . Schedule in ascending order of conflicts cj
+  - Greedy template. Consider jobs in some order. Take each job provided it's compatible with the ones already taken
+    - [Earliest start time] Consider jobs in ascending order of start time sj.
+    - [Earliest finish time] Consider jobs in ascending order of finish time fj
+    - [Shortest interval] Consider jobs in ascending order of interval length fj - s
+    - [Fewest conflicts] For each job, count the number of conflicting jobs cj . Schedule in ascending order of conflicts cj
 
-- **Divide and Conquer分治法**
+## **Divide and Conquer分治法**
 
-  - **Basic Idea:** Break up a problem into some sub-problems, solve each sub-problem independently, and combine solution to sub-problems to form solution to original problem. 
-  - **Most common usage：**Break up problem of size n into two equal parts of size ½n. Solve two parts recursively. Combine two solutions into overall solution in linear time.
-  - **Multiply乘法**
-    
-    - Given two n-digit integers a and b, compute a ×b.
-    
-    - Brute force solution: O(n^2) bit operations.
-    - To multiply two n-digit integers: Multiply four ½n-digit integers. Add two ½n-digit integers, and shift to obtain result.
-    - Karatsuba Multiplication: Add two ½ n digit integers. Multiply three ½ n-digit integers. Add, subtract, and shift ½ n-digit integers to obtain result.
-    - Fast matrix multiplication
-      - Divide: partition A and B into ½ n-by-½ n blocks.
-      - Compute: 14 ½ n-by-½ n matrices via 10 matrix additions.
-      - Conquer: multiply 7 ½ n-by-½ n matrices recursively.
-      - Combine: 7 products into 4 terms using 8 matrix additions.
+- **Basic Idea:** Break up a problem into some sub-problems, solve each sub-problem independently, and combine solution to sub-problems to form solution to original problem. 
+- **Most common usage：**Break up problem of size n into two equal parts of size ½n. Solve two parts recursively. Combine two solutions into overall solution in linear time.
+- **Multiply乘法**
+  
+  - Given two n-digit integers a and b, compute a ×b.
+  
+  - Brute force solution: O(n^2) bit operations.
+  - To multiply two n-digit integers: Multiply four ½n-digit integers. Add two ½n-digit integers, and shift to obtain result.
+  - Karatsuba Multiplication: Add two ½ n digit integers. Multiply three ½ n-digit integers. Add, subtract, and shift ½ n-digit integers to obtain result.
+  - Fast matrix multiplication
+    - Divide: partition A and B into ½ n-by-½ n blocks.
+    - Compute: 14 ½ n-by-½ n matrices via 10 matrix additions.
+    - Conquer: multiply 7 ½ n-by-½ n matrices recursively.
+    - Combine: 7 products into 4 terms using 8 matrix additions.
 
-- **Dynamical Programming动态规划**
+## **Dynamical Programming动态规划**
 
-  - **Basic Idea:** Break up a problem into a series of overlapping sub-problems, and build up solutions to larger and larger sub-problems.
+- **Basic Idea:** Break up a problem into a series of overlapping sub-problems, and build up solutions to larger and larger sub-problems.
 
-  - The most important step of designing dynamic programming algorithms:To find a good way to separate the problem into many overlapping subproblems.
+- The most important step of designing dynamic programming algorithms:To find a good way to separate the problem into many overlapping subproblems.
 
-  - Overlapping Subproblems:
-  
-    - When a recursive algorithm re-visits the same problem over and over again, we say that the problem has overlapping subproblems.
-    - An idea to save the running time is to avoid computing the same subproblem twice.
-    - This idea is the essential of dynamic programming.
+- Overlapping Subproblems:
 
-  - **The steps of solving problem**
+  - When a recursive algorithm re-visits the same problem over and over again, we say that the problem has overlapping subproblems.
+  - An idea to save the running time is to avoid computing the same subproblem twice.
+  - This idea is the essential of dynamic programming.
 
-    - separate the problem into many overlapping subproblems.
-    - construct a recurrence relation
-    - use memoization or bottom-up methods to avoid double counting of the same subproblem
+- **The steps of solving problem**
 
-  - **Weighted Interval Scheduling带权值的区间调度**
+  - separate the problem into many overlapping subproblems.
+  - construct a recurrence relation
+  - use memoization or bottom-up methods to avoid double counting of the same subproblem
 
-    - Job j starts at sj , finishes at fj , and has weight or value vj . 
+- **Weighted Interval Scheduling带权值的区间调度**
 
-      Two jobs compatible if they don't overlap.
+  - Job j starts at sj , finishes at fj , and has weight or value vj . 
 
-      Goal: find maximum weight subset of mutually compatible jobs
+    Two jobs compatible if they don't overlap.
 
-    - Notation. Label jobs by finishing time: f1 ≤ f2 ≤ . . . ≤ fn .
-      Def. p(j) = largest index i < j such that job i is compatible with j.
-  
-      OPT(j) = value of optimal solution to the problem consisting of job requests 1, 2, ..., j
-  
-      - Case 1: OPT selects job j.
-  
-        – can't use incompatible jobs { p(j) + 1, p(j) + 2, ..., j - 1 }
-  
-        – must include optimal solution to problem consisting of remaining compatible jobs 1, 2, ..., p(j)
-  
-      - Case 2: OPT does not select job j.
-  
-        – must include optimal solution to problem consisting of remaining compatible jobs 1, 2, ..., j-1
-  
-      - *OPT*( *j*) = 
-  
-        - 0，if j = 0
-        - max(vj+OPT(p(j), OPT(j-1))，otherwise
-  
-    - Weighted Interval Scheduling: Memoization
-  
-      Memoization. Store results of each sub-problem in a cache; lookup as needed.
-  
-      - code
-  
-        `Input: n,s1,…,sn,f1,…,fn ,v1,…,vn`
-  
-        `Sort jobs by finish times so that f1 ≤ f2 ≤...≤ fn`
-  
-        `Compute p(1),p(2),……,p(n)`
-  
-        `for j = 1 to n`
-  
-        ​	`M[j] = empty`
-  
-        `M[0]=0`
-  
-        `M-Compute-Opt(n) {`
-  
-        ​	`if (M[n] is empty)`
-  
-        ​		`M[n] = max(vn + M-Compute-Opt(p(n)), M-Compute-Opt(n-1))`		
-  
-        ​	`return M[n]`
-  
-        `}`
-  
-    - Weighted Interval Scheduling: Bottom-Up
-  
-      Bottom-up dynamic programming. Unwind recursion.
-  
-      - code
-  
-        `Input: n, s1,…,sn , f1,…,fn , v1,…,vn`
-        `Sort jobs by finish times so that f1 ≤ f2 ≤ ... ≤ fn.`
-        `Compute p(1), p(2), …, p(n)`
-        `Iterative-Compute-Opt {`
-        	`M[0] = 0`
-        	`for j = 1 to n`
-        		`M[j] = max(vj + M[p(j)], M[j-1])`
-        `}`
-  
-  - **Knapsack Problem背包问题**
-  
-    - Given n objects and a "knapsack."
-  
-      Item i weighs wi > 0 kilograms and has value vi > 0.
-  
-      Knapsack has capacity of W kilograms.
-  
-      Goal: fill knapsack so as to maximize total value
-  
-    - Greedy: repeatedly add item with maximum ratio vi / wi.
-  
-      But, greedy is not optimal.
-  
-    - Def. OPT(i, w) = max profit subset of items 1, …, i with weight limit w.
-  
-      - Case 1: OPT does not select item i.
-  
-        – OPT selects best of { 1, 2, …, i-1 } using weight limit w 
-  
-      - Case 2: OPT selects item i.
-  
-        – new weight limit = w – wi 
-  
-        – OPT selects best of { 1, 2, …, i–1 } using this new weight limit
-  
-    - *OPT*(*i*, *w*) =
-  
-      - 0，if i = 0
-      - OPT(i −1, w)，if wi > w
-      - max(OPT(i −1, w), vi + OPT(i −1, w− wi))，otherwise
-  
-    - Code, Running time:O(n W)
-  
-      `Input: n, w1, ……, wn, v1, ……, vn`
-  
-      `for w = 0 to w`
-  
-      ​	`M[0,w] = 0`
-  
-       `for i = 1 to n`
-  
-      ​	`for w = 1 to w`
-  
-      ​		`if (wi > w)`
-  
-      ​			`M[i,w] = M[i-1,w]`
-  
-      ​		`else`
-  
-      ​			`M[i,w] = max(M[i-1,w], vi + M[i-1,w-wi])`
-  
-      ​	`return M[n,w]`
+    Goal: find maximum weight subset of mutually compatible jobs
 
+  - Notation. Label jobs by finishing time: f1 ≤ f2 ≤ . . . ≤ fn .
+    Def. p(j) = largest index i < j such that job i is compatible with j.
+
+    OPT(j) = value of optimal solution to the problem consisting of job requests 1, 2, ..., j
+
+    - Case 1: OPT selects job j.
+
+      – can't use incompatible jobs { p(j) + 1, p(j) + 2, ..., j - 1 }
+
+      – must include optimal solution to problem consisting of remaining compatible jobs 1, 2, ..., p(j)
+
+    - Case 2: OPT does not select job j.
+
+      – must include optimal solution to problem consisting of remaining compatible jobs 1, 2, ..., j-1
+
+    - *OPT*( *j*) = 
+
+      - 0，if j = 0
+      - max(vj+OPT(p(j), OPT(j-1))，otherwise
+
+  - Weighted Interval Scheduling: Memoization
+
+    Memoization. Store results of each sub-problem in a cache; lookup as needed.
+
+    - code
+
+      `Input: n,s1,…,sn,f1,…,fn ,v1,…,vn`
+
+      `Sort jobs by finish times so that f1 ≤ f2 ≤...≤ fn`
+
+      `Compute p(1),p(2),……,p(n)`
+
+      `for j = 1 to n`
+
+      ​	`M[j] = empty`
+
+      `M[0]=0`
+
+      `M-Compute-Opt(n) {`
+
+      ​	`if (M[n] is empty)`
+
+      ​		`M[n] = max(vn + M-Compute-Opt(p(n)), M-Compute-Opt(n-1))`		
+
+      ​	`return M[n]`
+
+      `}`
+
+  - Weighted Interval Scheduling: Bottom-Up
+
+    Bottom-up dynamic programming. Unwind recursion.
+
+    - code
+
+      `Input: n, s1,…,sn , f1,…,fn , v1,…,vn`
+      `Sort jobs by finish times so that f1 ≤ f2 ≤ ... ≤ fn.`
+      `Compute p(1), p(2), …, p(n)`
+      `Iterative-Compute-Opt {`
+      	`M[0] = 0`
+      	`for j = 1 to n`
+      		`M[j] = max(vj + M[p(j)], M[j-1])`
+      `}`
+
+- **Knapsack Problem背包问题**
+
+  - Given n objects and a "knapsack."
+
+    Item i weighs wi > 0 kilograms and has value vi > 0.
+
+    Knapsack has capacity of W kilograms.
+
+    Goal: fill knapsack so as to maximize total value
+
+  - Greedy: repeatedly add item with maximum ratio vi / wi.
+
+    But, greedy is not optimal.
+
+  - Def. OPT(i, w) = max profit subset of items 1, …, i with weight limit w.
+
+    - Case 1: OPT does not select item i.
+
+      – OPT selects best of { 1, 2, …, i-1 } using weight limit w 
+
+    - Case 2: OPT selects item i.
+
+      – new weight limit = w – wi 
+
+      – OPT selects best of { 1, 2, …, i–1 } using this new weight limit
+
+  - *OPT*(*i*, *w*) =
+
+    - 0，if i = 0
+    - OPT(i −1, w)，if wi > w
+    - max(OPT(i −1, w), vi + OPT(i −1, w− wi))，otherwise
+
+  - Code, Running time:O(n·W)，Not polynomial in input size
+
+    `Input: n, w1, ……, wn, v1, ……, vn`
+
+    `for w = 0 to w`
+
+    ​	`M[0,w] = 0`
+
+     `for i = 1 to n`
+
+    ​	`for w = 1 to w`
+
+    ​		`if (wi > w)`
+
+    ​			`M[i,w] = M[i-1,w]`
+
+    ​		`else`
+
+    ​			`M[i,w] = max(M[i-1,w], vi + M[i-1,w-wi])`
+
+    ​	`return M[n,w]`
+
+- **Sequence Alignment序列对齐**
+
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Sequence%20Alignment%201.png)
+
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Sequence%20Alignment%202.png)
+
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Sequence%20Alignment%20%203.png)
+
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Sequence%20Alignment%204.png)
+
+# 网络流Flow Network
+
+ 

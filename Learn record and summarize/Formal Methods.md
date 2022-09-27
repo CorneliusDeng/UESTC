@@ -219,6 +219,72 @@
 
 ## 谓词逻辑应用
 
+- **开关切换系统** 
+  - 考察一个切换开关的状态的谓词逻辑描述问题
+  - 在不同的时刻开关只能处于“开“或者”关“的状态，并且在某一确定时刻只能处于其中的一种状态
+    - switch_on(x):表示在时刻x开关处于”开”的状态
+    - switch_off(x)表示在时刻x开关处于和“关”的状态
+    - 个体变元x对应于离散的时间
+    - 假定论域为一个自然数集合
+  - 用谓词on(x,y)表示开关在时刻x,x+1,…,y-1都处于“开”态。谓词off(x,y)表示开关在时刻x,x+1,…,y-1都处于“关”状态，谓词lessthan(x,y)表示x小于y
+    - On(x,y) ↔switch_on(x)∧¬(∃z)(lessthan(x,z)∧lessthan(z,y)∧switch_off(z)
+    - off(x,y) ↔switch_off(x)∧¬(∃z)(lessthan(x,z)∧lessthan(z,y)∧switch_on(z)
+  - 若开关在时刻y处于开（关）状态，而在此之前处于同样的状态的时刻为x，则在x与y之间的所有时刻，开关都一直处于关（开）状态
+    - ∀x∀y(switch_on(x)∧switch_on(y)∧lessthan(x,y))∧¬∃z.(switch_on(z)∧lessthan(x,z)∧lessthan(z,y)) ⇒off(x+1,y)
+    - ∀x∀y(switch_off(x)∧switch_off(y)∧lessthan(x,y))∧¬∃z.(switch_off(z)∧lessthan(x,z)∧lessthan(z,y)) ⇒on(x+1,y)
+  - 用谓词from_off_to_on(u1,v2)表示在u1时刻处于关状态，在v2时刻处于开状态。
+    - 其中u1<v2,并且在时刻u1,u1+1,…,v2-1开关一直保持关状态；
+    - 或者对于间隔（u1,v2）中的每一时刻，当开关出现开状态后，下一个状态一定为关。
+  - 谓词off_on(u1,v2)表示每次开关出现开状态后，下一个状态一定为关;
+    谓词on_off(u1,v2) 表示每次开关出现关状态后，下一个状态一定为开；那么
+    - Off_on(u1,v2) ↔∃v1. ∃u2(lessthan(u1,v1)∧lessthan(v1,u2)∧lessthan(u2,v2)∧off(u1,v1)∧off(u2,v2)∧on_off(v1,u2)
+    - on_off(v1,u3) ↔∃u2. ∃v2.(lessthan(v1,u2)∧lessthan(u2,v2)∧lessthan(v2,u3)∧on(v1,u1)∧on(v2,u3)∧off_on(u2,v2)
+    - from_off_to_on(x,y) ↔switch_on(y)∧(off(x,y)∨off_on(x,y));	from_on_to_off(x,y) ↔switch_off(y)∧(on(x,y)∨on_off(x,y))
+- **文件操作系统**
+  - 考察由记录（Record）的线性序列所组成文件的操作问题
+    - 文件中的记录从零开始顺序编号，即，file0,file1,…filek-1是任意一个文件的k个记录。其中fliej（0≤j≤k-1）表示文件的第j个记录
+    - 如果k<1，则文件为空。编辑人员可以通过插入，删除和替换来对文件进行修改
+  - 如果S(x)是一个关于x的不变的条件，x’表示操作后更新的变量x，S(x’)表述了在操作后状态的不变性
+    - 设Position：当前的指针位置，表示了两个相邻记录之间的位置，LP：在position的左边的记录序列，RP：在position的右边的记录序列，Length：文件中的记录数。
+    - 位置不变性S(position):0≤position≤length，任意操作对position进行作用后，S(position’)恒为真。
+  - 文件操作：		
+    - EMPTY_FILE    Position=0∧length=0
+    - MOVE_LEFT    指针移动到前一个记录的左端；对于空文件，该操作无效果；
+      - 前置条件：position>0
+      - 后置条件：(position’=position-1)∧(length’=length)∧(file’=file)
+    - MOVE_RIGHT  指针移动到下一个记录的右端；如果当前指针已经在最后一个记录的右端，则该操作不产生影响；
+      - 前置条件：position<length
+      - 后置条件：(position’=position+1)∧(length’=length)∧(file’=file)
+    - INSERT_RIGHT  在文件中插入一个新记录r，从而在新位置左端的记录序列为{LP},右端的记录序列为{r,RP};
+      - 后置条件：(position’=position)∧(length’=length+1)∧(∀p)((0≤p<position) → filep’= filep ∧(p=position) → filep’=r∧(position<p<length) → filep+1’= filep
+    - INSERT_LEFT  在文件中插入一个新记录r，从而在新位置左端的记录序列为{LP,r},右端的记录序列为{RP};
+      - 前置条件：position≧0
+      - 后置条件：(position’=position+1)∧(length’=length+1)∧(∀p)((0≤p<position) → filep’= filep∧(p=position) →file’p=r∧(position<p<length) → filep+1’= filep
+    - DELETE_LEFT 删除指针左边的记录r；如果当前指针在第一个记录的左端，或者文件为空，则操作不产生影响；
+      - 前置条件：前置条件  position≧0
+      - 后置条件：(position’=position-1)   ∧(length’=length-1)    ∧ (∀p) ((0≤p<position) → filep ’= filep ∧(position’≤p<length’) → filep ’= filep＋1 )
+    - DELETE_RIGHT  删除指针右边的记录r；如果当前指针在第一个记录的右端，或者文件为空，则操作不产生影响；
+      - 前置条件： 0≤position<lenght
+      - 后置条件：(position’=position)   ∧(length’=length-1)   ∧(∀p)((0≤p<position) → filep’= filep∧(position’≤p<length’) → filep’= filep+1) 
+- **有向图的可达性分析**
+  - 有向图是一个二元组（V,E），V:一个有限顶点集合，E:一个有限有向边集合
+  - 定义谓词
+    - 对每个顶点v∈V，谓词vertex(v)为真
+    - 对每条边e∈E，谓词edge(e)为真
+    - first(x.e)和second(y,e)：边e是从顶点x到顶点y
+    - path(x,y)：存在一条从顶点x到顶点y的路径
+  - 顶点和边的规格 
+    - ∀x(vertex(x)∨edge(x))
+    - ∀x¬(vertex(x)∧edge(x))
+    - ∀e(edge(e) →(∃x)(∃y)(vertex(x)∧vertex(y)∧first(x,e)∧second(y, e))
+  - 路径
+    - ∀x∀y∃e(first(x,e)∧second(y,e) →path(x,y))
+    - ∀x∀y∃z(path(x,z)∧path(z,y) →path(x,y))
+  - 可达性
+    - ∀x：R.p表示对集合R中的任何元素，属于p为真；∃x：R.p表示集合R中的存在一个元素，使得属性p为真 
+    - ∀v1,v2:V.(path(v1,v2)∧path(v2,v1))
+    - ∃v1,v2:V.(path(v1,v2)∨path(v2,v1))
+
 ## 谓词逻辑演算
 
 ## 谓词逻辑语义

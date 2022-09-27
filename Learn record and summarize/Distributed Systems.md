@@ -16,7 +16,7 @@
 
 
 
-# 系统模型
+# 系统模型System Model
 
 ## **物理模型physical models**
 
@@ -54,7 +54,7 @@
 
 
 
-# 时间和全局状态
+# 时间和全局状态Time Global State
 
 计算机时钟：晶体具有固定震荡频率，硬件时钟：𝐻𝑖 (𝑡)，软件时钟：𝐶i (𝑡)=𝑎𝐻𝑖 (𝑡)+𝑏
 时钟漂移：振荡频率变化。电源稳定性，环境温度等
@@ -273,3 +273,68 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
   - 全局状态的一致性判断——CGS条件
     - 设S=(s1,s2,…,sN)是从监控器进程接收到的状态信息中得出的全局状态，V(si)是从pi接收到的状态si的向量时间戳，则S是一致的全局状态当且仅当：V(si)[i]>=V(sj)[i] 　(i,j = 1,2,…, N)
     - 即若一个进程的状态依赖于另一个进程的状态，则全局状态也包含了它所依赖的状态。
+
+
+
+# 协调和协定Coordination Agreement
+
+- 构建分布式系统的主要动力：资源共享和协作
+- 分布式系统的进程需要协调动作和对共享资源达成协定
+- 分布式中的协作
+  - 互斥
+  - 选举
+  - 组播
+    - 可靠性和排序语义
+  - 进程间的协定
+    - 共识和拜占庭协定
+- 故障模型
+  - 良性故障(fail stop)
+  - 随机故障(arbitrary failure)
+- 网络
+  - 网络分区 partitioning
+  - 非对称路由 asymmetric
+  - 连接的非传递性 intransitive
+- 故障检测器 failure detector
+  - 不可靠的故障检测器 timeout,产生值:  Unsuspected和Suspected
+  - 可靠的故障检测器,产生值:  Unsuspected和Failed
+
+## 分布式互斥Distributed Mutual Exclusion
+
+- 目的：仅基于消息投递，实现对资源的互斥访问
+- 假设：异步系统(eventually deliver)，无故障进程，可靠的消息投递(no faked messages)
+- 执行临界区的应用层协议
+  - enter( )           //进入临界区——若必要，可以阻塞进入
+  - resourceAccesses( )          //在临界区访问共享资源
+  - exit( )              //离开临界区——其它进程现在可以进入
+- 基本要求
+  - 安全性 safety：在临界区内一次最多有一个进程可以执行
+  - 活性 liveness：进入和离开临界区的请求最终成功执行
+  - 顺序 order：进入临界区的顺序与进入请求的happen-before顺序一致
+- 性能评价
+  - 带宽消耗 bandwidth：在每个enter和exit操作中发送的消息数
+  - 客户延迟 client delay：进程进入、退出临界区的等待时间（请求进入到进入，请求退出到退出的延迟）
+  - 吞吐率 throughput：单位时间纯切换CS的速度（Switch quickly between waiting processes）
+- **中央服务器算法 Central Server**
+- **基于环的算法 Ring-based**
+- **基于组播和逻辑时钟的算法 Multicast & LC**
+- **Maekawa投票算法 Maekawa voting**
+
+## 选举Election
+
+- 基本概念
+  - 选举算法：选择一个唯一的进程来扮演特定角色的算法
+  - 召集选举：一个进程启动了选举算法的一次运行
+  - 参与者：进程参加了选举算法的某次运行
+  - 非参与者：进程当前没有参加任何选举算法
+  - 进程标识符：唯一且可按全序排列的任何数值
+- 基本要求
+  - 安全性：参与进程Pi的electedi =或electedi = P（有效进程pid最大值）
+  - 活性：所有进程Pi都参加并且最终置electedi ≠或进程Pi崩溃
+- 性能评价
+  - 带宽消耗：与发送消息的总数成比例
+  - 周转时间：从启动算法到终止算法之间的串行消息传输的次数
+- **基于环的选举算法 Ring-based Election**
+
+## 组播通信 Multicast
+
+## 共识和相关问题 Consensus

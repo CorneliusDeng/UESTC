@@ -209,23 +209,59 @@ Logistic回归算法是一种分类算法，它适用于标签取值离散的情
 
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Neural%20Network%20Cost%20function%202.png)
 
-## 反向传播算法 Backpropagation Algorithm
-
-![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Backpropagation%20Algorithm%201.png)
-
-![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Backpropagation%20Algorithm%202.png)
-
-## 展开参数 Unrolling Parameters
-
-## 梯度检验 Gradient Checking
-
-## 随即初始化 Random Initialization
 
 
+# 应用机器学习的建议 Advice for Applying Machine Learning
 
+## 评估假设函数 Evaluating a Hypothesis
 
+当我们确定学习算法的参数时，考虑的是选择参数来使训练误差最小化。有人认为得到一个非常小的训练误差一定是一件好事，但我们已经知道，仅仅因为这个假设函数具有很小的训练误差并不能说明它一定是一个好的假设函数。而且过拟合假设函数推广到新的训练集上是不适用的，所以仅靠具有很小的训练误差就说一个假设函数是好的假设函数这种说法是错误的。
 
+那么，如何判断一个假设函数是否过拟合呢？
+对于预测房价这个简单的例子，我们可以对假设函数进行绘图，然后观察图形趋势；但对于有很多特征变量的情况，想要通过画出假设函数的图形来进行观察，就会变得很难甚至不可能实现。 因此，我们需要另一种方法来评估我们的假设函数是否过拟合。
+为了检验算法是否过拟合，我们将数据分成训练集和测试集，通常用70%的数据作为训练集，用剩下30%的数据作为测试集。很重要的一点是训练集和测试集均要含有各种类型的数据，通常我们要对数据进行“洗牌”，然后再分成训练集和测试集。所以说如果这组数据有某种规律或顺序的话，那么最好是随机选择70%的数据作为训练集，30%的数据作为测试集。
 
+测试集评估在通过训练集让我们的模型学习得出其参数后，对测试集运用该模型，我们有两种方式计算误差：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Evaluating%20a%20Hypothesis.png)
+
+## 模型选择和训练、验证、测试集 Model Selection and Training/Validation/Test Sets
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Training%3AValidation%3ATest%20Sets.png)
+
+## 诊断偏差/方差 Diagnosing Bias/Variance
+
+偏差(bias)大↔欠拟合(underfit)，方差(variance)大↔过拟合(overfit)
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/high%20bias%20and%20variance.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Diagnosing%20Bias%20Variance.png)
+对于训练集，当d较小时，模型拟合程度更低，误差较大；随着d的增长，拟合程度提高，误差减小。
+对于交叉验证集，当d较小时，模型拟合程度低，误差较大；但是随着d的增长，误差呈现先减小后增大的趋势，转折点是我们的模型开始过拟合训练数据集的时候。
+
+训练集误差和交叉验证集误差近似时：偏差/欠拟合
+交叉验证集误差远大于训练集误差时：方差/过拟合
+
+## 正则化和偏差/方差 Regularization and Bias/Variance
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Regularization%20and%20Bias%3AVariance.png) 
+
+## 学习曲线 Learning Curves
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Learning%20Curves.png)
+
+## 决定下一步如何改进 Deciding What to Do Next Revisited
+
+假设我们已经使用正则化线性回归实现了模型的预测，但是当我们在一系列新的数据集上测试我们的假设函数时发现存在着很大的误差，改进的思路：
+获得更多的训练样本——解决高方差
+尝试减少特征的数量——解决高方差
+尝试获得更多的特征——解决高偏差
+尝试增加多项式特征——解决高偏差
+尝试减少正则化程度λ——解决高偏差
+尝试增加正则化程度λ——解决高方差
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Neural%20networks%20and%20overfitting.png)
+使用较小的神经网络，类似于参数较少的情况，容易导致高偏差和欠拟合，但计算代价较小；使用较大的神经网络，类似于参数较多的情况，容易导致高方差和过拟合，虽然计算代价比较大，但是可以通过正则化手段来调整而更加适应数据。
+通常选择较大的神经网络并采用正则化处理会比采用较小的神经网络效果要好。
+对于神经网络中的隐藏层的层数的选择，通常从一层开始逐渐增加层数，为了更好地作选择，可以把数据分为训练集、交叉验证集和测试集，针对不同隐藏层层数的神经网络训练神经网络， 然后选择交叉验证集代价最小的神经网络。
 
 
 
