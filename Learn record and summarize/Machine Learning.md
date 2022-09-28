@@ -226,7 +226,7 @@ Logistic回归算法是一种分类算法，它适用于标签取值离散的情
 
 ## 模型选择和训练、验证、测试集 Model Selection and Training/Validation/Test Sets
 
-![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Training%3AValidation%3ATest%20Sets.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Training%20Validation%20Test%20Sets.png)
 
 ## 诊断偏差/方差 Diagnosing Bias/Variance
 
