@@ -242,7 +242,7 @@ Logistic回归算法是一种分类算法，它适用于标签取值离散的情
 
 ## 正则化和偏差/方差 Regularization and Bias/Variance
 
-![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Regularization%20and%20Bias%3AVariance.png) 
+ ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Regularization%20and%20Bias%20Variance.png)
 
 ## 学习曲线 Learning Curves
 
