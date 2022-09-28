@@ -317,7 +317,7 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
 - 性能评价
   - 带宽消耗 bandwidth：在每个enter和exit操作中发送的消息数
   - 客户延迟 client delay：进程进入、退出临界区的等待时间（请求进入到进入，请求退出到退出的延迟）
-  - 吞吐率 throughput：单位时间纯切换CS的速度（Switch quickly between waiting processes）
+  - 吞吐量 throughput：用一个进程离开临界区和下一个进程进入临界区之间的同步延迟（synchronization delay）来衡量这个影响，当同步延迟较短时，吞吐量较大
   
 - **中央服务器算法 Central Server**
 
