@@ -271,7 +271,7 @@
   - 定义谓词
     - 对每个顶点v∈V，谓词vertex(v)为真
     - 对每条边e∈E，谓词edge(e)为真
-    - first(x.e)和second(y,e)：边e是从顶点x到顶点y
+    - first(x,e)和second(y,e)：边e是从顶点x到顶点y
     - path(x,y)：存在一条从顶点x到顶点y的路径
   - 顶点和边的规格 
     - ∀x(vertex(x)∨edge(x))
@@ -282,8 +282,8 @@
     - ∀x∀y∃z(path(x,z)∧path(z,y) →path(x,y))
   - 可达性
     - ∀x：R.p表示对集合R中的任何元素，属于p为真；∃x：R.p表示集合R中的存在一个元素，使得属性p为真 
-    - ∀v1,v2:V.(path(v1,v2)∧path(v2,v1))
-    - ∃v1,v2:V.(path(v1,v2)∨path(v2,v1))
+    - ∀v1,v2:V.(path(v1,v2)∧path(v2,v1))，该图为强连通图
+    - ∃v1,v2:V.(path(v1,v2)∨path(v2,v1))，该图为非强连通图
 
 ## 谓词逻辑演算
 
