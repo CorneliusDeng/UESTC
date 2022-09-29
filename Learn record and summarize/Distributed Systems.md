@@ -340,9 +340,7 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
 
   ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Ring-based.png)
 
-  - 基本思想：把进程安排在一个逻辑环中，通过获得在进程间沿着环单向（如顺时针）传递的消息为形式的令牌来实现互斥
-
-    Pass token along the ring，Retain or pass immediately
+  - 基本思想：把进程安排在一个逻辑环中，通过获得在进程间沿着环单向（如顺时针）传递的消息为形式的令牌来实现互斥。Pass token along the ring，Retain or pass immediately
 
   - 满足安全性和活性要求，不满足顺序要求
 
@@ -355,16 +353,15 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
     - 同步延迟
       - Min: 1个消息，进程依次进入临界区
       - Max: N个消息，一个进程连续进入临界区，期间无其他进程进入临界区
-
+  
 - **基于组播和逻辑时钟的算法 Multicast & LC**
 
-  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Multicast%20%26%20LC.png)
-
   - 基本思想：进程进入临界区需要所有其它进程的同意，组播+应答
+  - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Multicast%20%26%20LC.png)
   - 并发控制，采用Lamport clock避免死锁
-
+  
   - 满足安全性、活性和顺序要求
-
+  
   - 性能
     - 带宽消耗
       - enter: 2(N－1)，即(N－1)个请求、 (N－1)个应答
@@ -372,14 +369,14 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
       - 1 round-trip  (multicast)
     - 同步延迟
       - 1个消息的传输时间（无exit，vs round-trip）
-
+  
 - **Maekawa投票算法 Maekawa voting**
 
   - 基本思想：进程进入临界区不需要所有进程同意（部分即可）
   - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Voting%20set.png)
   - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Maekawa%20voting.png)
   - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Maekawa%20voting%20Deadlock.png)
-  - Maekawa算法改进后[Sanders 1987]可满足安全性、活性和顺序性，进程按关系维护请求队列
+  - Maekawa算法改进后[Sanders 1987]可满足安全性、活性和顺序性，进程按→关系维护请求队列
   - 性能
 
     - 带宽消耗
@@ -397,14 +394,151 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
   - 参与者：进程参加了选举算法的某次运行
   - 非参与者：进程当前没有参加任何选举算法
   - 进程标识符：唯一且可按全序排列的任何数值
+  
 - 基本要求
-  - 安全性：参与进程Pi的electedi =或electedi = P（有效进程pid最大值）
-  - 活性：所有进程Pi都参加并且最终置electedi ≠或进程Pi崩溃
+  - 安全性：参与进程Pi的electedi =⊥或electedi = P（有效进程pid最大值）
+    - 当进程第一次成为一次选举的参与者时，它把变量值置为特殊值“⊥”，表示该值还没有定义
+  - 活性：所有进程Pi都参加并且最终置electedi ≠⊥或进程Pi崩溃
+  
 - 性能评价
   - 带宽消耗：与发送消息的总数成比例
   - 周转时间：从启动算法到终止算法之间的串行消息传输的次数
+  
 - **基于环的选举算法 Ring-based Election**
 
+  - 基本思想：按逻辑环排列一组进程，id不必有序
+  - 目的：在异步系统中选举具有最大标识符的进程作为协调者
+  - 算法过程
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Ring-based%20Election.png)
+  - 算法示例：选举从进程17开始。到目前为止，所遇到的最大的进程标识符是24。参与的进程用深色表示
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Ring-based%20Election%20Example.png)
+  - 性能
+    - 最坏情况：启动选举算法的逆时针邻居具有最大标识符，共计需要3N-1个消息，周转时间为3N-1
+      - 到达该邻居需要N-1个消息，并且还需要N个消息才能完成一个回路，才能宣布它当选，接着当选消息被发送N-1次
+    - 最好情况：周转时间为2N
+  - 该算法不具备容错功能
+
+- **霸道算法 Bully Election**
+
+  - 为什么叫霸道算法
+
+    When a process is started to replace a crashed process, it begins an election. If it has the highest process identifier, then it will decide that it is the coordinator and announce this to the other processes. Thus it will become the coordinator, even though the current coordinator is functioning. It is for this reason that the algorithm is called the ‘bully’ algorithm.
+
+  - 假定
+
+    - 同步系统，使用超时检测进程故障
+    - 通道可靠，但允许进程崩溃
+    - 每个进程知道哪些进程具有更大的标识符
+    - 每个进程均可以和所有其它进程通信
+
+  - 该算法存在3种类型的消息：
+
+    - 选举消息用于宣布选举，应答消息用于回复选举消息，协调者消息用于宣布当选进程的身份：新的“协调者”
+    - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Bully%20Election.png)
+
+  - 算法示例：p4、p3相继出现故障的选举过程，p1先发现
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Bully%20Election%20Example.png)
+
+  - 性能
+
+    - 最好情况：标识符次大的进程发起选举，发送N-2个协调者消息，周转时间为1个消息
+    - 最坏情况：标识符最小的进程发起选举，然后N-1个进程一起开始选举，周转时间=依次elect(N-2)+协调者消息
+
+
 ## 组播通信 Multicast
+
+- 组播/广播
+  - 组播：发送一个消息给进程组中的每个进程
+  - 广播：发送一个消息给系统中的所有进程
+- 组播面临的挑战
+  - 效率
+    - 带宽使用
+    - 总传输时间
+  - 投递保证
+    - 可靠性
+    - 顺序
+  - 进程组管理
+    - 进程可任意加入或退出进程组
+- 系统模型
+  - multicast(g, m)：进程发送消息给进程组g的所有成员
+  - deliver(m)：投递由组播发送的消息到调用进程
+  - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/System%20Modal.png)
+- 封闭组和开放组
+  - 封闭组：只有组的成员可以组播到该组
+  - 开放组：组外的进程也可以向该组发送消息
+- **基本组播 Basic Muticast**
+  - 原语：B-multicast、B-deliver
+    A correct process will eventually deliver the msg, as long as the multicaster does not crash.
+  - 实现B-multicast的一个简单方法是使用一个可靠的一对一send操作
+    - B-multicast(g, m)：对每个进程p∈g，send(p, m)
+    - 进程p receive(m)时：p执行B-deliver(m)
+- **可靠组播 Reliable Muticast**
+  - 一个可靠组播应当满足如下性质
+    - 完整性 Integrity：一个正确的进程p传递一个消息m至多一次
+    - 有效性 Validity：如果一个正确的进程组播消息m，那么它终将传递m
+    - 协定 Agreement：如果一个正确的进程投递消息m，那么group中其它正确的进程终将传递m
+  - 与B-multicast的区别：B-multicast 不保证协定（sender中途失效）
+- **用B-multicast实现可靠组播**
+  - 基本思想
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Reliable%20Muticast.png)
+  - 算法示例
+    - 进程p崩溃，消息m没有投递到r和s进程
+    - 然而，进程q继续投递消息m给正确的进程r和s
+    - 此后，正确的进程r和s继续投递消息至组内其他进程
+    - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/RM%20reply%20BM%20Example.png)
+  - 算法评价
+    - 满足完整性：B-multicast中的通信通道可靠以及B-multicast特性
+    - 满足有效性：一个正确的进程终将B-deliver消息到它自己
+    - 遵循协定：每个正确的进程在B-deliver消息中都B-multicast该消息到其它进程（sender没有crash，eventually deliver）
+    - 效率低：每个消息被发送到每个进程|g|次，累计|g|^2次
+- **用IP组播实现可靠组播**
+  - 将IP组播、捎带确认法和否定确认相结合
+    - 基于IP组播：IP组播通信通常是成功的
+    - 捎带确认piggyback：在发送给组中的消息中捎带确认（已经收到了什么）
+    - 否认确认negative acknowledgement：进程检测到有遗漏消息时，发送单独的应答（请求）消息
+  - 算法思想
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/RM%20apply%20IPM.png)
+  - 保留队列 hold-back queue
+    - 保留队列并不是可靠性必须的，但它简化了协议，使我们能使用序号来代表已投递的消息集。也提供了投递顺序保证。
+    - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/hold-back%20queue.png)
+  - 算法评价
+    - 完整性
+      - 通过检测重复消息和IP组播性质实现
+    - 有效性
+      - 仅在IP组播具有有效性时成立
+    - 协定
+      - 需要：进程无限组播消息（保证有机会探测消息丢失，因为是被动NACK）+无限保留消息副本时成立（一旦收到NACK，重发）不现实
+      - 某些派生协议实现了协定
+- **统一性质 Uniform Properties**
+  - 统一性质：无论进程是否正确都成立的性质
+  - 统一协定 Uniform agreement：如果一个进程投递消息m，不论该进程是正确的还是出故障，在group(m)中的所有正确的进程终将投递m。统一协定允许一个进程在投递一个消息后崩溃。
+  - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Uniform%20Properties.png)
+- **有序组播**
+  - **FIFO组播**
+    - 如果一个正确的进程发出multicast(g, m)，然后发出multicast(g, m’)，那么每个投递m’的正确的进程将在m’前投递m
+    - 保证每个进程发送的消息在其它进程中的接收顺序一致
+    - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/FIFO%20Multicast.png)
+    - 实现
+      - 基于序号实现
+      - FO-multicast/FO-deliver
+      - 算法：与基于IP组播的可靠组播类似，即采用Sgp、Rgq和保留队列
+  - **因果排序组播 causal ordering**
+    - 如果multicast(g, m) → multicast(g, m’) ，那么任何投递m’的正确进程将在m’前投递m
+    - C1→C3, C2||C3，区别于FIFO：跨进程
+    - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/causal%20ordering.png)
+    - 实现
+      - 向量时钟，每个进程维护自己的向量时钟
+      - CO-multicast：在向量时钟的相应分量上加1，附加VC到消息
+      - CO-deliver：根据时间戳递交消息
+      - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/causal%20ordering%20implementation.png)
+  - **全排序组播 total ordering**
+    - 如果一个正确的进程在投递m’前投递消息m，那么其它投递m’的正确进程将在m’前投递m
+    - 所有进程对所有消息deliver顺序一致，不关心其它属性
+    - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/total%20ordering.png)
+    - 实现
+      - 为组播消息指定全排序标识符 ，以便每个进程基于这些标识符做出相同的排序决定
+      - 每个进程将<m, id(m)>放入保留队列，sequencer除外
+      - sequencer维护一个组特定的序号Sg，用来给它B-deliver的消息指定连续且不断增加的序号。它通过给g发送B-deliver顺序消息来宣布序号。每个进程维护一个本地的rg
+      - ISIS算法
 
 ## 共识和相关问题 Consensus
