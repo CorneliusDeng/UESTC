@@ -287,4 +287,40 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
 # 网络流Flow Network
 
+## **Flow network 流网络**
+
+Abstraction for material flowing through the edges.
+G = (V, E) = directed graph, no parallel edges.
+Two distinguished nodes: s = source, t = sink.
+c(e) = capacity of edge e.
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Flow%20Network.png)
+
+## **Cuts 割**
+
+Def. An s-t cut is a partition (A, B) of V with s ∈ A and t ∈ B.
+Def. The capacity of a cut (A, B) is:
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Cuts.png)
+
+**Minimum Cut Problem 最小割问题：Find an s-t cut of minimum capacity.**
+
+## Maximum Flow and Minimum Cut 最大流和最小割
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Flows.png)
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Flow%20value%20lemma.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Flow%20value%20lemma%20Pf.png)
+
+**Max flow problem 最大流问题： Find s-t flow of maximum value.**
+
+**Weak duality 弱对偶性：** Let f be any flow, and let (A, B) be any s-t cut. Then the value of the flow is at most the capacity of the cut.
+eg.Cut capacity = 30 ⇒ Flow value ≤ 30
+Let f be any flow. Then, for any s-t cut (A, B) we have：v(f) ≤ cap(A, B).
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Weak%20Duality%20Pf.png)
+**Corollary 推论：**If v(f) = cap(A, B), then f is a max flow and (A, B) is a min cut
+
+## Residual Graph 剩余图
+
+
+
  
