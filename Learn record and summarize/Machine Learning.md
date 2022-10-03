@@ -263,9 +263,153 @@ Logistic回归算法是一种分类算法，它适用于标签取值离散的情
 通常选择较大的神经网络并采用正则化处理会比采用较小的神经网络效果要好。
 对于神经网络中的隐藏层的层数的选择，通常从一层开始逐渐增加层数，为了更好地作选择，可以把数据分为训练集、交叉验证集和测试集，针对不同隐藏层层数的神经网络训练神经网络， 然后选择交叉验证集代价最小的神经网络。
 
+## 斜偏类的误差度量 Error Metrics for Skewed Classes
+
+设定某个实数来评价我们的学习算法并衡量它的表现，有了算法的评估和误差度量值后，要注意的是使用一个合适的误差度量值有时会对于我们的学习算法造成非常微妙的影响，这就是偏斜类的问题。
+
+在癌症分类例子中，我们训练Logistic回归模型（y = 1为癌症，y = 0为其他），假设使用测试集来检验这个分类模型，发现它只有1%的错误，因此我们99%会做出正确的诊断，这看起来是一个不错的结果。但假设我们发现在测试集中只有0.5%的患者真正患了癌症，那么1%的错误率就不显得那么好了，这种情况发生在训练集中有非常多的同一种类的样本且只有很少或没有其他类的样本，把这种情况称为偏斜类。
+
+偏斜类：一个类中的样本数与另一个类的样本数相比多很多，通过总是预测y = 0或y = 1，算法可能表现得非常好，因此使用分类误差或者分类精确度来作为评估度量会产生问题。
+如果我们有一个偏斜类，用分类精度并不能很好的衡量算法。因为我们可能会获得一个很高的精确度、非常低的错误率，但是我们并不知道我们是否真的提升了分类模型的质量。就像总是预测y = 0并不是一个好的分类模型，但是会将我们的误差降低至更低水平。所以当我们遇到偏斜类问题时，希望有一个不同的误差度量值或不同的评估度量值，例如查准率(Precision)和查全率(Recalll)。
+
+查准率（Precision）和查全率（Recall） 我们将算法预测的结果分成四种情况：
+1、正确肯定（True Positive,TP）：预测为真，实际为真
+2、正确否定（True Negative,TN）：预测为假，实际为假
+3、错误肯定（False Positive,FP）：预测为真，实际为假
+4、错误否定（False Negative,FN）：预测为假，实际为真
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Error%20Metrics%20for%20Skewed%20Classes.png)
+
+查准率=TP/(TP+FP)，即真正预测准确的数量 / 预测是准确的数量。例，在所有我们预测有恶性肿瘤的病人中，实际上有恶性肿瘤的病人的百分比，越高越好。
+查全率=TP/(TP+FN)，即真正预测准确的数量 / 所有真正准确的数量。例，在所有实际上有恶性肿瘤的病人中，成功预测有恶性肿瘤的病人的百分比，越高越好。
+
+高查准率和高查全率才可以表示一个模型是好模型
+查准率和查全率是一对矛盾的指标，一般说，当查准率高的时候，查全率一般很低；查全率高时，查准率一般很低。
+
+比如在西瓜书中的经典例子：若我们希望选出的西瓜中好瓜尽可能多，即查准率高，则只挑选最优把握的西瓜，算法挑选出来的西瓜（TP+FP）会减少，相对挑选出的西瓜确实是好瓜（TP）也相应减少，但是分母（TP+FP）减少的更快，所以查准率变大；在查全率公式中，分母（所有好瓜的总数）是不会变的，分子（TP）在减小，所以查全率变小。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Precision%20and%20Recall.png)
+
+
+
+# 支持向量机 Support Vector Machines
+
+## 优化目标 Optimization Objective
+
+与Logistic回归和神经网络相比，支持向量机（SVM）在学习复杂的非线性方程时提供了一种更为清晰、更加强大的方式。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Logistic.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/SVM.png)
+
+## 大边界 Large Margin
+
+有时人们会把支持向量机叫做大间距分类器（Large margin classifiers）
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Large%20Margin.png)
+
+## 核函数 Kernels
+
+对于下图的非线性数据集，可以通过构造一个复杂的多项式模型来解决无法用直线进行分隔的分类问题。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Kernels%201.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Kernels%202.png)
+
+## 使用支持向量机 Using SVM
+
+从Logistic回归模型，我们得到了支持向量机模型，在两者之间，我们应该如何选择呢？下面是一些普遍使用的准则，n为特征数，m为训练样本数。
+
+如果n相较于m足够大的话，即训练集数据量不够支持我们训练一个复杂的非线性模型，我们选用Logistic回归模型或者不带核函数的支持向量机。
+如果n较小，m大小中等，例如n在 1-1000 之间，而m在10-10000之间，使用高斯核函数的支持向量机。
+如果n较小，而m较大，例如n在1-1000之间，而m大于50000，则使用支持向量机会非常慢，解决方案是手动地创建拥有更多的特征变量，然后使用Logistic回归或不带核函数的支持向量机。
+
+值得一提的是，神经网络在以上三种情况下都可能会有较好的表现，但是训练神经网络可能非常慢，选择支持向量机的原因主要在于它的代价函数是凸函数，不存在局部最小值。
+
+在遇到机器学习问题时，有时会不确定该用哪种算法，但是通常更加重要的是有多少数据，有多熟练，是否擅长做误差分析和排除学习算法，指出如何设定新的特征变量和找出其他能决定你学习算法的变量等方面，通常这些方面会比我们具体使用Logistic回归还是SVM算法更加重要。
+
+
+
+# 决策树 Decision Tree
+
+## 商和信息增益 Entropy and Information Gain
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Entropy%20and%20Information%20Gain%201.jpg)
+
+设属性A将S划分成m份，根据A划分的子集的熵或期望信息由下式给出：
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Entropy%20and%20Information%20Gain%202.jpg)
+
+## Algorithm ID3
+
+基本的 ID3 算法通过自顶向下构造决策树来进行学习。构造过程是从“哪一个属性将在树的根结点被测试？”这个问题开始的。然后为根结点属性的每个可能值产生一个分支，并把训练样例排列到适当的分支（也就是，样例的该属性值对应的分支）之下。然后重复整个过程，用每个分支结点关联的训练样例来选取在该点被测试的最佳属性。同时此贪婪搜索从不回溯重新考虑先前的选择。
+
+故ID3算法主要围绕3个问题的解决来进行：如何选择最优属性、结点数据如何拆分、子树何时停止增长。
+
+在为树节点选择测试属性时，需要选择最有助于分类实例的属性（也即特征）。ID3定义了一个统计属性“信息增益”，用来衡量给定属性区分当前训练样例集的能力，在其增长树的每一步使用该信息增益标准从侯选属性集中选择属性。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Algorithm%20ID3%201.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Algorithm%20ID3%202.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Algorithm%20ID3%20Procedure.png)
+
+- 算法优点
+  - ID3算法使用信息增益作为结点选择依据，从信息论的角度来进行学习，原理明晰、可解释性强
+  - ID3算法操作简单，学习泛化能力强，考虑到ID3算法的归纳偏置：较短的树比较长的树优先，信息增益高的特征更靠近根节点的树优先，我们可以看到决策树所习得的规则是简单且易泛化到新数据的（符合奥卡姆剃刀原则）
+  - 对于样例集中不充足属性的数据，可以有多种有效的方式进行填充，包括此次所用的“最通常值法”、“比例分配法”、“调换特征与目标属性角色法”等等。
+  - ID3 算法在搜索的每一步都使用当前的所有训练样例，以统计为基础决定怎样精化当前的假设。这与那些基于单独的训练样例递增作出决定的方法（例如，Find-S或候选消除法）不同。使用所有样例的统计属性（例如，信息增益）的一个优点是大大减小了对个别训练样例错误的敏感性。
+- 算法缺点
+  - ID3算法只能处理分类属性的数据，不适宜连续类型的数据
+  - 不能判断有多少个其他的决策树也是与现有的训练数据一致的
+  - ID3算法很容易出现过度拟合训练数据的问题（特别是当训练数据集合小的时候）。因为训练样例仅仅是所有可能实例的一个样本，向树增加分支可能提高在训练样例上的性能，但却降低在训练实例外的其他实例上的性能。因此，通常需要后修剪决策树来防止过度拟合训练集，一般来说，这可以通过划分一个验证集来观测修剪。
+
+## Algorithm C4.5
+
+C4.5是一系列用在机器学习和数据挖掘的分类问题中的算法。它的目标是监督学习：给定一个数据集，其中的每一个元组都能用一组属性值来描述，每一个元组属于一个互斥的类别中的某一类。C4.5的目标是通过学习，找到一个从属性值到类别的映射关系，并且这个映射能用于对新的类别未知的实体进行分类。
+
+- 改进表现
+
+  - ID3算法在选择根节点和各内部节点中的分支属性时，采用信息增益作为评价标准。信息增益的缺点是倾向于选择取值较多的属性，而这类属性并不一定是最优的属性
+
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Algorithm%20C4.5%201.png)
+
+  - 在决策树构造过程中进行剪枝，因为某些具有很少元素的结点可能会使构造的决策树过适应（Overfitting），如果不考虑这些结点可能会更好
+
+  - 能够处理离散型和连续型的属性类型，即将连续型的属性进行离散化处理
+
+  - 能够处理具有缺失属性值的训练数据
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Algorithm%20C4.5%202.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Algorithm%20C4.5%203.png)
+
+
+
+# 聚类 Clustering
+
+## 无监督学习 Unsupervised Learning
+
+## K-均值算法 K-Means Algorithm
+
+## 优化目标 Optimization Objective
+
+## 随机初始化 Random Initialization
+
+## 选择聚类数 Choosing the Number of Clusters
 
 
 
 
 
+
+
+# 降维 Dimensionality Reduction
+
+
+
+
+
+
+
+# 异常检测 Anomaly Detection
+
+
+
+
+
+
+
+# 推荐系统 Recommender Systems
 
