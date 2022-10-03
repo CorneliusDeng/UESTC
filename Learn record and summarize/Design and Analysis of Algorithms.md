@@ -287,7 +287,7 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
 # 网络流Flow Network
 
-## **Flow network 流网络**
+## **Definition 定义**
 
 Abstraction for material flowing through the edges.
 G = (V, E) = directed graph, no parallel edges.
@@ -296,15 +296,11 @@ c(e) = capacity of edge e.
 
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Flow%20Network.png)
 
-## **Cuts 割**
-
 Def. An s-t cut is a partition (A, B) of V with s ∈ A and t ∈ B.
 Def. The capacity of a cut (A, B) is:
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Cuts.png)
 
 **Minimum Cut Problem 最小割问题：Find an s-t cut of minimum capacity.**
-
-## Maximum Flow and Minimum Cut 最大流和最小割
 
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Flows.png)
 
@@ -317,9 +313,54 @@ Def. The capacity of a cut (A, B) is:
 eg.Cut capacity = 30 ⇒ Flow value ≤ 30
 Let f be any flow. Then, for any s-t cut (A, B) we have：v(f) ≤ cap(A, B).
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Weak%20Duality%20Pf.png)
-**Corollary 推论：**If v(f) = cap(A, B), then f is a max flow and (A, B) is a min cut
+**Corollary 推论：If v(f) = cap(A, B), then f is a max flow and (A, B) is a min cut**
 
-## Residual Graph 剩余图
+## Residual Graph 残存图
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Residual%20Graph.png)
+解释：
+流网络的一条边可以允许的额外流量等于该边的容量减去该边的流量
+一条边所能允许的反向流量最多将其正向流量抵消，残存网络中的这些反向边允许算法将已经发送出来的流量发送回去，其意义是缩减该边的流量
+
+## Augmenting Path 增广路径
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Augmenting%20Path.png)
+增广路径是残存网络中一条从源点s到汇点t的简单路径。
+
+**Choosing Good Augmenting Paths：**
+Use care when selecting augmenting paths：Some choices lead to exponential algorithms. Clever choices lead to polynomial algorithms. If capacities are irrational, algorithm not guaranteed to terminate!
+Goal: choose augmenting paths so that Can find augmenting paths efficiently, Few iterations.
+Choose augmenting paths with: Max bottleneck capacity. Sufficiently large bottleneck capacity. Fewest number of edges.
+
+## Ford-Fulkerson
+
+**Ford-Fulkerson方法用来解决最大流问题，其核心是沿着增广路径重复增加路径上的流量，直到找到一个最大流为止。**
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Ford-Fulkerson.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Ford-Fulkerson%20Example.jpg)
+(a)~(e)图的左边部分描述的是残存图，覆盖阴影的路径是增广路径，右图描述的是当前流网络
+
+**Running Time：**
+**Assumption.** All capacities are integers between 1 and C.
+**Invariant.** Every flow value f(e) and every residual capacity cf(e) remains an integer throughout the algorithm.
+**Theorem.** The algorithm terminates in at most v(f*) ≤ mC iterations. **Pf.** Each augmentation increase value by at least 1.
+**Corollary.** If C = 1, Ford-Fulkerson runs in O(m^2) time.
+**Integrality theorem.** If all capacities are integers, then there exists a max flow f for which every flow value f(e) is an integer.
+**Pf.** Since algorithm terminates, theorem follows from invariant.
+
+## Max-Flow Min-Cut Theorem 最大流最小割定理
+
+**Augmenting path theorem：** Flow f is a max flow iff there are no augmenting paths.
+
+**Max-flow min-cut theorem：** [Elias-Feinstein-Shannon 1956, Ford-Fulkerson 1956] **The value of the max flow is equal to the value of the min cut.**
+Pf. We prove both simultaneously by showing:
+(i) There exists a cut (A, B) such that v(f) = cap(A, B).
+(ii) Flow f is a max flow.
+(iii) There is no augmenting path relative to f
+
+(i) ⇒ (ii) This was the corollary to weak duality lemma.
+(ii) ⇒ (iii) We show contrapositive.Let f be a flow. If there exists an augmenting path, then we can improve f by sending flow along path.
+(iii) ⇒ (i)Let f be a flow with no augmenting paths. Let A be set of vertices reachable from s in residual graph. By definition of A, s ∈ A. By definition of t, t ∉ A
 
 
 
