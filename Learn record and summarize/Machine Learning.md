@@ -326,7 +326,7 @@ Logistic回归算法是一种分类算法，它适用于标签取值离散的情
 
 # 决策树 Decision Tree
 
-## 商和信息增益 Entropy and Information Gain
+## 熵与信息增益 Entropy and Information Gain
 
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Entropy%20and%20Information%20Gain%201.jpg)
 
@@ -381,35 +381,213 @@ C4.5是一系列用在机器学习和数据挖掘的分类问题中的算法。�
 
 ## 无监督学习 Unsupervised Learning
 
+在典型的监督学习中，我们有一个有标签的训练集，目标是找到能够区分正样本和负样本的决策边界。与此不同的是，在无监督学习中，我们需要将一系列无标签的训练数据输入到一个算法中，然后通过实现算法为我们找到训练数据的内在结构。将无标签数据集划分成一系列点集（称为簇）。能够划分这些点集的算法，就被称为聚类算法。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Unsupervised%20Learning.png)
+
 ## K-均值算法 K-Means Algorithm
+
+K-均值算法是一种迭代求解的聚类分析算法，算法接受一个未标记的数据集，然后将数据聚类成不同的组。其步骤是，预将数据分为K组，则随机选取K个对象作为初始的聚类中心，然后计算每个对象与各个种子聚类中心之间的距离，把每个对象分配给距离它最近的聚类中心。
+
+K-均值算法会做两件事：1. 簇分配；2. 移动聚类中心。
+
+假设有一个无标签的数据集，想将其分为两个簇，执行K-均值算法。如下图所示，首先随机生成两点，这两点称为聚类中心，然后根距离移动聚类中心，直至中心点不再变化为止。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/K-means.png)
 
 ## 优化目标 Optimization Objective
 
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Optimization%20Objective.png)
+
 ## 随机初始化 Random Initialization
+
+如何初始化K-均值聚类算法？如何使算法避开局部最优？
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Random%20Initialization.png)
 
 ## 选择聚类数 Choosing the Number of Clusters
 
+最好的选择聚类数的方法，通常是根据不同的问题，人工进行选择，选择能最好服务于聚类目的的数量。
 
+肘部法则（Elbow method）：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Choosing%20the%20Number%20of%20Clusters.png)
 
-
-
-
+大部分时候，聚类数量K仍是通过手动、人工输入或者经验来决定，一种可以尝试的方法是使用“肘部原则”，但不能期望它每次都有效果。选择聚类数量更好的思路是去问自己运行K-均值聚类算法的目的是什么，然后再想聚类数目K取哪一个值能更好的服务于后续的目的。
 
 # 降维 Dimensionality Reduction
 
+## 数据压缩 Data Compression
 
+数据压缩不仅能对数据进行压缩，使得数据占用较少的内存或硬盘空间，还能让我们对学习算法进行加速。
 
+假使我们要采用两种不同的仪器来测量一些东西的尺寸，其中一个仪器测量结果x1的单位是厘米，另一个仪器测量的结果x2是英寸，我们希望将测量的结果作为我们机器学习的特征，如下图所示。现在的问题的是，两种仪器对同一个东西测量的结果不完全相等（由于误差、精度等原因），但将两者都作为特征又有些重复，因而我们希望将这个二维的数据降至一维来减少这种冗余。
 
+## 数据可视化 Data Visualization
 
+在许多机器学习问题中，如果我们能将数据可视化，便能寻找到一个更好的解决方案，降维可以帮助我们。
 
+假设我们有关于许多不同国家的数据，每一个特征向量都有50个特征（如GDP、人均GDP、平均寿命等），如下表所示。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Data%20Visualization.png)
+
+如果要将上面这个50维的数据直接进行可视化是不可能的，但使用降维的方法先将其降至2维，我们便可以将其可视化了。但这样做的问题在于，降维的算法只负责减少维数，新产生的特征的意义就必须由我们自己去发现了。
+
+## 主成分分析问题规划 Principal Component Analysis Problem Formulation
+
+主成分分析（Principal Component Analysis）是常用的降维算法。在PCA中，我们要做的是找到一个低维平面，当我们将所有数据都投影到该平面上时，希望投影误差（Projection error）能尽可能地小。在应用PCA之前，常规的做法是先进性均值归一化和特征归一化，使得特征量均值为0，并且其数值在可比较的范围之内。
+
+如下图所示的数据，其在红线所代表的向量上的投影误差总的来说要比绿线所代表的向量上的投影误差要小得多，效果更好。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Principal%20Component%20Analysis%20Problem%20Formulation%201.png)
+在本例将2维降至1维的情况中，PCA要做的是去找到一个数据投影后能够最小化投影误差的方向向量。对于将 n 维降至 k 维的情况，PCA要做的是找到 k 个方向向量来对数据进行投影来最小化投影误差。
+
+主成分分析与线性回归是两种不同的算法。如下图所示，左边的是线性回归的误差（垂直于横轴投影），右边是主成分分析的误差（垂直于方向向量投影）。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Principal%20Component%20Analysis%20Problem%20Formulation%202.png)
+
+主成分分析与线性回归的区别在于：
+1、线性回归的误差距离是某个点与假设得到的预测值之间的距离；PCA的误差距离是某个点与方向向量之间的正交距离，即最短距离。
+2、主成分分析最小化的是投影误差；线性回归尝试的是最小化预测误差。
+3、线性回归的目的是预测结果，而主成分分析不作任何预测。
+
+PCA将 n 个特征降维到 k 个，可以用来进行数据压缩，如果100维的向量最后可以用10维来表示，那么压缩率为90%。同样图像处理领域的KL变换使用PCA做图像压缩。但PCA要保证降维后，还要保证数据的特性损失最小。
+PCA技术的一大好处是对数据进行降维的处理。我们可以对新求出的“主元”向量的重要性进行排序，根据需要取前面最重要的部分，将后面的维数省去，可以达到降维从而简化模型或是对数据进行压缩的效果，同时最大程度的保持了原有数据的信息。
+PCA技术的一个很大的优点是完全无参数限制。在PCA的计算过程中完全不需要人为的设定参数或是根据任何经验模型对计算进行干预，最后的结果只与数据相关，与用户是独立的。但这一点同时也可以看作是缺点。如果用户对观测对象有一定的先验知识，掌握了数据的一些特征，却无法通过参数化等方法对处理过程进行干预，可能会得不到预期的效果，效率也不高。
+
+## 主成分分析算法 Principal Component Analysis Algorithm
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Principal%20Component%20Analysis%20Algorithm.png)
+
+## 重建压缩表示 Reconstruction from Compressed Representation
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Reconstruction%20from%20Compressed%20Representation.png)
+
+## 主成分数量选择 Choosing The Number Of Principal Components
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Choosing%20The%20Number%20Of%20Principal%20Components.png)
+
+## 主成分分析的应用建议 Advice for Applying PCA
+
+采用PCA算法对监督学习算法进行加速：假使我们正在针对一张 100×100像素的图片进行某个计算机视觉的机器学习，即总共有10000 个特征。但因为数据量大，会使得学习算法运行的非常慢。采用PCA算法可以降低数据的维数从而使得算法运行更加高速。
+
+PCA算法的应用：
+1、压缩：减少存储数据所需的存储器或硬盘空间；加速学习算法。
+2、可视化。
+
+PCA算法的错误使用：
+一个常见的错误使用PCA算法的情况是，将其用于防止过拟合（减少了特征的数量）。减少数据维度来防止过拟合的方法不是解决过拟合问题的好方法，不如尝试正则化处理。原因在于主成分分析只是近似地丢弃掉一些特征，它并不考虑任何与结果变量有关的信息，因此可能会丢失非常重要的特征。然而当我们进行正则化处理时，会考虑到结果变量，不会丢掉重要的数据。
+另一个常见的错误是，默认地将主成分分析作为学习过程中的一部分，这虽然在很多时候都有效果，但最好还是从所有原始特征开始，只在有必要的时候（算法运行太慢或者占用太多内存）才考虑采用主成分分析。
 
 # 异常检测 Anomaly Detection
 
+异常检测是机器学习算法的一个常见应用，这种算法的一个有趣之处在于：它虽然主要用于非监督学习，但从某些角度来看，又类似于一些监督学习问题。
 
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Anomaly%20Detection.png)
 
+## 高斯分布 Gaussian Distribution
 
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Gaussian%20Distribution.png)
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Gaussian%20Distribution%20Algorithm.png)
+
+## 开发和评价异常检测系统 Developing and Evaluating an Anomaly Detection System
+
+实数评估的重要性：当我们为某个应用开发一个学习算法时，需要进行一系列的选择（比如，选择特征等）。如果我们有某种方法，通过返回一个实数来评估我们的算法，那么对这些选择做出决定往往会更容易的多。
+
+异常检测算法是一个非监督学习算法，意味着我们无法根据结果变量y的值来告诉我们数据是否真的是异常的。我们需要另一种方法来帮助检验算法是否有效。
+
+当我们开发一个异常检测系统时，我们从带标记（异常或正常）的数据着手，从其中选择一部分正常数据用于构建训练集，然后用剩下的正常数据和异常数据混合的数据构成交叉检验集和测试集。
+
+对异常检测系统具体的评价方法如下：
+1、根据训练集数据，我们估计特征的平均值和方差并构建p(x)函数；
+2、对交叉检验集，我们尝试使用不同的ε值作为阀值，并预测数据是否异常，根据F1值或者查准率与查全率的比例来选择ε.
+3、选出ε后，针对测试集进行预测，计算异常检验系统的F1值，或者查准率与查全率之比。
+
+## 异常检测与监督学习对比 Anomaly Detection vs Supervised Learning
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Anomaly%20Detection%20vs.%20Supervised%20Learning.png)
+
+什么情况下，能让我们把某个学习问题当做是一个异常检测，或者是一个监督学习的问题？
+对于一个学习问题，如果正样本的数量很少，甚至有时候是0，也就是说出现了太多没见过的不同的异常类型，那么对于这些问题，通常应该使用的算法就是异常检测算法；而如果正负样本数量都很多的话，则可以使用监督学习算法。例如，如果网络有很多诈骗用户，则可以变为监督学习；如果只有少量诈骗用户，则为异常检测。
+
+## 选择特征 Choosing What Features to Use
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Choosing%20What%20Features%20to%20Use.png)
+
+如何得到异常检测算法的特征？进行误差分析。
+
+一个常见的问题是一些异常的数据可能也会有较高的p(x)值，因而被算法认为是正常的。这种情况下误差分析能够帮助我们，我们可以分析那些被算法错误预测为正常的数据，观察能否找出一些问题。我们可能能从问题中发现我们需要增加一些新的特征，增加这些新特征后获得的新算法能够帮助我们更好地进行异常检测。
+
+我们通常可以通过将一些相关的特征进行组合，来获得一些新的更好的特征（异常数据的该特征值异常地大或小）。
+
+## 多元高斯分布 Multivariate Gaussian Distribution
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Multivariate%20Gaussian%20Distribution%201.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Multivariate%20Gaussian%20Distribution%202.png)
 
 
 
 # 推荐系统 Recommender Systems
 
+## 基于内容的推荐系统 Content Based Recommendations
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Content%20Based%20Recommendations.png)
+
+## 协同过滤 Collaborative Filtering
+
+在之前的基于内容的推荐系统中，对于每一部电影, 我们都掌握了可用的特征，使用这些特征训练出了每一个用户的参数。相反地，如果我们拥有用户的参数，我们可以学习得出电影的特征。但是，如果当我们既没有用户的参数，也没有电影的特征，这两种方法就都不可行了。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Collaborative%20Filtering%201.png)
+
+协同过滤算法指的是当我们执行算法时，要观察大量的用户，观察这些用户的实际行为来协调地得到对个用户对电影更佳的评分值。因为如果每个用户都对一部分电影做出了评价，那么每个用户都在帮助算法学习出更合适的特征，然后这些学习出的特征又可以被用来更好地预测其他用户的评分。协同的意思是每位用户都在帮助算法更好地进行特征学习，这就是协同过滤。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Collaborative%20Filtering%202.png)
+
+## 均值归一化 Mean Normalization
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Mean%20Normalization.png)
+
+## 基于内容的过滤 Content Based Filtering
+
+Collaborative Filtering: 
+Recommend items to you based on rating of users who gave similar ratings as you.
+
+Content-based Filtering:
+Recommend items to you based on features of user and item to find good match.
+
+
+
+# 强化学习 Reinforcement Learning
+
+## 强化学习的任务 The Mission of RL
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/RL_Introduce.png)
+
+如图，人与环境交互的一种模型化表示，在每个时间点，大脑 agent 会从可以选择的动作集合A中选择一个动作 at 执行。环境则根据 agent 的动作给 agent 反馈一个 reward rt，同时 agent 进入一个新的状态。
+
+知道了整个过程，任务的目标就出来了，那就是要能获取尽可能多的Reward。Reward越多，就表示执行得越好。每个时间片，agent 根据当前的状态来确定下一步的动作。也就是说我们需要一个state找出一个action，使得 reward 最大，从 state 到 action 的过程就称之为一个策略Policy，一般用 π 表示。
+
+A policy is a function π(s): a mapping from states to actions, that tells you what action a to take in a given state s.
+Find a policy π that tells you what action (a = π(s)) to take in every state (s) so as to maximize the return.
+
+强化学习的任务就是找到一个最优的策略Policy从而使Reward最多。
+
+我们一开始并不知道最优的策略是什么，因此往往从随机的策略开始，使用随机的策略进行试验，就可以得到一系列的状态样本，强化学习的算法就是需要根据这些样本来改进Policy，从而使得得到的样本中的Reward更好。由于这种让Reward越来越好的特性，所以这种算法就叫做强化学习Reinforcement Learning。
+
+## 马尔可夫决策过程 Markov Decision Process
+
+强化学习的问题都可以模型化为MDP(马尔可夫决策过程)的问题，MDP 实际上是对环境的建模；MDP 与常见的 Markov chains 的区别是加入了action 和 rewards 的概念。
+
+一个基本的 MDP 可以用一个五元组 (S,A,P,R,γ) 表示，其中
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/MDP.png)
+
+对于MDP，未来只取决于当前状态而不取决于任何事物。
+
+因此，MDP 的核心问题就是找到一个策略 π(s) 来决定在状态 s 下选择哪个动作，这种情况下MDP就变成了一个 Markov chain，且此时的目标与强化学习的目标是一致的。
+
+## 回报与价值函数 Return and Value Function
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Return%20and%20Value%20Function.png)
+
+## Bellman Equation
+
+采用上面获取最优策略的第 2 种方法时，我们需要估算 Value Function，只要能够计算出价值函数，那么最优决策也就得到了。因此，问题就变成了如何计算Value Function？
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Bellman%20Equation.png)
