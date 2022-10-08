@@ -34,35 +34,9 @@ if __name__ == '__main__':
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(('localhost', 8080))
 
-    # # 测试sum函数结果
-    # for i in range(2):
-    #     out, result = rpc(s, 'sum', '1,2', 'int')
-    #     out, result = rpc(s, 'sum', '1,2.4', 'float')
-    #
-    #     time.sleep(5)
-
-    # 测试uppercase函数结果
-    # print('测试Uppercase')
-    # for i in range(2):
-    #     out, result = rpc(s, 'uppercase', 'iloveyou', 'str')
-    #     out, result = rpc(s, 'uppercase', 'Apple', 'str')
-    #     print(out, result)
-    #     time.sleep(5)
-
-    # # 测试At-least-once语义
-    # print('测试At-least-once语义')
-    # out, result = rpc(s, 'uppercase', 'iloveyou', 'str')
-    # print(out, result)
-    #
     # 测试并发请求
-    for i in range(2):
-        out, result = rpc(s, 'sum', '6,6', 'int')
-        time.sleep(1)
-        out, result = rpc(s, 'sum', '7,8.8888888888', 'float')
-        time.sleep(1)
-        out, result = rpc(s, 'sum', '3,4', 'int')
-        time.sleep(1)
-        out, result = rpc(s, 'sum', '2,9.12345678', 'float')
-        time.sleep(1)
+    print('并发测试sum')
+    out, result = rpc(s, 'sum', '1,2', 'int')
+    out, result = rpc(s, 'sum', '6.666,7.777', 'float')
 
     s.close()

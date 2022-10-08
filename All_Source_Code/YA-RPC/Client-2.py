@@ -13,7 +13,7 @@ def rpc(sock, in_, params, args=None):
     # 等待接受响应
     try:
         # 设置响应时间以实现At-least-once语义
-        sock.settimeout(2)
+        sock.settimeout(1)
         # 接受响应并且得到响体
         length_prefix = sock.recv(4)
         length, = struct.unpack('I', length_prefix)
@@ -34,19 +34,20 @@ if __name__ == '__main__':
     s.connect(('localhost', 8080))
 
     # 测试sum函数结果
-    print('测试Sum')
-    for i in range(2):
-        out, result = rpc(s, 'sum', '1,2', 'int')
-        out, result = rpc(s, 'sum', '1,2.4', 'float')
+    print('测试sum')
+    out, result = rpc(s, 'sum', '6,6', 'int')
+    out, result = rpc(s, 'sum', '7,8.8888888888', 'float')
+    out, result = rpc(s, 'sum', '3,4', 'int')
+    out, result = rpc(s, 'sum', '2,9.12345678', 'float')
 
     # 测试uppercase函数结果
-    print('\n测试Uppercase')
-    out, result = rpc(s, 'uppercase', 'iloveyou', 'str')
-    out, result = rpc(s, 'uppercase', 'Apple', 'str')
+    print('测试Uppercase')
+    out, result = rpc(s, 'uppercase', 'dengqi', 'str')
+    out, result = rpc(s, 'uppercase', 'ya-rpc', 'str')
 
     # 测试At-least-once语义
     print('\n测试At-least-once语义')
-    out, result = rpc(s, 'uppercase', 'iloveyou', 'str')
+    out, result = rpc(s, 'uppercase', 'test the at-least-once', 'str')
 
     s.close()
 

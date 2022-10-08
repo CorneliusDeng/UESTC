@@ -1,4 +1,4 @@
-## 微服务概念
+# 微服务概念
 
 微服务是一种架构，这种架构是将单个的整体应用程序分割成更小的项目关联的独立的服务。一个服务通常实现一组独立的特性或功能，包含自己的业务逻辑和适配器。各个微服务之间的关联通过暴露api来实现。这些独立的微服务不需要部署在同一个虚拟机，同一个系统和同一个应用服务器中。微服务架构风格是一种将单个应用程序开发为“一套小型服务”的方法，每个服务“运行在自己的进程中”，并通过轻量级机制(通常是HTTP资源API)进行通信。
 
@@ -28,13 +28,13 @@
 
 
 
-## 负载均衡概念
+# 负载均衡概念
 
 当一台服务器的性能达到极限时，我们可以使用服务器集群来提高网站的整体性能。那么，在服务器集群中，需要有一台服务器充当调度者的角色，用户的所有请求都会首先由它接收，调度者再根据每台服务器的负载情况将请求分配给某一台后端服务器去处理。那么在这个过程中，调度者如何合理分配任务，保证所有后端服务器都将性能充分发挥，从而保持服务器集群的整体性能最优，这就是负载均衡问题。
 
 
 
-## Redis和Docker的概念与简单操作
+# Redis和Docker的概念与简单操作
 
 - **Redis：Remote Dictionary Server，远程字典服务**
 
@@ -48,7 +48,7 @@
 
 
 
-## 逆向工程
+# 逆向工程
 
 使用开源框架“https://gitee.com/renrenio/renren-generator.git”的代码生成器，生成基本CRUD代码，需修改renren-generator的application.yml和generator.properties配置信息
 
@@ -60,33 +60,32 @@
 
 
 
-## 分布式组件SpringCloud Alibaba
+# 分布式组件SpringCloud Alibaba
 
 Spring Cloud 是一个服务治理平台，是若干个框架的集合，提供了全套的分布式系统解决方案。包含了：服务注册与发现、配置中心、服务网关、智能路由、负载均衡、断路器、监控跟踪、分布式消息队列等等。Spring Cloud Alibaba 致力于提供微服务开发的一站式解决方案。此项目包含开发分布式应用微服务的必需组件，方便开发者通过 Spring Cloud 编程模型轻松使用这些组件来开发分布式应用服务。
 
 - **GuliMall技术搭配方案**
 
   - SpringCloud Alibaba - Nacos：注册中心（服务发现/注册）、配置中心（动态配置管理）
-
-
-  - SpringCloud - Ribbon：负载均衡
-
-
-  - SpringCloud - Feign：声明式HTTP客户端（调用远程服务）
-
-
-  - SpringCloud Alibaba - Sentinel：服务容错（限流、降级、熔断）
-
-
-  - SpringCloud - Gateway：API网关（webflux编程模式）
-
-
-  - SpringCloud - Sleuth：调用链监控
-
-
-  - SpringCloud Alibaba - Seata：分布式事务解决方案
-
-    
+  
+  
+    - SpringCloud - Ribbon：负载均衡
+  
+  
+    - SpringCloud - Feign：声明式HTTP客户端（调用远程服务）
+  
+  
+    - SpringCloud Alibaba - Sentinel：服务容错（限流、降级、熔断）
+  
+  
+    - SpringCloud - Gateway：API网关（webflux编程模式）
+  
+  
+    - SpringCloud - Sleuth：调用链监控
+  
+  
+    - SpringCloud Alibaba - Seata：分布式事务解决方案
+  
 
 ## Nacos
 
@@ -112,8 +111,6 @@ Nacos默认级群启动，测试时需要修改为单机启动，使用命令sta
 
 ​		加载多配置集：把一个冗长的application.yml配置文件拆分，将其内容都分类别抽离出去。微服务任何配置信息，任何配置文件都可以放在配置中心里，只需要在bootstrap.properties说明加载配置中心里哪些配置文件即可；以前SpringBoot任何方法从配置文件中获取值，都能使用；配置中心有的有优先使用配置中心里的。
 
-
-
 ## 网关
 
 ​	网关是请求浏览的入口，常用功能包括路由转发，权限校验，限流控制等，网关动态地管理每个微服务的地址，他能从注册中心中实时地感知某个服务上线还是下线。
@@ -135,7 +132,7 @@ Nacos默认级群启动，测试时需要修改为单机启动，使用命令sta
 
 
 
-## ECMAScript6（ES6）
+# ECMAScript6（ES6）
 
 ECMAScript是浏览器脚本语言的规范，JS是规范的具体实现
 
@@ -201,5 +198,5 @@ ECMAScript是浏览器脚本语言的规范，JS是规范的具体实现
 
 
 
-## VUE
+# VUE
 

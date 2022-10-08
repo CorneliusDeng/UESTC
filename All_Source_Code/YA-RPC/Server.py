@@ -24,7 +24,7 @@ def sum(conn, params, args):
 def uppercase(conn, params, args):
     # print(str.upper(params))
     res = str.upper(params)
-    send_result(conn, 'sum_result', res)
+    send_result(conn, 'upper_result', res)
 
 
 def handle_conn(conn, addr, handlers):
@@ -46,7 +46,7 @@ def handle_conn(conn, addr, handlers):
         # 查找请求对应的处理函数
         handler = handlers[in_]
         # 用于测试并发、将其慢处理，使请求交叉通过
-        time.sleep(3)
+        # time.sleep(1.5)
         # 处理请求
         handler(conn, params, args)
 
@@ -57,7 +57,6 @@ def loop(sock, handlers):
         conn, addr = sock.accept()  # 接收连接
         t = threading.Thread(target=handle_conn, args=(conn, addr, handlers))
         t.start()
-        # handle_conn(conn, addr,  handlers)
 
 
 # 向sender发送响应体
