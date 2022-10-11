@@ -1,4 +1,4 @@
-# 简介
+# 简介 Introduce
 
 - **机器学习定义**
   - Arthur Samuel(1959): Field of study that gives computers the ability to learn without being explicitly programmed. 在没有明确设置的情况下，使计算机具有学习能力的研究领域。
