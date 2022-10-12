@@ -628,3 +628,71 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
       - 每个回合至少有一个进程崩溃，但假设至多有f个进程崩溃
       - 而进行了f+1回合（即便只剩一个回合，B-multicast的语义可以保证所有correct process看到的集合一致），因此得出矛盾
 
+- **Paxos (Παξος): CFT Consensus**
+
+  - Goal：Allow a group of processes to agree on a value
+
+  - Requirements
+
+    - Safety
+      - Only a value that has been proposed may be chosen.
+      - Only a single value is chosen.
+      - A node never learns that a value has been chosen unless it actually has been.
+
+    - Liveness (enough processes remain up-and-running)
+      - Some proposed value is eventually chosen.
+      - If a value has been chosen, a node can eventually learn the value.
+
+  - Assumptions
+
+    - The distributed system is partially synchronous (in fact, it may even be asynchronous).
+    - Communication between processes may be unreliable, meaning that messages may be lost, duplicated, delayed or reordered.
+    - Messages that are corrupted can be detected as such (and thus subsequently ignored).
+    - Processes may exhibit crash failures, but not arbitrary failures, nor do processes collude.
+
+  - Quorum-Based Consensus：not guarantee better result
+
+    - Create a fault-tolerant consensus algorithm that does not block if a majority of processes are working
+      ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Quorum-Based%20Consensus.png)
+
+  - Paxos players
+
+    - Client：makes a request
+
+    - Proposers：Get a request from a client and run the protocol to get everyone in the cluster to agree
+
+    - Acceptors：Multiple processes that remember the state of the protocol，Quorum = any majority of acceptors
+
+    - Learners：Accept agreement from majority of acceptors，Execute the request and/or sends a response back to the client
+
+    - Proposal：An alternative proposed by a proposer. Consists of a unique number and a proposed value (42, B)
+
+      ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Paxos%20players.png)
+      ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Paxos%20workflow.png)
+
+  - Basic Paxos Algorithm
+
+    - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Basic%20Paxos%20Algorithm%201.png)
+    - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Basic%20Paxos%20Algorithm%202.png)
+
+  - Paxos: keep trying if you need to
+
+    - A proposal N may fail because
+      - The acceptor may have made a new promise to ignore all proposals less than some value M >N
+      - A proposer does not receive a quorum of responses: either promise or accept
+
+- BFT共识：BGP
+
+  - 随机故障假设：N个进程中最多有f个进程会出现随机故障
+  - N≤3f：无解决方法
+    - 将N个将军分成3组，n1+n2+n3=N，且n1, n2, n3 ≤ N/3
+    - 让进程p1, p2, p3分别模仿n1, n2, n3个将军
+    - 若存在一个解决方法，即达成一致且满足完整性条件。与三个进程的不可能性结论矛盾
+    - f个坏进程可能不发消息，故需保证N-f个消息可确定结果，但无法区分N-f是否都是好的，故最坏结果是N-f里包括f个坏消息，那么剩余的好消息要多余坏消息，即N-f-f>f，即N>3f
+
+  - N≥3f+1：Lamport于1982给出了解决算法
+    - 定理：对于任意m，如果有多于3m的将军和至多m个叛徒，算法OM(m)达到共识。
+    - f+1轮，O(N*(f+1))条消息
+    - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Lamport%20BGP.png)
+
+
