@@ -695,4 +695,3 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
     - f+1轮，O(N*(f+1))条消息
     - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Lamport%20BGP.png)
 
-
