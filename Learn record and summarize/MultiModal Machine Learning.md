@@ -85,7 +85,7 @@
   - Joint representations project multimodal data into a common space and are best suited for situations when all of the modalities are present during inference.
   - They have been extensively used for AVSR, affect, and multimodal gesture recognition.
 - Joint representations are mostly (but not exclusively) used in tasks where multimodal data is present both during training and inference steps.
-- Neural networks have become a very popular method forunimodal data representation
+- Neural networks have become a very popular method for unimodal data representation
   - To construct a multimodal representation using neural networks each modality starts with several individual neural layers followed by a hidden layer that projects the modalities into a joint space.
   - The joint multimodal representation is then be passed through multiple hidden layers itself or used directly for prediction.
   - The major advantage of neural network based joint representations comes from their ability to pre-train from unlabled data when labeled data is not enough for supervised learning.

@@ -628,7 +628,7 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
       - 每个回合至少有一个进程崩溃，但假设至多有f个进程崩溃
       - 而进行了f+1回合（即便只剩一个回合，B-multicast的语义可以保证所有correct process看到的集合一致），因此得出矛盾
 
-- **Paxos (Παξος): CFT Consensus**
+- **Paxos : CFT Consensus**
 
   - Goal：Allow a group of processes to agree on a value
 
@@ -665,7 +665,7 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
 
     - Learners：Accept agreement from majority of acceptors，Execute the request and/or sends a response back to the client
 
-    - Proposal：An alternative proposed by a proposer. Consists of a unique number and a proposed value (42, B)
+    - Proposal：An alternative proposed by a proposer. Consists of a unique number and a proposed value 
 
       ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Paxos%20players.png)
       ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Paxos%20workflow.png)
@@ -695,3 +695,116 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
     - f+1轮，O(N*(f+1))条消息
     - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Lamport%20BGP.png)
 
+- **Raft**
+  - 复制状态机（Replicated State Machine）
+    - 复制日志（Replicated log），共识模块确保复制状态机执行的复制日志一致。
+    - 多个服务器，从相同的初始状态开始，执行相同的一串命令（复制日志），产生相同的最终状态。
+  - 领导人选举——服务器状态
+    - 一个 Raft 集群包含若干个服务器节点，满足2f+1
+    - 在任何时刻，每一个服务器都处于三个状态之一
+      - 领导人（Leader）: handles all client interactions, log replication
+      - 跟随者（Follower）: completely passive
+      - 候选者（Candidate）: used to elect a new leader
+    - 在通常情况下，系统中只有一个领导人并且其他的节点全部都是跟随者
+    - 服务器启动时均为跟随者
+    - 领导人发送心跳信息(empty AppendEntries RPCs)给跟随者以维护领导人身份
+    - 如果超时（100-500ms）没有收到RPCs信息，跟随者认为领导人崩溃，发起新的选举
+    - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Raft%201.png)
+  - 领导人选举——任期
+    - 时间划分成任期
+      - 选举时，要么选出1个领导人，要么失败
+      - 所有的操作都是在单一领导人下进行
+    - 每个服务器持有当前的任期值
+    - 任期的核心价值是识别过期的信息
+    - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Raft%202.png)
+  - 领导人选举
+    - 开始选举：递增当前任期，改变为候选人状态，为自己投票
+    - 向所有其他服务器发送RequestVoteRPC，重试直到发生下列情况之一
+      - 收到大多数服务器的投票：成为领导人，向所有其他服务器发送AppendEntries RPC心跳信号
+      - 收到来自有效领导人的RPC：返回到追随者状态
+      - 没有人赢得选举（选举超时结束）：递增任期，开始新的选举
+    - 安全性：每届任期最多允许产生一个领导人
+      - 每个服务器在每届任期内只投票一次（投票信息存在磁盘上）
+      - 两个不同的候选人不能在同一任期内获得多数票
+      - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Raft%203.png)
+    - 有效性：某个候选人最终获胜
+      - 每个人在[T, 2T]中随机选择选举超时时间
+      - 一个服务器通常在其他候选人开始启动选举之前发起选举并获胜
+      - 如果T >> 网络RTT，则工作良好 
+  - 日志复制
+    - 日志结构
+      - 日志条目 = < index, term, command >
+      - 日志存储在稳定的存储器（磁盘）上；在崩溃后仍能恢复。
+      - 如果日志条目已存储在大多数服务器上，则提交该条目。由于日志条目已存储在磁盘上，因此该条目最终会被提交执行。
+    - 过程
+      - 客户端向领导人发送命令
+      - 领导人将命令附加到其日志中
+      - 领导人向跟随者发送AppendEntries RPCs，要求其他服务器复制日志条目（命令）
+      - 一旦其他服务器复制了新的日志条目（命令）
+        - 领导人将命令传递给它的状态机，并将结果发送给客户端
+        - 如果跟随者崩溃了，领导人会重试AppendEntries RPCs，直到跟随者最终更新了最新的日志条
+        - 目跟随者将命令传递给他们的状态机
+      - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Raft%204.png)
+    - 如果不同服务器上的日志条目具有相同的索引和任期
+      - 存储了相同的命令 < index, term, command >
+      - 该条目之前条目都是相同的
+    - 如果给定的条目被提交，其前面的所有条目也被提交了
+      ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Raft%205.png)
+    - AppendEntries RPCs包含本次提交的日志前一条日志的index和term
+    - Follower中对应index的entry的必须与请求一致，否则拒绝请求
+      ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Raft%206.png)
+    - 领导人变更
+      - 新的领导人不会进行特殊操作，仅仅按照正常流程进行
+        - 领导人的日志总是正确的
+        - 最终，跟随者的日志与领导人的日志完全一致
+        - 旧领导人可能会留下部分复制的条目
+      - 多次崩溃会留下许多不相干的日志条目
+  - 安全性
+    - Raft的安全性属性：一旦某个状态机执行一条日志，所有的状态机，必须以相同的顺序执行相同日志记录的命令。
+    - 安全性保证
+      - 领导人永远不会改写他日志中的条目
+      - 只有领导人日志中的条目才可以提交
+      - 所有的日志在应用状态机之前都要被提交
+    - 挑选最好的领导人
+      - 选择最有可能包含所有提交条目的候选者
+        - 在RequestVote RPCs中，候选者包括index+最后一个任期内的日志条目
+        - 投票者V拒绝投票，如果它的日志是 "更完整的"
+        - 相较大多数候选者，领导人将拥有 “最完整 ”的日志
+  - 平衡旧领导人(Neutralizing Old Leaders)
+    - 领导人暂时中断联系
+      -   其他服务器选出新的领导人
+      - 旧领导人重新连接
+      - 旧领导人试图提交日志条
+    - 任期用来识别旧领导人（和候选者）
+      - 每个RPC都包含发送方的任期
+      - 发送方的任期 < 接收方，则接收方拒绝RPC（通过发送方处理的ACK...）
+      - 接收方的任期 < 发送方，则接收方恢复为跟随者，更新任期，处理RPC
+    - 选举更新大多数服务器的任期
+      - 被废黜的服务器不能提交新的日志条目
+  - 客户端协议
+    - 向领导人发送命令：如果客户端不知道领导人，则可以联系任一服务器，服务器将客户端重定向到领导人
+    - 领导人只在命令写入日志、提交并由领导人执行（在状态机上执行）后做出响应
+    - 如果请求超时（例如，领导人崩溃）：客户端向新的领导人重新发出命令（在可能的重定向之后）
+    - 即使在领导人崩溃的情况下，也要确保仅完成一次的语义（exactly-once semantics ）
+      - 客户端应该在每个命令中嵌入唯一的请求ID
+      - 这个唯一的请求ID包括在日志条目中
+      - 在接受请求之前，领导人会检查日志中是否有相同ID的条目
+  - 配置变更
+    - 查看配置。 {领导，{成员}，设置}
+    - 共识必须支持对配置的更改：替换故障机器，改变副本的数量
+    - 不能直接从一个配置切换到另一个配置：可能会出现相互冲突的大多数（ conflicting majorities ）
+    - Raft中集群切换的过渡配置，称为联合共识（ Joint Consensus ），需要新、旧配置中的大多数服务器来选举、提交
+    - 配置变更只是一个日志条目；收到后立即应用（无论提交与否）
+    - 一旦联合共识得到提交，就开始复制最终配置的日志条目
+      ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Raft%207.png)
+    - 任何配置中的任何服务器都可以作为leader
+    - 如果领导人不在Cnew配置中，一旦Cnew配置提交，旧领导人就必须退出
+      ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/Raft%208.png)
+  - 小结
+    - Raft 是一种管理复制日志的一致性算法。它提供了和 Paxos 算法相同的功能和性能，但是它的算法结构和 Paxos 不同，使得 Raft 算法更加容易理解，并且更容易构建实际的系统
+    - 为了提升可理解性，Raft 将一致性算法分解成了几个关键模块，例如领导人选举、日志复制和安全。同时它通过实施一个更强的一致性来减少需要考虑的状态数量
+    - Raft 算法还包括一个新的机制来允许集群成员的动态改变，它通过多数派来保证算法安全
+
+
+
+# 事务和并发控制
