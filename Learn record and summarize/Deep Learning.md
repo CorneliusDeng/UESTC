@@ -20,7 +20,7 @@ Structured Data通常指的是有实际意义的数据，例如房价预测中�
 
 
 
-# 神经网络的编程基础 Basics of Neural Network programming
+# 神经网络基础知识 Basics Knowledge of Neural Network
 
 ## 逻辑回归 Logistic Regression
 
@@ -45,6 +45,10 @@ Cost function是关于待求系数w和b的函数。我们的目标就是迭代�
 
 逻辑回归问题可以看成是一个简单的神经网络，只包含一个神经元。
 
+**Detailed explanation of logistic regression cost function**
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Explanation%20of%20logistic%20regression%20cost%20function.png)
+
 ## 梯度下降 Gradient Descent
 
 由于J(w,b)是convex function，梯度下降算法是先随机选择一组参数w和b值，然后每次迭代的过程中分别沿着w和b的梯度（偏导数）的反方向前进一小步，不断修正w和b。每次迭代更新w和b后，都能让J(w,b)更接近全局最小值。
@@ -65,19 +69,113 @@ Cost function是关于待求系数w和b的函数。我们的目标就是迭代�
 反向传播（Back Propagation），即计算输出对输入的偏导数。
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Computation%20Graph%202.png)
 
+## 逻辑回归中的梯度下降 Logistic Regression Gradient Descent
+
+对单个样本而言，逻辑回归Loss function表达式如下:
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Logistic%20Regression%20Gradient%20Descent%201.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Logistic%20Regression%20Gradient%20Descent%202.png)
+
+计算该逻辑回归的反向传播过程，即由Loss function计算参数w和b的偏导数。推导过程如下：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Logistic%20Regression%20Gradient%20Descent%203.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Logistic%20Regression%20Gradient%20Descent%204.png)
+
+如果有m个样本，其Cost function表达式如下：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Gradient%20descent%20on%20m%20examples.png)
+
+这样，每次迭代中w和b的梯度有m个训练样本计算平均值得到。其算法流程如下所示：
+
+```python
+J=0; dw1=0; dw2=0; db=0;
+for i = 1 to m
+    z(i) = wx(i)+b;
+    a(i) = sigmoid(z(i));
+    J += -[y(i)log(a(i))+(1-y(i)）log(1-a(i));
+    dz(i) = a(i)-y(i);
+    dw1 += x1(i)dz(i);
+    dw2 += x2(i)dz(i);
+    db += dz(i);
+J /= m;
+dw1 /= m;
+dw2 /= m;
+db /= m;
+```
+
+经过每次迭代后，根据梯度下降算法，w和b都进行更新，这样经过n次迭代后，整个梯度下降算法就完成了。
+
+在上述的梯度下降算法中，利用for循环对每个样本进行dw1，dw2和db的累加计算最后再求平均数的。在深度学习中，样本数量m通常很大，使用for循环会让神经网络程序运行得很慢。所以，我们应该尽量避免使用for循环操作，而使用矩阵运算，能够大大提高程序运行速度。
+
 ## 向量化 Vectorization
 
+深度学习算法中，数据量很大，在程序中应该尽量减少使用loop循环语句，而可以使用向量运算来提高程序运行速度。
+向量化（Vectorization）就是利用矩阵运算的思想，大大提高运算速度。
 
+为了加快深度学习神经网络运算速度，可以使用比CPU运算能力更强大的GPU。事实上，GPU和CPU都有并行指令（parallelization instructions），称为Single Instruction Multiple Data（SIMD）。SIMD是单指令多数据流，能够复制多个操作数，并把它们打包在大型寄存器的一组指令集。SIMD能够大大提高程序运行速度，例如python的numpy库中的内建函数（built-in function）就是使用了SIMD指令。相比而言，GPU的SIMD要比CPU更强大一些。
 
+在python的numpy库中，我们通常使用np.dot()函数来进行矩阵运算。
+我们将向量化的思想使用在逻辑回归算法上，尽可能减少for循环，而只使用矩阵运算。值得注意的是，算法最顶层的迭代训练的for循环是不能替换的，而每次迭代过程对J，dw，b的计算是可以直接使用矩阵运算。
 
+整个训练样本构成的输入矩阵X的维度是（，m），权重矩阵w的维度是（，1），b是一个常数值，而整个训练样本构成的输出矩阵Y的维度为（1，m）。利用向量化的思想，所有m个样本的线性输出Z可以用矩阵表示：
+$$
+Z=w^TX+b
+$$
+在python的numpy库中可以表示为:
 
+```python
+Z = np.dot(w.T,X) + b
+A = sigmoid(Z)
+```
 
+其中，w.T表示w的转置。这里在 Python 中有一个巧妙的地方，这里b是一个实数，或者你可以说是一个 1 × 1 矩阵，只是一个普通的实数。但是当你将这个向量加上这个实数时，Python 自动把这个实数b扩展成一个 1 × m 的行向量。所以这种情况下的操作似乎有点不可思议，它在Python中被称作广播(brosdcasting)。
+这样，我们就能够使用向量化矩阵运算代替for循环，对所有m个样本同时运算，大大提高了运算速度。
 
+## 向量化逻辑回归的梯度输出 Vectorizing Logistic Regression’s Gradient Output
 
+对于所有m个样本，dZ的维度是（1，m），可表示为：dZ=A−Y
+db可表示为：
+$$
+db=\frac{1}{m}\sum_{i=1}^mdz^{(i)}
+$$
+对应的程序为
 
+```Python
+db = 1/m*np.sum(dZ)
+```
 
+dw可表示为：
+$$
+dw=\frac{1}{m}X·dZ^T
+$$
+对应的程序为：
 
+```python
+dw = 1/m*np.dot(X,dZ.T)
+```
 
+这样，我们把整个逻辑回归中的for循环尽可能用矩阵运算代替，对于单次迭代，梯度下降算法流程如下所示：
+
+```python
+Z = np.dot(w.T,X) + b
+A = sigmoid(Z)
+dZ = A-Y
+dw = 1/m*np.dot(X,dZ.T)
+db = 1/m*np.sum(dZ)
+
+w = w - alpha*dw
+b = b - alpha*db
+```
+
+其中，alpha是学习因子，决定w和b的更新速度。上述代码只是对单次训练更新而言的，外层还需要一个for循环，表示迭代次数。
+
+## Broadcasting in Python 
+
+- python中的广播机制可由下面四条表示：
+  - 让所有输入数组都向其中shape最长的数组看齐，shape中不足的部分都通过在前面加1补齐
+  - 输出数组的shape是输入数组shape的各个轴上的最大值
+  - 如果输入数组的某个轴和输出数组的对应轴的长度相同或者其长度为1时，这个数组能够用来计算，否则出错
+  - 当输入数组的某个轴的长度为1时，沿着此轴运算时都用此轴上的第一组值
+- 简而言之，就是python中可以对不同维度的矩阵进行四则混合运算，但至少保证有一个维度是相同的。
+- 在python程序中为了保证矩阵运算正确，可以使用reshape()函数来对矩阵设定所需的维度
+- ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Broadcasting%20example.png)
 
 # 浅层神经网络 Shallow neural networks
 

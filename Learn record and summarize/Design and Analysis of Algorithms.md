@@ -40,34 +40,43 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
 - **Propose-and-reject algorithm.** [Gale-Shapley 1962] Intuitive method that guarantees to find a stable matching.
 
-  `Initialize each person to be free.`
-  `while (some man is free and hasn't proposed to every woman) {`
-  				` Choose such a man m`
-   				`w = 1st woman on m's list to whom m has not yet proposed`
-  				  `if (w is free)`
-  							`assign m and w to be engaged`
-  				  `else if (w prefers m to her fiancé m')`
-  							`assign m and w to be engaged, and m' to be free`
-  				 `else`
-  						   `w rejects m`
-  `}`
-
-
+  ```c
+  Initialize each person to be free.
+  while (some man is free and hasn't proposed to every woman) {
+  				Choose such a man m
+   				w = 1st woman on m's list to whom m has not yet proposed
+  				  if (w is free)
+  							assign m and w to be engaged
+  				  else if (w prefers m to her fiancé m')
+  							assign m and w to be engaged, and m' to be free
+  				 else
+  						   w rejects m
+  }
+  ```
+  
+  
 
 # Asymptotic Order of Growth渐进分析
 
 用渐进表达式表达数量级的差别，渐进表式的核心内容就是忽略常数，是一个被大家认同的计算机里表式运行时间和空间的方法。
 
-- **渐进上界记号O，理解相当于≤**
+- **渐近上界记号O，理解相当于≤**
   - O(g(n)) = { f(n) | 存在正常数c和n0使得对所有n≥n0有：0≤f(n)≤cg(n) }
+  - 读“O”
 - **渐近下界记号Ω，理解相当于≥**
   - Ω(g(n)) = { f(n) | 存在正常数c和n0使得对所有n≥n0有：0≤cg(n)≤f(n) }
-- **紧渐近界记号Θ，理解相当于=**
+  - 读”omega”
+- **渐近近界记号Θ，理解相当于=**
   - Θ(g(n)) = { f(n) | 存在正常数c1,c2和n0使得对所有n≥n0有：c1g(n)≤f(n)≤c2g(n) }
+  - 读”theta”
 - **非紧上界记号o，理解相当于<**
   - o(g(n)) = { f(n) | 对于任何正常数c>0，存在正数和n0 >0使得对所有n≥n0有：0≤f(n)<cg(n) }，等价于 f(n) / g(n) →0 ，as n→∞。
 - **非紧下界记号ω，理解相当于>**
   - ω(g(n)) = { f(n) | 对于任何正常数c>0，存在正数和n0 >0使得对所有n≥n0有：0≤cg(n)<f(n) }，等价于 f(n) / g(n) →∞，as n→∞。 f(n) ∈ ω(g(n))↔️g(n) ∈ o (f(n))
+
+定理 如果t1(n) ∈O(g1(n))并且t2(n) ∈O(g2(n))，则t1(n)+ t2(n) ∈O(max{(g1(n), g2(n)})
+对于符号Ω和Θ，该定理也成立
+该定理表明：当算法由两个连续执行部分组成时，该算法的整体效率由具有较大增长次数的那部分所决定。
 
 规则O(f(n))+O(g(n)) = O(max{f(n),g(n)}) 的证明：
 
@@ -79,7 +88,23 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
 ​	f1(n) +g1(n) ≤ c1f(n) + c2g(n) ≤ c3f(n) + c3g(n)= c3(f(n) + g(n)) ≤ c3 · 2max{f(n),g(n)} = c3 · 2h(n) = O(max{f(n),g(n)}) .
 
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/equation.png)
 
+- **渐近增长率比较的三种方法**
+
+  - 定义法
+
+    - 找到正常数c和n0使得对所有n ≥ n0有f(n) ≤ cg(n)，则  f(n) = O(g(n))
+
+  - 极限法
+
+    - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/limitation.png)
+
+  - 取对数法
+
+    - 对于比较难的比较的两个函数，我们可以对它们同时取对数后再进行比较
+
+      
 
 # Three Techniques for Designing Algorithms
 
@@ -120,9 +145,8 @@ A computer program is an instance, or concrete representation, for an algorithm 
 - **Basic Idea:** Break up a problem into some sub-problems, solve each sub-problem independently, and combine solution to sub-problems to form solution to original problem. 
 - **Most common usage：**Break up problem of size n into two equal parts of size ½n. Solve two parts recursively. Combine two solutions into overall solution in linear time.
 - **Multiply乘法**
-  
   - Given two n-digit integers a and b, compute a ×b.
-  
+
   - Brute force solution: O(n^2) bit operations.
   - To multiply two n-digit integers: Multiply four ½n-digit integers. Add two ½n-digit integers, and shift to obtain result.
   - Karatsuba Multiplication: Add two ½ n digit integers. Multiply three ½ n-digit integers. Add, subtract, and shift ½ n-digit integers to obtain result.
@@ -131,6 +155,13 @@ A computer program is an instance, or concrete representation, for an algorithm 
     - Compute: 14 ½ n-by-½ n matrices via 10 matrix additions.
     - Conquer: multiply 7 ½ n-by-½ n matrices recursively.
     - Combine: 7 products into 4 terms using 8 matrix additions.
+- **Master theorem 主定理**
+  - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/master%20theorem%201.png)
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/master%20theorem%202.png)
+  - 理解主定理
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/master%20theorem%203.png)
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/master%20theorem%204.png)
+
 
 ## **Dynamical Programming动态规划**
 
@@ -184,27 +215,20 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
     - code
 
-      `Input: n,s1,…,sn,f1,…,fn ,v1,…,vn`
-
-      `Sort jobs by finish times so that f1 ≤ f2 ≤...≤ fn`
-
-      `Compute p(1),p(2),……,p(n)`
-
-      `for j = 1 to n`
-
-      ​	`M[j] = empty`
-
-      `M[0]=0`
-
-      `M-Compute-Opt(n) {`
-
-      ​	`if (M[n] is empty)`
-
-      ​		`M[n] = max(vn + M-Compute-Opt(p(n)), M-Compute-Opt(n-1))`		
-
-      ​	`return M[n]`
-
-      `}`
+      ```c
+    Input: n,s1,…,sn,f1,…,fn ,v1,…,vn
+      Sort jobs by finish times so that f1 ≤ f2 ≤...≤ fn
+    Compute p(1),p(2),……,p(n)
+        
+    for j = 1 to n
+        M[j] = empty
+    M[0]=0
+      M-Compute-Opt(n) {
+      if (M[n] is empty)
+          M[n] = max(vn + M-Compute-Opt(p(n)), M-Compute-Opt(n-1))
+    	return M[n]
+      }
+    ```
 
   - Weighted Interval Scheduling: Bottom-Up
 
@@ -212,14 +236,16 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
     - code
 
-      `Input: n, s1,…,sn , f1,…,fn , v1,…,vn`
-      `Sort jobs by finish times so that f1 ≤ f2 ≤ ... ≤ fn.`
-      `Compute p(1), p(2), …, p(n)`
-      `Iterative-Compute-Opt {`
-      	`M[0] = 0`
-      	`for j = 1 to n`
-      		`M[j] = max(vj + M[p(j)], M[j-1])`
-      `}`
+      ```c
+      Input: n, s1,…,sn , f1,…,fn , v1,…,vn
+      Sort jobs by finish times so that f1 ≤ f2 ≤ ... ≤ fn.
+      Compute p(1), p(2), …, p(n)
+      Iterative-Compute-Opt {
+      	M[0] = 0
+      	for j = 1 to n
+      		M[j] = max(vj + M[p(j)], M[j-1])
+      }
+      ```
 
 - **Knapsack Problem背包问题**
 
@@ -255,25 +281,18 @@ A computer program is an instance, or concrete representation, for an algorithm 
 
   - Code, Running time:O(n·W)，Not polynomial in input size
 
-    `Input: n, w1, ……, wn, v1, ……, vn`
-
-    `for w = 0 to w`
-
-    ​	`M[0,w] = 0`
-
-     `for i = 1 to n`
-
-    ​	`for w = 1 to w`
-
-    ​		`if (wi > w)`
-
-    ​			`M[i,w] = M[i-1,w]`
-
-    ​		`else`
-
-    ​			`M[i,w] = max(M[i-1,w], vi + M[i-1,w-wi])`
-
-    ​	`return M[n,w]`
+    ```c
+  Input: n, w1, ……, wn, v1, ……, vn
+    for w = 0 to w
+    M[0,w] = 0
+    for i = 1 to n
+    for w = 1 to w
+        if (wi > w)
+        M[i,w] = M[i-1,w]
+        else
+        M[i,w] = max(M[i-1,w], vi + M[i-1,w-wi])
+    return M[n,w]
+  ```
 
 - **Sequence Alignment序列对齐**
 
@@ -364,4 +383,47 @@ Pf. We prove both simultaneously by showing:
 
 
 
- 
+# NP and Computational Intractability
+
+## Polynomial-Time Reductions 多项式时间归约
+
+- Classify Problems: Classify problems according to those that can be solved in polynomial-time and those that cannot.
+
+- Reduction: Problem **X** polynomial **reduces to** problem **Y** if arbitrary instances of problem X can be solved using
+
+  - Polynomial number of standard computational steps, plus
+
+  - Polynomial number of calls to oracle that solves problem Y. (Oracle means computational model supplemented by special piece of hardware that solves instances of Y in a single step)
+
+  - Notation
+    $$
+    X ≤_P Y
+    $$
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Polynomial-Time%20Reduction.png)
+
+## Independent Set and Vertex Cover 独立集和点覆盖
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Independent%20Set.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Vertex%20Cover.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Vertex%20Cover%20and%20Independent%20Set.png)
+
+## Vertex Cover Reduces to Set Cover 点覆盖归约于集合覆盖
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Set%20Cover.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Vertex%20Cover%20Reduces%20to%20Set%20Cover.png)
+
+## SAT & 3-SAT 
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/SAT.png)
+
+**3 Satisfiability Reduces to Independent Set**
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/3%20Satisfiability%20Reduces%20to%20Independent%20Set.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/3%20sat%20proof.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Review.png)
+
+## Self-Reducibility
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Self-Reducibility.png)
+
+## Definition of NP
