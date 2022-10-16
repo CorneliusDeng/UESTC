@@ -72,7 +72,18 @@ Cost function是关于待求系数w和b的函数。我们的目标就是迭代�
 ## 逻辑回归中的梯度下降 Logistic Regression Gradient Descent
 
 对单个样本而言，逻辑回归Loss function表达式如下:
-![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Logistic%20Regression%20Gradient%20Descent%201.png)
+$$
+Z=w^Tx+b
+$$
+
+$$
+\widehat{y}=a=\sigma(z)
+$$
+
+$$
+L(a,y)=-(ylog(a)+(1-y)log(1-a))
+$$
+
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Logistic%20Regression%20Gradient%20Descent%202.png)
 
 计算该逻辑回归的反向传播过程，即由Loss function计算参数w和b的偏导数。推导过程如下：
@@ -175,9 +186,36 @@ b = b - alpha*db
   - 当输入数组的某个轴的长度为1时，沿着此轴运算时都用此轴上的第一组值
 - 简而言之，就是python中可以对不同维度的矩阵进行四则混合运算，但至少保证有一个维度是相同的。
 - 在python程序中为了保证矩阵运算正确，可以使用reshape()函数来对矩阵设定所需的维度
-- ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Broadcasting%20example.png)
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Broadcasting%20example.png)
 
 # 浅层神经网络 Shallow neural networks
+
+## 神经网络概述 Neural Networks Overview
+
+神经网络的结构与逻辑回归类似，只是神经网络的层数比逻辑回归多一层，多出来的中间那层称为隐藏层或中间层。这样从计算上来说，神经网络的正向传播和反向传播过程只是比逻辑回归多了一次重复的计算。
+
+正向传播过程分成两层，第一层是输入层到隐藏层，用上标[1]来表示：
+$$
+z^{[1]}=W^{[1]}x+b^{[1]}
+$$
+
+$$
+a^{[1]}=σ(z^{[1]})
+$$
+
+第二层是隐藏层到输出层，用上标[2]来表示：
+$$
+z^{[2]}=W^{[2]}x+b^{[2]}
+$$
+
+$$
+a^{[2]}=σ(z^{[2]})
+$$
+
+在写法上值得注意的是，方括号上标[i]表示当前所处的层数；圆括号上标(i)表示第i个样本。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Neural%20Networks%20Overview.png)
 
 # 深层神经网络 Deep neural networks
 
