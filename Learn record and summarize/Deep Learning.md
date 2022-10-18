@@ -312,3 +312,49 @@ b_2 = 0
 
 # 深层神经网络 Deep neural networks
 
+## Deep L-layer neural network
+
+深层神经网络其实就是包含更多的隐藏层神经网络。如下图所示，分别列举了逻辑回归、1个隐藏层的神经网络、2个隐藏层的神经网络和5个隐藏层的神经网络它们的模型结构。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Deep%20L-layer%20neural%20network%201.png)
+
+命名规则上，一般只参考隐藏层个数和输出层。例如，上图中的逻辑回归又叫1 layer NN，1个隐藏层的神经网络叫做2 layer NN，2个隐藏层的神经网络叫做3 layer NN，以此类推。如果是L-layer NN，则包含了L-1个隐藏层，最后的L层是输出层。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Deep%20L-layer%20neural%20network%202.png)
+
+## 深层网络中的前向传播 Forward propagation in a Deep Network
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Forward%20propagation%20in%20a%20Deep%20Network%200.png)
+
+对于单个样本，推导深层神经网络的正向传播过程：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Forward%20propagation%20in%20a%20Deep%20Network%201.png)
+
+如果有m个训练样本，其向量化矩阵形式为：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Forward%20propagation%20in%20a%20Deep%20Network%202.png)
+
+## 矩阵维数 Matrix Dimensions
+
+当实现深度神经网络的时候，检查代码是否有错的方法之一是计算一遍算法中矩阵的维数
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/matrix%20dimensions%201.png)
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/matrix%20dimensions%202.png)
+
+## 搭建神经网络块 Building blocks of deep neural networks
+
+用流程块图来解释神经网络正向传播和反向传播过程。如下图所示，对于第l层来说，正向传播过程中存在输入、输出、参数、缓存变量，反向传播过程中存在输入、输出、参数
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Building%20blocks%20of%20deep%20neural%20networks%201.png)
+
+对于神经网络所有层，整体的流程块图正向传播过程和反向传播过程如下所示
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Building%20blocks%20of%20deep%20neural%20networks%202.png)
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/The%20connection%20between%20neural%20network%20and%20brain.jpg)
+
+## 参数和超参数 Parameters and Hyperparameters
+
+想要你的深度神经网络起很好的效果，需要规划好参数和超参数
+
+超参数是例如学习速率，训练迭代次数N，隐藏层数L，隐藏层神经元个数，激活函数等，之所以叫做超参数的原因是这些数字实际上控制了最后的参数w和b的值
+
+如何设置最优的超参数是一个比较困难的、需要经验知识的问题。通常的做法是选择超参数一定范围内的值，分别代入神经网络进行训练，测试cost function随着迭代次数增加的变化，根据结果选择cost function最小时对应的超参数值
+
