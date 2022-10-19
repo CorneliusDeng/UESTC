@@ -404,7 +404,7 @@ b_2 = 0
 
 如果出现了过拟合high variance，则需要采用正则化regularization来解决。虽然扩大训练样本数量也是减小high variance的一种方法，但是通常获得更多训练样本的成本太高，比较困难。所以，更可行有效的办法就是使用regularization
 
-对于Logistic regression，采用L2 regularization（向量参数𝑤 的欧几里德范数的平方(2 范数)），其表达式为：
+对于Logistic regression，采用L2 regularization（向量参数𝑤 的欧几里德范数(2 范数)的平方），其表达式为：
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Regularization%201.png)
 
 为什么只对w进行正则化而不对b进行正则化呢？其实也可以对b进行正则化。但是一般w的维度很大，而b只是一个常数。相比较来说，参数很大程度上由w决定，改变b值对整体模型影响较小。所以，一般为了简便，就忽略对b的正则化了。
@@ -428,4 +428,179 @@ $$
 
 L2 regularization也被称做“权重衰减”(weight decay)。这是因为，由于加上了正则项，有个增量，在更新的时候，会多减去这个增量，使得比没有正则项的值要小一些。不断迭代更新，不断地减小。
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Regularization%205.png)
+
+假如我们选择了非常复杂的神经网络模型，在未使用正则化的情况下，我们得到的分类超平面可能是过拟合情况。但是，如果使用L2 regularization，当λ很大时，权重矩阵w近似为零，意味着该神经网络模型中的某些神经元实际的作用很小，可以忽略。从效果上来看，其实是将某些神经元给忽略掉了。这样原本过于复杂的神经网络模型就变得不那么复杂了，而变得非常简单化了。如下图所示，整个简化的神经网络模型变成了一个逻辑回归模型，可是深度却很大。问题就从high variance变成了high bias了。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Regularization%206.png)
+因此，选择合适大小的值，就能够同时避免high bias和high variance，得到最佳模型。
+
+还有另外一个直观的例子来解释为什么正则化能够避免发生过拟合。假设激活函数是tanh函数。tanh函数的特点是在z接近零的区域，函数近似是线性的，而当|z|很大的时候，函数非线性且变化缓慢。
+用g(z)表示tanh(z)，如果正则化参数 λ 很大，激活函数的参数会相对较小，因为代价函数中的参数变大了。如果𝑊很小，相对来说，𝑧也会很小，则此时的分布在tanh函数的近似线性区域。那么这个神经元起的作用就相当于是linear regression。如果每个神经元对应的权重都比较小，那么整个神经网络模型相当于是多个linear regression的组合，即可看成一个linear network。得到的分类超平面就会比较简单，不会出现过拟合现象。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Regularization%207.png)
+
+## 随机失活正则化 Dropout Regularization
+
+除了L2 regularization之外，还有另外一种防止过拟合的有效方法：Dropout（随机失活）
+
+Dropout是指在深度学习网络的训练过程中，对于每层的神经元，按照一定的概率将其暂时从网络中丢弃。也就是说，每次训练时，每一层都有部分神经元不工作，起到简化复杂网络模型的效果，从而避免发生过拟合。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Dropout%20Regularization%201.png)
+
+Dropout有不同的实现方法，一种常用的方法是Inverted dropout（反向随机失活）。
+用一个三层（𝑙 = 3）网络来举例说明。
+
+```Python
+# 假设对于第𝑙层神经元，设定保留神经元比例概率keep_prob=0.8，即该层有20%的神经元停止工作。为dropout向量，设置为随机vector，其中80%的元素为1，20%的元素为0。在python中可以使用如下语句生成dropout vector：
+dl = np.random.rand(al.shape[0],al.shape[1])< keep_prob
+# 然后，第𝑙 层经过dropout，随机删减20%的神经元，只保留80%的神经元，其输出为：
+al = np.multiply(al,dl)
+# 最后，还要对进行scale up处理，即：
+al /= keep_prob
+```
+
+之所以要对进行scale up是为了保证在经过dropout后，作为下一层神经元的输入值尽量保持不变。假设第层有50个神经元，经过dropout后，有10个神经元停止工作，这样只有40神经元有作用。那么得到的只相当于原来的80%。scale up后，能够尽可能保持的期望值相比之前没有大的变化。
+
+Inverted dropout的另外一个好处就是在对该dropout后的神经网络进行测试时能够减少scaling问题。因为在训练时，使用scale up保证的期望值没有大的变化，测试时就不需要再对样本数据进行类似的尺度伸缩操作了。
+
+对于m个样本，单次迭代训练时，随机删除掉隐藏层一定数量的神经元；然后，在删除后的剩下的神经元上正向和反向更新权重w和常数项b；接着，下一次迭代中，再恢复之前删除的神经元，重新随机删除一定数量的神经元，进行正向和反向更新w和b。不断重复上述过程，直至迭代训练完成。
+
+值得注意的是，使用dropout训练结束后，在测试和实际应用模型时，不需要进行dropout和随机删减神经元，所有的神经元都在工作。
+
+Dropout通过每次迭代训练时，随机选择不同的神经元，相当于每次都在不同的神经网络上进行训练。除此之外，还可以从权重w的角度来解释为什么dropout能够有效防止过拟合。对于某个神经元来说，某次训练时，它的某些输入在dropout的作用被过滤了。而在下一次训练时，又有不同的某些输入被过滤。经过多次训练后，某些输入被过滤，某些输入被保留。这样，该神经元就不会受某个输入非常大的影响，影响被均匀化了。也就是说，对应的权重w不会很大。这从从效果上来说，与L2 regularization是类似的，都是对权重w进行“惩罚”，减小了w的值。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Dropout%20Regularization%202.png)
+
+在使用dropout的时候，有几点需要注意。首先，不同隐藏层的dropout系数keep_prob可以不同。一般来说，神经元越多的隐藏层，keep_out可以设置得小一些.，例如0.5；神经元越少的隐藏层，keep_out可以设置的大一些，例如0.8，甚至是1。另外，实际应用中，不建议对输入层进行dropout，如果输入层维度很大，例如图片，那么可以设置dropout，但keep_out应设置的大一些，例如0.8，0.9。总体来说，就是越容易出现overfitting的隐藏层，其keep_prob就设置的相对小一些。没有准确固定的做法，通常可以根据validation进行选择。
+
+使用dropout的时候，可以通过绘制cost function来进行debug，看看dropout是否正确执行。一般做法是，将所有层的keep_prob全设置为1，再绘制cost function，即涵盖所有神经元，看J是否单调下降。下一次迭代训练时，再将keep_prob设置为其它值。
+
+## 其他正则化方法 Other Regularization Methods
+
+除了L2 regularization和dropout regularization之外，还有其它减少过拟合的方法。
+
+一种方法是增加训练样本数量。但是通常成本较高，难以获得额外的训练样本。但是，我们可以对已有的训练样本进行一些处理来“制造”出更多的样本，称为data augmentation。例如图片识别问题中，可以对已有的图片进行水平翻转、垂直翻转、任意角度旋转、缩放或扩大等等。如下图所示，这些处理都能“制造”出新的训练样本。虽然这些是基于原有样本的，但是对增大训练样本数量还是有很有帮助的，不需要增加额外成本，却能起到防止过拟合的效果。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Other%20Regularization%20Methods%201.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Other%20Regularization%20Methods%202.png)
+
+还有另外一种防止过拟合的方法：early stopping。一个神经网络模型随着迭代训练次数增加，train set error一般是单调减小的，而dev set error 先减小，之后又增大。也就是说训练次数过多时，模型会对训练样本拟合的越来越好，但是对验证集拟合效果逐渐变差，即发生了过拟合。因此，迭代训练次数不是越多越好，可以通过train set error和dev set error随着迭代次数的变化趋势，选择合适的迭代次数，即early stopping。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Other%20Regularization%20Methods%203.png)
+
+然而，Early stopping有其自身缺点。通常来说，机器学习训练模型有两个目标：一是优化cost function，尽量减小J；二是防止过拟合。这两个目标彼此对立的，即减小J的同时可能会造成过拟合，反之亦然。我们把这二者之间的关系称为正交化orthogonalization。在深度学习中，我们可以同时减小Bias和Variance，构建最佳神经网络模型。但是，Early stopping的做法通过减少得带训练次数来防止过拟合，这样J就不会足够小。也就是说，early stopping将上述两个目标融合在一起，同时优化，但可能没有“分而治之”的效果好。
+与early stopping相比，L2 regularization可以实现“分而治之”的效果：迭代训练足够多，减小J，而且也能有效防止过拟合。而L2 regularization的缺点之一是最优的正则化参数的选择比较复杂。对这一点来说，early stopping比较简单。
+总的来说，L2 regularization更加常用一些。
+
+## 归一化输入 Normalizing Inputs
+
+在训练神经网络时，标准化输入可以提高训练的速度。标准化输入就是对训练数据集进行归一化的操作。
+归一化需要两个步骤：零均值、归一化方差。
+即将原始数据减去其均值后，再除以其方差。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Normalizing%20inputs%201.png)
+注意：上式求方差中的向量x是已经完成零均值操作的向量x
+
+以二维平面为例，下图展示了其归一化过程：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Normalizing%20inputs%202.png)
+
+值得注意的是，由于训练集进行了标准化处理，那么对于测试集或在实际应用时，应该使用同样的和对其进行标准化处理。这样保证了训练集合测试集的标准化操作一致。
+
+之所以要对输入进行标准化操作，主要是为了让所有输入归一化同样的尺度上，方便进行梯度下降算法时能够更快更准确地找到全局最优解。假如输入特征是二维的，且x1的范围是[1,1000]，x2的范围是[0,1]。如果不进行标准化处理，x1与x2之间分布极不平衡，训练得到的w1和w2也会在数量级上差别很大。这样导致的结果是cost function与w和b的关系可能是一个非常细长的椭圆形碗。对其进行梯度下降算法时，由于w1和w2数值差异很大，只能选择很小的学习因子，来避免J发生振荡。一旦较大，必然发生振荡，J不再单调下降。如下左图所示。然而，如果进行了标准化操作，x1与x2分布均匀，w1和w2数值差别不大，得到的cost function与w和b的关系是类似圆形碗。对其进行梯度下降算法时，可以选择相对大一些，且J一般不会发生振荡，保证了J是单调下降的。如下右图所示。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Normalizing%20inputs%203.png)
+
+另外一种情况，如果输入特征之间的范围本来就比较接近，那么不进行标准化操作也是没有太大影响的。但是，标准化处理在大多数场合下还是值得推荐的。
+
+## 梯度消失/梯度爆炸 Vanishing / Exploding gradients
+
+在神经网络尤其是深度神经网络中存在可能存在这样一个问题：梯度消失和梯度爆炸。意思是当训练一个 层数非常多的神经网络时，计算得到的梯度可能非常小或非常大，甚至是指数级别的减小或增大。这样会让训练过程变得非常困难。
+
+举个例子来说明，假设一个多层的每层只包含两个神经元的深度神经网络模型，如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Vanishing%20and%20Exploding%20gradients.png)
+
+为了简化复杂度，便于分析，我们令各层的激活函数为线性函数，即g(z)=z，且忽略各层常数项b的影响，令b全部为零。那么，该网络的预测输出为：
+$$
+\widehat{Y} =W^{[l]}W^{[l−1]}W^{[l−2]}⋯W^{[3]}W^{[2]}W^{[1]}X
+$$
+如果各层权重的元素都稍大于1，例如1.5，则Layer越大，Y-hat越大，且呈指数型增长，称之为数值爆炸。相反，如果各层权重的元素都稍小于1，例如0.5，网络层数Layer越多，Y-hat越小，且呈指数型减小，称之为数值消失。
+也就是说，如果各层权重都大于1或者都小于1，那么各层激活函数的输出将随着层数的增加，呈指数型增大或减小。当层数很大时，出现数值爆炸或消失。同样，这种情况也会引起梯度呈现同样的指数型增大或减小的变化。L非常大时，例如L=150，则梯度会非常大或非常小，引起每次更新的步进长度过大或者过小，这让训练过程十分困难。
+
+改善Vanishing and Exploding gradients这类问题的方法是对权重w进行一些初始化处理
+深度神经网络模型中，以单个神经元为例，它有n个输入特征，暂时忽略b，其输出为：
+$$
+z=w_1x_1+w_2x_2+⋯+w_nx_n，a=g(z)
+$$
+为了让z不会过大或者过小，思路是让w与n有关，且n越大，w应该越小才好。如果把很多𝑤𝑖𝑥i相加，希望每项值更小，最合理的方法就是设置𝑤𝑖=1/n，n表示神经元的输入特征数量。
+
+```python
+# 如果激活函数是tanh,此处的n[l-1]表示第l-1层神经元数量，即第l层的输入数量，这被称为 Xavier 初始化
+w[l] = np.random.randn(n[l],n[l-1])*np.sqrt(1/n[l-1])
+# 如果激活函数是ReLU，权重w的初始化一般令其方差为
+w[l] = np.random.randn(n[l],n[l-1])*np.sqrt(2/n[l-1]) 
+# Yoshua Bengio提出了另外一种初始化w的方法，令其方差为：
+w[l] = np.random.randn(n[l],n[l-1])*np.sqrt(2/n[l-1]*n[l]) 
+```
+
+##  梯度的数值逼近和梯度检查 Numerical approximation of gradients and Gradient checking
+
+Back Propagation神经网络有一项重要的测试是梯度检查(gradient checking)，其目的是检查验证反向传播过程中梯度下降算法是否正确。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Numerical%20approximation%20of%20gradients.png)
+
+其中ε趋近于无穷小，而这样计算得出的导数值与直接计算𝑔(𝜃)相比的误差非常小，使得我们确信，𝑔(𝜃)可能是𝑓导数的正确实现。
+
+上文介绍了如何近似求出梯度值，下文将展开如何进行梯度检查(Gradient checking)，来验证训练过程中是否出现bugs：
+
+假设网络中含有下列参数，𝑊[1]和𝑏[1]……𝑊[𝑙]和𝑏[𝑙]，为了执行梯度检验，首先要做的就是，把所有参数转换成一个巨大的向量数据，需要先把所有𝑊矩阵转换成向量，接着做连接运算，得到一个巨型向量𝜃，该向量表示为参数𝜃，代价函数𝐽是所有𝑊和𝑏的函数，现在就得到了一个𝜃的代价函数𝐽（即𝐽(𝜃)）。接着，得到与𝑊和𝑏顺序相同的数据，同样可以把反向传播中的𝑑𝑊[1]和𝑑𝑏[1]……𝑑𝑊[𝑙]和𝑑𝑏[𝑙]转换成一个新的向量，用它们来初始化大向量𝑑𝜃，它与𝜃具有相同维度。
+
+首先，我们清楚𝐽是超参数𝜃的一个函数，𝐽函数可以展开为𝐽(𝜃1, 𝜃2, 𝜃3,… … )，接着利用对每个 d𝜃_i 计算近似梯度，其值与反向传播算法得到的相比较，检查是否一致。例如，对于第i个元素，近似梯度为：
+$$
+dθ_{approx}[i]=\frac{J(θ_1,θ_2,⋯,θ_i+ε,⋯)−J(θ_1,θ_2,⋯,θ_i−ε,⋯)}{2ε}
+$$
+计算完所有的近似梯度后，可以计算与反向传播得到的 d𝜃 的欧氏（Euclidean）距离来比较二者的相似度
+$$
+\frac{||d𝜃_{approx}-d𝜃||_2}{||d𝜃_{approx}||_2+||d𝜃||_2}
+$$
+一般来说，如果欧氏距离较小，10^-7或更小，表明二者接近，即反向梯度计算是正确的，没有bugs。如果欧氏距离较大，10^-5，则表明梯度计算可能出现问题，需要再次检查是否有bugs存在。如果欧氏距离很大，10^-3，则表明二者差别很大，梯度下降计算过程有bugs，需要仔细检查。
+
+在进行梯度检查的过程中有几点需要注意的地方：
+
+不要在整个训练过程中都进行梯度检查，仅仅作为debug使用。
+
+如果梯度检查出现错误，找到对应出错的梯度，检查其推导是否出现错误。
+
+注意不要忽略正则化项，计算近似梯度的时候要包括进去。
+
+梯度检查时关闭dropout，检查完毕后再打开dropout。
+
+随机初始化时运行梯度检查，经过一些训练后再进行梯度检查（不常用）
+
+# 优化算法  Optimization Algorithms
+
+##  Mini-batch 梯度下降 Mini-batch Gradient Descent 
+
+神经网络训练过程是对所有m个样本，称为batch，通过向量化计算方式，同时进行的。如果m很大，例如达到百万数量级，训练速度往往会很慢，因为每次迭代都要对所有样本进行进行求和运算和矩阵运算，这种梯度下降算法被称为Batch Gradient Descent。
+
+向量化能够有效地对所有 m 个样本进行计算，允许处理整个训练集，而无需某个明确的公式。用一个巨大的矩阵X表示训练样本，其维度是(𝑛_𝑥, 𝑚)，结果Y也是如此，其维度是(1, 𝑚)
+$$
+X=[x^{(1)}x^{(2)}...x^{(m)}]，Y=[y^{(1)}y^{(2)}...y^{(m)}]
+$$
+为了解决这一问题，我们可以把m个训练样本分成若干个子集，称为mini-batches，这样每个子集包含的数据量就小了，然后每次在单一子集上进行神经网络训练，速度就会大大提高，这种梯度下降算法被称为Mini-batch Gradient Descent。
+
+假设总的训练样本个数m=5000000，每个mini-batch只有1000个样本，那么一共存在5000个mini-batch
+$$
+不妨将训练样本x^{(1)}到x^{(1000)}取出记作X^{\{1\}},训练样本x^{(1001)}到x^{(2000)}取出记作X^{\{2\}},X的维数为（n_x,1000）
+$$
+对Y也进行相同处理，相同表示
+$$
+那么存在X^{\{1\}}～X^{\{5000\}}，Y^{\{1\}}～Y^{\{5000\}},Y的维数为（1,1000）
+$$
+符号总结：
+上角小括号(𝑖)表示训练集里的值，所以𝑥^(𝑖)是第𝑖个训练样本
+上角中括号[𝑙]来表示神经网络的层数，𝑧^[𝑙]表示神经网络中第𝑙层的𝑧值
+我们现在引入了{𝑡}来代表不同的 mini-batch，所以存在X^{t}，Y^{t}
+
+Mini-batches Gradient Descent的实现过程是先将总的训练样本分成T个子集（mini-batches），然后对每个mini-batch进行神经网络训练，包括Forward Propagation，Compute Cost Function，Backward Propagation，循环至T个mini-batch都训练完毕。
+经过T次循环之后，所有m个训练样本都进行了梯度下降计算。这个过程，我们称之为经历了一个epoch。对于Batch Gradient Descent而言，一个epoch只进行一次梯度下降算法；而Mini-Batches Gradient Descent，一个epoch会进行T次梯度下降算法。
+
+值得一提的是，对于Mini-Batches Gradient Descent，可以进行多次epoch训练。而且，每次epoch，最好是将总体训练数据重新打乱，重新分成T组mini-batches，这样有利于训练出最佳的神经网络模型。
+
+Batch gradient descent和Mini-batch gradient descent的cost曲线如下图所示：
+
+
+
+
 
