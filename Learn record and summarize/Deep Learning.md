@@ -599,6 +599,19 @@ Mini-batches Gradient Descent的实现过程是先将总的训练样本分成T�
 值得一提的是，对于Mini-Batches Gradient Descent，可以进行多次epoch训练。而且，每次epoch，最好是将总体训练数据重新打乱，重新分成T组mini-batches，这样有利于训练出最佳的神经网络模型。
 
 Batch gradient descent和Mini-batch gradient descent的cost曲线如下图所示：
+图1
+
+对于一般的神经网络模型，使用Batch gradient descent，随着迭代次数增加，cost是不断减小的。然而，使用Mini-batch gradient descent，随着在不同的mini-batch上迭代训练，其cost不是单调下降，而是受类似noise的影响，出现振荡。但整体的趋势是下降的，最终也能得到较低的cost值。之所以出现细微振荡的原因是不同的mini-batch之间是有差异的，例如可能第一个子集是好的子集，而第二个子集包含了一些噪声noise，出现细微振荡是正常的。
+
+如何选择每个mini-batch的大小：有两个极端：如果mini-batch size=m，即为Batch gradient descent，只包含一个子集；如果mini-batch size=1，即为Stochastic gradient descent，每个样本就是一个子集，共有m个子集。
+
+比较一下Batch gradient descent和Stochastic gradient descent的梯度下降曲线。如下图所示，蓝色的线代表Batch gradient descent，紫色的线代表Stachastic gradient descent。Batch gradient descent会比较平稳地接近全局最小值，但是因为使用了所有m个样本，每次前进的速度有些慢。Stachastic gradient descent每次前进速度很快，但是路线曲折，有较大的振荡，最终会在最小值附近来回波动，难以真正达到最小值处。而且在数值处理上就不能使用向量化的方法来提高运算速度。
+图2
+
+实际使用中，mini-batch size不能设置得太大（Batch gradient descent），也不能设置得太小（Stachastic gradient descent）。这样，相当于结合了Batch gradient descent和Stachastic gradient descent各自的优点，既能使用向量化优化算法，又能叫快速地找到最小值。mini-batch gradient descent的梯度下降曲线如下图绿色所示，每次前进速度较快，且振荡较小，基本能接近全局最小值。
+图3
+
+一般来说，如果总体样本数量m不太大时（小于2000个样本），可以直接使用Batch gradient descent。如果总体样本数量m很大时，需要将样本分成许多mini-batches，推荐常用的mini-batch size为64,128,256,512，这些都是2的幂，之所以这样设置的原因是计算机存储数据一般是2的幂，这样设置可以提高运算速度。
 
 
 
