@@ -216,10 +216,11 @@ A computer program is an instance, or concrete representation, for an algorithm 
     - code
 
       ```c
-    Input: n,s1,…,sn,f1,…,fn ,v1,…,vn
+      Input: n,s1,…,sn,f1,…,fn ,v1,…,vn
       Sort jobs by finish times so that f1 ≤ f2 ≤...≤ fn
-    Compute p(1),p(2),……,p(n)
+      Compute p(1),p(2),……,p(n)
         
+
     for j = 1 to n
         M[j] = empty
     M[0]=0
@@ -282,7 +283,7 @@ A computer program is an instance, or concrete representation, for an algorithm 
   - Code, Running time:O(n·W)，Not polynomial in input size
 
     ```c
-  Input: n, w1, ……, wn, v1, ……, vn
+    Input: n, w1, ……, wn, v1, ……, vn
     for w = 0 to w
     M[0,w] = 0
     for i = 1 to n
@@ -399,6 +400,7 @@ Pf. We prove both simultaneously by showing:
     $$
     X ≤_P Y
     $$
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Polynomial-Time%20Reductions.png)
 
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Polynomial-Time%20Reduction.png)
 
@@ -412,6 +414,8 @@ Pf. We prove both simultaneously by showing:
 
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Set%20Cover.png)
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Vertex%20Cover%20Reduces%20to%20Set%20Cover.png)
+
+Lemma. G = (V, E) contains a vertex cover of size k iff (U, S, k) contains a set cover of size k.
 
 ## SAT & 3-SAT 
 
@@ -427,3 +431,37 @@ Pf. We prove both simultaneously by showing:
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Self-Reducibility.png)
 
 ## Definition of NP
+
+- Decision problem.
+  - X is a set of strings.
+  - Instance: string s.
+  - Algorithm A solves problem X: A(s) = yes iff s ∈ X.
+- Polynomial time. 
+  - Algorithm A runs in poly-time if for every string s, A(s) terminates in at most p(|s|) "steps", where p() is some polynomial. The |s| means length of s.
+- Certification algorithm intuition.
+  - Certifier views things from "managerial" viewpoint.
+  - Certifier doesn't determine whether s ∈ X on its own; Rather, it checks a proposed proof t that s ∈ X
+- ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/NP.png)
+  NP stands for nondeterministic polynomial-time.
+- Example
+  - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/NP%20composite.png)
+  - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/NP%20SAT.png)
+  - ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/NP%20HAMILTON-CYCLE.png)
+
+- ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/P-NP-EXP.png)
+
+## NP-Completeness
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Def%201.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Def%202.png)
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Complexity%201.png)
+
+More Hard Computational Problems
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Complexity%202.png)
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Complexity%203.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Complexity%204.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Complexity%205.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Complexity%206.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Complexity%207.png)
