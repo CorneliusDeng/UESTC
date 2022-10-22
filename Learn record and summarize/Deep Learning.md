@@ -635,5 +635,128 @@ $$
 $$
 V_t = \beta V_{t-1}+(1-\beta)\theta_t
 $$
-β的值决定了指数加权平均的天数，近似可以表示为 1/(1-β)。即当β为0.9，表示将前10天进行指数加权平均；当β为0.98，表示将前50天进行指数加权平均。β值越大，则指数加权平均的天数越多，平均后的趋势线就越平缓，但是同时也会向右平移（可以理解为β很大时，相当于给前一天的值加了太多的权重，只有很少的权重给了当日的值，所以指数加权平均值适应地更缓慢一些）。下图绿色曲线和黄色曲线分别表示了β=0.9和β=0.98时，指数加权平均的结果。
+β的值决定了指数加权平均的天数，V_t可近似约等于为 1/(1-β)天的平均温度。即当β为0.9，表示将前10天进行指数加权平均；当β为0.98，表示将前50天进行指数加权平均。β值越大，则指数加权平均的天数越多，平均后的趋势线就越平缓，但是同时也会向右平移（可以理解为β很大时，相当于给前一天的值加了太多的权重，只有很少的权重给了当日的值，所以指数加权平均值适应地更缓慢一些）。下图绿色曲线和黄色曲线分别表示了β=0.98和β=0.5时，指数加权平均的结果。
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Exponentially%20weighted%20averages%203.png)
+
+那么对于上述例子，我们可以计算第100天的温度
+$$
+V_{100}=0.1\theta_{100}+0.1·0.9\theta_{99}+0.1·0.9^2\theta_{98}+0.1·0.9^3\theta_{97}+……
+$$
+我么可以构建一个指数衰减函数，从 0.1 开始，到0.1 × 0.9，到0.1 × (0.9)^2，以此类推。那么显然，计算V_100是选取每日温度，将其与指数衰减函数相乘，然后求和。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Exponentially%20Weighted%20Averages%204.png)
+
+那么到底平均了多少天的温度？实际上 0.9^10 大约为0.35，这大约是 1/e，那么即10天之后，曲线的高度下降到 1/3，相当于在峰值的 1/e。又因此当β= 0.9的时候，我们说仿佛你在计算一个指数加权平均数，只关注了过去 10天的温度，因为 10 天后，权重下降到不到当日权重的三分之一。
+$$
+根据高等数学，我们知道：\beta^{\frac{1}{1-\beta}}=\frac{1}{e}，或者说 (1-\frac{1}{\beta})^{\beta}=\frac{1}{e}
+$$
+指数加权平均的偏差修正(Bias correction in exponentially weighted averages)可以让平均数运算更加准确。当β的值越靠近于1，其曲线起点越低，也就意味着初始阶段的估计不准确。
+$$
+解决办法：估测初期，不使用V_t，而是使用 \frac{V_t}{1-\beta^t}，t就是现在的天数
+$$
+
+$$
+具体的例子：当t=2，\beta=0.98时，对第二天的估测变为\frac{V_2}{1-0.98^2}=\frac{0.98·0.02·\theta_1+0.02\theta_2}{1-0.98^2}
+$$
+
+很明显地，随着t的增大，β^t接近于0，这时候偏差修正几乎没有作用。
+
+## 动量梯度下降法 Gradient Descent with Momentum
+
+动量梯度下降算法，其速度要比传统的梯度下降算法快很多。做法是在每次训练时，对梯度进行指数加权平均处理，然后用得到的梯度值更新权重W和常数项b。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Gradient%20Descent%20with%20Momentum.png)
+原始的梯度下降算法如上图蓝色折线所示。在梯度下降过程中，梯度下降的振荡较大，尤其对于W、b之间数值范围差别较大的情况。此时每一点处的梯度只与当前方向有关，产生类似折线的效果，前进缓慢。而如果对梯度进行指数加权平均，这样使当前梯度不仅与当前方向有关，还与之前的方向有关，这样处理让梯度前进方向更加平滑，减少振荡，能够更快地到达最小值处。
+
+权重W和常数项b的指数加权平均表达式如下
+$$
+V_{dW}=\beta·V_{dW}+(1-\beta)·dW,V_{db}=\beta·V_{dW}+(1-\beta)·db
+$$
+然后重新赋值权重
+$$
+W:=W-\alpha V_{dW},b:=b-\alpha V_{db}
+$$
+从动量的角度来看，Momentunm项(V_dW)可以看成速度V，微分项(dW)可以看成是加速度a，β可以看成是一些摩擦力。指数加权平均实际上是计算当前的速度，当前速度由之前的速度和现在的加速度共同影响。而β，又能限制速度过大。也就是说，当前的速度是渐变的，而不是瞬变的，是动量的过程。这保证了梯度下降的平稳性和准确性，减少振荡，较快地达到最小值处。
+
+## RMSprop
+
+RMSprop 的算法，全称是 root mean square prop 算法，它也可以加速梯度下降。
+
+每次迭代训练过程中，其权重W和常数项b的更新表达式如下
+$$
+S_{dW}=\beta S_{dW}+(1-\beta)dW^2,S_{db}=\beta S_{db}+(1-\beta)db^2
+$$
+
+$$
+W:=W-\alpha \frac{d_W}{\sqrt{S_{dW}}+\varepsilon},b:=b-\alpha \frac{d_b}{\sqrt{S_{db}}+\varepsilon},
+$$
+
+其中平方是针对整个符号的平方，还有一点需要注意的是为了避免RMSprop算法中分母为零，通常可以在分母增加一个极小的常数ε，可以取10^-8
+
+下面简单解释一下RMSprop算法的原理，以下图为例，为了便于分析，令水平方向为W的方向，垂直方向为b的方向。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/RMSprop%202.png)
+从图中可以看出，梯度下降（蓝色折线）在垂直方向（b）上振荡较大，在水平方向（W)上振荡较小，表示在b方向上梯度较大，而在W方向上梯度较小。
+
+我们希望学习速度快，而在垂直方向，也就是图中的b方向，我们希望减缓垂直方向上的摆动，所以有了𝑆𝑑𝑊和𝑆𝑑𝑏，我们希望𝑆𝑑𝑊会
+相对较小，所以我们要除以一个较小的数，而希望𝑆𝑑𝑏又较大，所以这里我们要除以较大的数字，这样就可以减缓纵轴上的变化。观察图示微分，垂直方向的要比水平方向的大得多，所以斜率在𝑏方向特别大，所以这些微分中，𝑑𝑏较大，𝑑𝑊较小，因为函数的倾斜程度，在
+纵轴上，也就是 b 方向上要大于在横轴上，也就是𝑊方向上。𝑑𝑏的平方较大，所以𝑆𝑑𝑏也会较大，而相比之下，𝑑𝑊会小一些，亦或𝑑𝑊平方会小一些，因此𝑆𝑑𝑊会小一些，结果就是纵轴上的更新要被一个较大的数相除，就能消除摆动，而水平方向的更新则被较小的数相除。即加快了W方向的速度，减小了b方向的速度，减小振荡，实现快速梯度下降算法，其梯度下降过程如绿色折线所示。总得来说，就是如果哪个方向振荡大，就减小该方向的更新速度，从而减小振荡。
+当然，也可以用一个更大的学习率，加快学习，就无需在垂直方向上偏离。
+
+##  Adam优化算法 Adam Optimization Algorithm
+
+Adam(Adaptive Moment Estimation) 优化算法基本上就是将 Momentum 和 RMSprop 结合在一起.
+
+其算法流程为：
+$$
+初始化，令V_{dW}=0,S_{dW}=0,V_{db}=0,S_{db}=0
+$$
+在第t次迭代中，计算微分，用当前的 mini-batch 计算𝑑𝑊，𝑑𝑏，一般会用 mini-batch 梯度下降法，接下来计算 Momentum 指数加权平均数（Momentum使用的超参数记为β1，RMSprop使用的超参数记为β2）
+$$
+V_{dW}=\beta_1·V_{dW}+(1-\beta_1)·dW,V_{db}=\beta_1·V_{dW}+(1-\beta_1)·db
+$$
+接着用 RMSprop 进行更新
+$$
+S_{dW}=\beta_2 S_{dW}+(1-\beta_2)dW^2,S_{db}=\beta_2 S_{db}+(1-\beta_2)db^2
+$$
+一般使用 Adam 算法的时候，要计算偏差修正
+$$
+V^{corrected}_{dW}=\frac{V_{dw}}{1-\beta_1^t},V^{corrected}_{db}=\frac{V_{db}}{1-\beta_1^t}
+$$
+
+$$
+S^{corrected}_{dW}=\frac{S_{dw}}{1-\beta_2^t},S^{corrected}_{db}=\frac{S_{db}}{1-\beta_2^t}
+$$
+
+最后更新权重（如果只是用Momentum，使用V𝑑𝑊或者修正后的V𝑑𝑊，但现在加入了RMSprop的部分，所以要除以修正后
+
+𝑆𝑑𝑊的平方根加上𝜀）
+$$
+W:=W-\alpha \frac{V^{corrected}_{dW}}{\sqrt{S^{corrected}_{dW}}+\varepsilon},b:=b-\alpha \frac{V^{corrected}_{db}}{\sqrt{S^{corrected}_{db}}+\varepsilon},
+$$
+所以 Adam 算法结合了 Momentum 和 RMSprop 梯度下降法，并且是一种极其常用的学习算法，被证明能有效适用于不同神经网络，适用于广泛的结构。
+
+本算法中有很多超参数，超参数学习率a很重要，也经常需要调试，可以尝试一系列值，然后看哪个有效。𝛽1常用的缺省值为 0.9，这是 dW 的移动平均数，也就是𝑑𝑊的加权平均数，这是 Momentum 涉及的项。至于超参数𝛽2，Adam 论文作者，也就是 Adam 算法的发明者，推荐使用 0.999，这是在计算(𝑑𝑊)^2以及(𝑑𝑏)^2的移动加权平均值，关于𝜀的选择其实没那么重要，Adam 论文的作者建议𝜀10^−8，但并不需要设置它，因为它并不会影响算法表现。但是在使用 Adam 的时候，人们往往使用缺省值即可，𝛽1，𝛽2和𝜀都是如此。
+
+## 学习率衰减 Learning Rate  Decay 
+
+Learning rate decay就是随着迭代次数增加，学习因子逐渐减小。下面用图示的方式来解释这样做的好处。下图中，蓝色折线表示使用恒定的学习因子，由于每次训练相同，步进长度不变，在接近最优值处的振荡也大，在最优值附近较大范围内振荡，与最优值距离就比较远。绿色折线表示使用不断减小的，随着训练次数增加，逐渐减小，步进长度减小，使得能够在最优值处较小范围内微弱振荡，不断逼近最优值。相比较恒定的来说，learning rate decay更接近最优值。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Learning%20Rate%20%20Decay%201.png)
+$$
+\alpha=\frac{1}{1+decay\_rate*epoch}\alpha_0
+$$
+其中，deacy_rate是衰减率，epoch是训练完所有样本的次数，a0为初始学习率。随着epoch增加，会不断变小。
+
+除了上面计算的公式之外，还有其它可供选择的计算公式
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Learning%20Rate%20%20Decay%202.png)
+其中，k为可调参数，t为mini-bach number。
+
+除此之外，还可以设置为关于t的离散值，随着t增加，呈阶梯式减小。当然，也可以根据训练情况灵活调整当前的值，但会比较耗时间。
+
+## 局部最优化问题 The problem of local optima
+
+在使用梯度下降算法不断减小cost function时，可能会得到局部最优解（local optima）而不是全局最优解（global optima）。之前我们对局部最优解的理解是形如碗状的凹槽，如下图左边所示。但是在神经网络中，local optima的概念发生了变化。准确地来说，大部分梯度为零的“最优点”并不是这些凹槽处，而是形如右边所示的马鞍状，称为saddle point。也就是说，梯度为零并不能保证都是convex（极小值），也有可能是concave（极大值）。特别是在神经网络中参数很多的情况下，所有参数梯度为零的点很可能都是右边所示的马鞍状的saddle point，而不是左边那样的local optimum。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/The%20problem%20of%20local%20optima%201.png)
+
+类似马鞍状的plateaus会降低神经网络学习速度。Plateaus是梯度接近于零的平缓区域，如下图所示。在plateaus上梯度很小，前进缓慢，到达saddle point需要很长时间。到达saddle point后，由于随机扰动，梯度一般能够沿着图中绿色箭头，离开saddle point，继续前进，只是在plateaus上花费了太多时间。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/The%20problem%20of%20local%20optima%202.png)
+
+总的来说，关于local optima，有两点总结：只要选择合理的强大的神经网络，一般不太可能陷入local optima；Plateaus可能会使梯度下降变慢，降低学习速度。另外，上述总结的的动量梯度下降，RMSprop，Adam算法都能有效解决plateaus下降过慢的问题，大大提高神经网络的学习速度。
