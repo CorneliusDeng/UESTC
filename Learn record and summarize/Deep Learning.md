@@ -492,7 +492,6 @@ Dropout通过每次迭代训练时，随机选择不同的神经元，相当于�
 归一化需要两个步骤：零均值、归一化方差。
 即将原始数据减去其均值后，再除以其方差。
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Normalizing%20inputs%201.png)
-注意：上式求方差中的向量x是已经完成零均值操作的向量x
 
 以二维平面为例，下图展示了其归一化过程：
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Normalizing%20inputs%202.png)
@@ -669,7 +668,7 @@ $$
 
 权重W和常数项b的指数加权平均表达式如下
 $$
-V_{dW}=\beta·V_{dW}+(1-\beta)·dW,V_{db}=\beta·V_{dW}+(1-\beta)·db
+V_{dW}=\beta·V_{dW}+(1-\beta)·dW,V_{db}=\beta·V_{db}+(1-\beta)·db
 $$
 然后重新赋值权重
 $$
@@ -690,7 +689,7 @@ $$
 W:=W-\alpha \frac{d_W}{\sqrt{S_{dW}}+\varepsilon},b:=b-\alpha \frac{d_b}{\sqrt{S_{db}}+\varepsilon},
 $$
 
-其中平方是针对整个符号的平方，还有一点需要注意的是为了避免RMSprop算法中分母为零，通常可以在分母增加一个极小的常数ε，可以取10^-8
+其中平方是针对整个符号的平方，即 (dW)^2，还有一点需要注意的是为了避免RMSprop算法中分母为零，通常可以在分母增加一个极小的常数ε，可以取10^-8
 
 下面简单解释一下RMSprop算法的原理，以下图为例，为了便于分析，令水平方向为W的方向，垂直方向为b的方向。
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/RMSprop%202.png)
@@ -711,7 +710,7 @@ $$
 $$
 在第t次迭代中，计算微分，用当前的 mini-batch 计算𝑑𝑊，𝑑𝑏，一般会用 mini-batch 梯度下降法，接下来计算 Momentum 指数加权平均数（Momentum使用的超参数记为β1，RMSprop使用的超参数记为β2）
 $$
-V_{dW}=\beta_1·V_{dW}+(1-\beta_1)·dW,V_{db}=\beta_1·V_{dW}+(1-\beta_1)·db
+V_{dW}=\beta_1·V_{dW}+(1-\beta_1)·dW,V_{db}=\beta_1·V_{db}+(1-\beta_1)·db
 $$
 接着用 RMSprop 进行更新
 $$
@@ -815,5 +814,108 @@ r = np.power(10,r)
 在训练深度神经网络时，一种情况是受计算能力所限，我们只能对一个模型进行训练，调试不同的超参数，使得这个模型有最佳的表现。我们称之为Babysitting one model。另外一种情况是可以对多个模型同时进行训练，每个模型上调试不同的超参数，根据表现情况，选择最佳的模型。我们称之为Training many models in parallel。
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/appropriate%20scale%20%202.png)
 
-# Batch正则化 Batch Regularization
+# Batch标准化 Batch Normalization
+
+## Batch Normalization
+
+Batch Normalization不仅可以让调试超参数更加简单，而且可以让神经网络模型更加“健壮”。也就是说较好模型可接受的超参数范围更大一些，包容性更强，使得更容易去训练一个深度神经网络。
+
+前文提到，在训练神经网络时，标准化输入可以提高训练的速度。方法是对训练数据集进行归一化的操作，即将原始数据减去其均值后，再除以其方差。但是标准化输入只是对输入进行了处理，那么对于神经网络，又该如何对各隐藏层的输入进行标准化处理呢？
+
+在神经网络中，第i层隐藏层的输入就是第i-1层隐藏层的输出。对各层激活函数进行标准化处理，从原理上来说可以提高和的训练速度和准确度。这种对各隐藏层的标准化处理就是Batch Normalization。值得注意的是，实际应用中，一般是对隐藏单元值z进行标准化处理而不是激活函数a本身，其实差别不是很大。
+
+Batch Normalization对第 l 层隐藏层的输入做如下标准化处理，忽略上标方括号表示的层数 l：
+$$
+\mu=\frac{1}{m}\sum_{i=1}z^{(i)},\sigma^2=\frac{1}{m}\sum_{i=1}(z^{(i)}-\mu)^2,z_{norm}^{(i)}=\frac{z^{(i)-\mu}}{\sqrt {\sigma^2+\varepsilon}}
+$$
+现在已把这些𝑧值标准化，化为含平均值 0 和标准单位方差，所以𝑧的每一个分量都含有平均值 0 和方差 1，但是，大部分情况下并不希望所有的均值都为0，方差都为1，也不太合理。通常需要对进行进一步处理：
+$$
+\widetilde{z}^{(i)}=\gamma z_{norm}^{(i)}+\beta
+$$
+这里𝛾和𝛽是模型的学习参数，所以我们使用梯度下降或一些其它类似梯度下降的算法，比如 Momentum 或者 Nesterov，Adam，会更新𝛾和𝛽，正如更新神经网络的权重一样。通过对𝛾和𝛽合理设定，规范化过程，从根本来说，只是计算恒等函数，通过赋予𝛾和𝛽其它值，可以构造含其它平均值和方差的隐藏单元值。
+
+值得注意的是，输入的标准化处理Normalizing inputs和隐藏层的标准化处理Batch Normalization是有区别的。Normalizing inputs使所有输入的均值为0，方差为1。而Batch Normalization可使各隐藏层输入的均值和方差为任意值。实际上，从激活函数的角度来说，如果各隐藏层的输入均值在靠近0的区域即处于激活函数的线性区域，这样不利于训练好的非线性神经网络，得到的模型效果也不会太好。这也解释了为什么需要用和来对作进一步处理。
+
+对于L层神经网络，经过Batch Norm的作用，整体流程如下：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Batch%20Norm%201.png)
+显然，Batch Norm是发生在计算隐藏层单元值z和激活函数a之间的
+
+实际上，Batch Norm经常使用在mini-batch上，这也是其名称的由来。值得注意的是，因为Batch Norm对各隐藏层有去均值的操作，所以这里的常数项可以消去，其数值效果完全可以由𝛽来实现；因此，我们在使用Batch Norm的时候，可以忽略各隐藏层的常数项。
+在使用梯度下降算法时，运行𝑡 = 1到 batch 数量的 for 循环，你会在 mini-batch 𝑋{𝑡}上应用正向 prop，每个隐藏层都应用正向 prop，用 Batch 归一化代替𝑧^[𝑙]为𝑧̃^[𝑙]。接下来，它确保在这个 mini-batch 中，𝑧值有归一化的均值和方差，归一化均值和方差后是𝑧̃^[𝑙]，然后，你用反向 prop 计算𝑑𝑤^[𝑙]和𝑑𝑏^[𝑙]，及所有 l 层所有的参数，𝑑𝛽^[𝑙]和𝑑𝛾^[𝑙]。尽管严格来说，因为你要去掉𝑏，这部分其实已经去掉了。最后，你更新这些参数：𝑤^[𝑙] = 𝑤^[𝑙] − αd𝑤^[𝑙]，和以前一样，𝛽^[𝑙] = 𝛽^[𝑙] − 𝛼𝑑𝛽^[𝑙]，对于𝛾也是如此𝛾^[𝑙] = 𝛾^[𝑙] − 𝛼𝑑𝛾^[𝑙].
+除了使用梯度下降法更新mini-batch，也可以使用动量梯度下降、RMSprop或者Adam等优化算法更新由 Batch 归一化添加到算法中的𝛽 和𝛾 参数。
+
+## Why does Batch Norm work？
+
+我们可以把输入特征做均值为0，方差为1的规范化处理，来加快学习速度。而Batch Norm也是对隐藏层各神经元的输入做类似的规范化处理。总的来说，Batch Norm不仅能够提高神经网络训练速度，而且能让神经网络的权重W的更新更加“稳健”，尤其在深层神经网络中更加明显。比如神经网络很后面的W对前面的W包容性更强，即前面的W的变化对后面W造成的影响很小，整体网络更加健壮。
+
+举个例子来说明，假如用一个浅层神经网络（类似逻辑回归）来训练识别猫的模型。如下图所示，提供的所有猫的训练样本都是黑猫。然后，用这个训练得到的模型来对各种颜色的猫样本进行测试，测试的结果可能并不好。其原因是训练样本不具有一般性（即不是所有的猫都是黑猫），这种训练样本（黑猫）和测试样本（猫）分布的变化称之为covariate shift。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Batch%20Norm%202.png)
+
+对于这种情况，如果实际应用的样本与训练样本分布不同，即发生了covariate shift，则一般是要对模型重新进行训练的。在神经网络，尤其是深度神经网络中，covariate shift会导致模型预测效果变差，重新训练的模型各隐藏层的和均产生偏移、变化。而Batch Norm的作用恰恰是减小covariate shift的影响，让模型变得更加健壮，鲁棒性更强。Batch Norm减少了各层、之间的耦合性，让各层更加独立，实现自我训练学习的效果。也就是说，如果输入发生covariate shift，那么因为Batch Norm的作用，对个隐藏层输出进行均值和方差的归一化处理，和更加稳定，使得原来的模型也有不错的表现。针对上面这个黑猫的例子，如果我们使用深层神经网络，使用Batch Norm，那么该模型对花猫的识别能力应该也是不错的。
+
+从另一个方面来说，Batch Norm也起到轻微的正则化（regularization）效果。具体表现在：
+每个mini-batch都进行均值为0，方差为1的归一化操作
+每个mini-batch中，对各个隐藏层的添加了随机噪声，效果类似于Dropout
+mini-batch越小，正则化效果越明显
+
+但是，Batch Norm的正则化效果比较微弱，正则化也不是Batch Norm的主要功能
+
+# Softmax回归 Softmax Regression
+
+## Softmax Regression
+
+二分类问题，神经网络输出层只有一个神经元，只有两种可能的标记 0 或 1。存在一种 logistic 回归的一般形式，叫做 Softmax 回归，能使你识别某一分类时做出预测，或者说是多种分类中的一个，不只是识别两个分类。
+
+对于多分类问题，用C表示种类个数，神经网络中输出层就有C个神经元，即指示类别的数字，从 0 到𝐶 − 1。其中，每个神经元的输出依次对应属于该类的概率。
+
+Softmax回归模型输出层的激活函数如下所示：
+$$
+计算输出层的z变量：z^{[L]}=W^{[L]}a^{[L-1]}+b^{[L]}
+$$
+
+$$
+计算z后使用Softmax激活函数：a_i^{[L]}=\frac{e^{z_i^{[L]}}}{\sum_{i=1}^Ce^{z_i^{[L]}}}
+$$
+
+输出层每个神经元的输出对应属于该类的概率，满足
+$$
+\sum_{i=1}^Ca_i^{[L]}=1
+$$
+设a^[L]=g^\[L](z^[L])，这一激活函数g的与众不同之处在于需要输入一个 C×1 维向量，然后输出一个 C×1 维向量。之前的激活函数都是接受单行数值输入，例如 Sigmoid 和 ReLu 激活函数，输入一个实数。Softmax 激活函数的特殊之处在于，因为需要将所有可能的输出归一化，就需要输入一个向量，最后输出一个向量。
+
+下图为几个简单的线性多分类的例子图示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Softmax%20Regression.png)
+
+## Training a Softmax classifier
+
+Softmax classifier的训练过程与二元分类问题有所不同。
+
+举例来说，假如C=4
+$$
+某样本预测输出\widehat{y}=
+\begin{bmatrix}
+    0.3\\ 0.2\\ 0.1\\ 0.4
+\end{bmatrix},
+某样本真实标签y=
+\begin{bmatrix}
+    0\\ 1\\ 0\\ 0
+\end{bmatrix}
+$$
+明显地，预测为第四类，但实际为第二类，因此该预测效果不佳。
+
+我们定义softmax classifier的loss function如下：
+$$
+L（\widehat{y},y）=-\sum_{i=1}^Cy_i·log\widehat{y_i}
+$$
+由上述例子可知，最后的损失函数L = -log hat(y_2)，这就意味着，如果学习算法试图将它变小，因为梯度下降法是用来减少训练集的
+损失的，要使它变小的唯一方式就是使−log hat(y_2)变小，要想做到这一点，就需要使hat(y_2)尽可能大，因为这些是概率，它又不可能比 1 大。概括来讲，损失函数所做的就是它找到训练集中的真实类别，然后试图使该类别相应的概率尽可能地高，这其实就是最大似然估计的一种形式。
+
+所有m个样本的cost function为：
+$$
+J(w^{[1]},b^{[1]}……)=\frac{1}{m}\sum_{i=1}^mL（\widehat{y}^{(i)},y^{(i)}）
+$$
+softmax classifier的反向传播过程仍然使用梯度下降算法，其推导过程与二元分类有一点不一样，因为只有输出层的激活函数不一样。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/softmax%20classifier.png)
+
+可见的表达式与二元分类结果是一致的，虽然推导过程不太一样。然后就可以继续进行反向传播过程的梯度下降算法了，推导过程与二元分类神经网络完全一致。
 
