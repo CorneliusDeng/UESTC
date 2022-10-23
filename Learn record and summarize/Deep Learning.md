@@ -919,3 +919,133 @@ softmax classifier的反向传播过程仍然使用梯度下降算法，其推�
 
 可见的表达式与二元分类结果是一致的，虽然推导过程不太一样。然后就可以继续进行反向传播过程的梯度下降算法了，推导过程与二元分类神经网络完全一致。
 
+# 卷积神经网络 Convolutional Neural Networks
+
+机器视觉（Computer Vision）是深度学习应用的主要方向之一。一般的CV问题包括以下三类：Image Classification、Object Detection、Neural Style Transfer
+
+使用传统神经网络处理机器视觉的一个主要问题是输入层维度很大。例如一张64x64x3的图片，神经网络输入层的维度为12288。如果图片尺寸较大，例如一张1000x1000x3的图片，神经网络输入层的维度将达到3百万，使得网络权重W非常庞大。这样会造成两个后果，一是神经网络结构复杂，数据量相对不够，容易出现过拟合；二是所需内存、计算量较大。解决这一问题的方法就是使用卷积神经网络（CNN）。
+
+## 边缘检测 Edge Detection
+
+对于CV问题，神经网络由浅层到深层，分别可以检测出图片的边缘特征 、局部特征（例如眼睛、鼻子等）、整体面部轮廓。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Edge%20Detection%201.png)
+
+最常检测的图片边缘有两类：一是垂直边缘（vertical edges），二是水平边缘（horizontal edges）
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Edge%20Detection%202.png)
+
+图片的边缘检测可以通过与相应滤波器进行卷积来实现。以垂直边缘检测为例，原始图片尺寸为6x6，滤波器filter尺寸为3x3，卷积后的图片尺寸为4x4。在6x6的矩阵上，每一行最多可以匹配4个3x3的滤波器，每一列也最多可以匹配4个3x3的滤波器，所以卷积后的图片尺寸是4x4。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Edge%20Detection%203.png)
+
+∗表示卷积操作
+python中，卷积用conv_forward()表示
+tensorflow中，卷积用tf.nn.conv2d()表示
+keras中，卷积用Conv2D()表示
+卷积运算不是矩阵乘法，上图只显示了卷积后的第一个值和最后一个值，卷积运算的过程是每个元素与滤波器的对应元素相乘求和，例如卷积后的第一个值-5=3x1+1x1+2x1+0x0+5x0+7x0+1x-1+8x-1+2x-1.
+
+Vertical edge detection能够检测图片的垂直方向边缘。下图对应一个垂直边缘检测的例子：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Edge%20Detection%204.png)
+
+图片边缘有两种渐变方式，一种是由明变暗，另一种是由暗变明。以垂直边缘检测为例，下图展示了两种方式的区别。实际应用中，这两种渐变方式并不影响边缘检测结果，可以对输出图片取绝对值操作，得到同样的结果。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Edge%20Detection%205.png)
+
+垂直边缘检测和水平边缘检测的滤波器算子如下所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Edge%20Detection%206.png)
+
+下图展示一个水平边缘检测的例子：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Edge%20Detection%207.png)
+
+除了上面提到的这种简单的Vertical、Horizontal滤波器之外，还有其它常用的filters，例如Sobel filter和Scharr filter。这两种滤波器的特点是增加图片中心区域的权重。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Edge%20Detection%208.png)
+上图展示的是垂直边缘检测算子，水平边缘检测算子只需将上图顺时针翻转90度即可。
+
+在深度学习中，如果我们想检测图片的各种边缘特征，而不仅限于垂直边缘和水平边缘，那么filter的数值一般需要通过模型训练得到，类似于标准神经网络中的权重W一样由梯度下降算法反复迭代求得。CNN的主要目的就是计算出这些filter的数值。确定得到了这些filter后，CNN浅层网络也就实现了对图片所有边缘特征的检测。
+
+## Padding
+
+如果原始图片尺寸为n x n，filter尺寸为f x f，则卷积后的图片尺寸为(n-f+1) x (n-f+1)，注意f一般为奇数。
+
+这样会带来两个问题：
+卷积运算后，输出图片尺寸缩小
+原始图片边缘信息对输出贡献得少，输出图片丢失边缘信息
+
+为了解决图片缩小的问题，可以使用padding方法，即把原始图片尺寸进行扩展，扩展区域补零，用p来表示每个方向扩展的宽度
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Padding.png)
+
+经过padding之后，原始图片尺寸为(n+2p) x (n+2p)，filter尺寸为f x f，则卷积后的图片尺寸为(n+2p-f+1) x (n+2p-f+1)。若要保证卷积前后图片尺寸不变，则p应满足：p = (f-1) / 2
+
+Valid Convolutions：没有padding操作，p=0
+
+Same Convolutions：有Padding操作，用p个像素填充边缘
+
+## 卷积步长 Strided Convolutions
+
+Stride表示filter在原图片中水平方向和垂直方向每次的步进长度。之前我们默认stride=1，若stride=2，则表示filter每次步进长度为2，即隔一点移动一次。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Strided%20Convolutions%201.png)
+
+用s表示stride长度，p表示padding长度，如果原始图片尺寸为n x n，filter尺寸为f x f，则卷积后的图片尺寸为：
+$$
+\lfloor \frac{n+2p-f}{s}+1 \rfloor \times \lfloor \frac{n+2p-f}{s}+1 \rfloor
+$$
+互相关（cross-correlations）与卷积（convolutions）之间是有区别的。实际上，真正的卷积运算会先将filter绕其中心旋转180度，然后再将旋转后的filter在原始图片上进行滑动计算。filter旋转如下所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Strided%20Convolutions%202.png)
+比较而言，互相关的计算过程则不会对filter进行旋转，而是直接在原始图片上进行滑动计算。
+
+其实，目前为止所阐述的CNN卷积实际上计算的是互相关，而不是数学意义上的卷积。但是，为了简化计算，我们一般把CNN中的这种“相关系数”就称作卷积运算。之所以可以这么等效，是因为滤波器算子一般是水平或垂直对称的，180度旋转影响不大；而且最终滤波器算子需要通过CNN网络梯度下降算法计算得到，旋转部分可以看作是包含在CNN模型算法中。总的来说，忽略旋转运算可以大大提高CNN网络运算速度，而且不影响模型性能。
+
+卷积运算服从结合律：( A ∗ B ) ∗ C = A ∗ ( B ∗ C ) 
+
+##  三维卷积 Convolutions Over Volumes
+
+对于3通道的RGB图片，其对应的滤波器算子同样也是3通道的。例如一个图片是6 x 6 x 3，分别表示图片的高度（height）、宽度（weight）和通道（channel）
+
+3通道图片的卷积运算与单通道图片的卷积运算基本一致。过程是将每个单通道（R，G，B）与对应的filter进行卷积运算求和，然后再将3通道的和相加，得到输出图片的一个像素值
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Convolutions%20Over%20Volume%201.png)
+
+不同通道的滤波算子可以不相同。例如R通道filter实现垂直边缘检测，G和B通道不进行边缘检测，全部置零，或者将R，G，B三通道filter全部设置为水平边缘检测。
+
+为了进行多个卷积运算，实现更多边缘检测，可以增加更多的滤波器组。例如设置第一个滤波器组实现垂直边缘检测，第二个滤波器组实现水平边缘检测。这样，不同滤波器组卷积得到不同的输出，个数由滤波器组决定。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Convolutions%20Over%20Volume%202.png)
+
+维度总结
+$$
+输入图像尺寸：n \times n \times n_c，filter尺寸：f \times f \times n_c，卷积后的图像尺寸为：(n-f+1) \times (n-f+1) \times n'_c
+$$
+其中，n_c为图像的通道数目，n'_c为滤波器的个数，也可以理解为下一层的通道数
+
+## 单层卷积网络 One Layer Of A Convolutional Network
+
+卷积神经网络的单层结构如下所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/One%20Layer%20of%20a%20Convolutional%20Network.png)
+
+相比之前的卷积过程，CNN的单层结构多了激活函数ReLU和偏移量b。整个过程与标准的神经网络单层结构非常类似：
+$$
+Z^{[l]}=W^{[l]}A^{[l-1]}+b^{[l]}，A^{[l]}=g^{[l]}(Z^{[l]})
+$$
+卷积运算对应着上式中的乘积运算，滤波器个数数值对应着权重W ^[ l ] ，所选的激活函数为ReLU。
+
+计算一下上图中参数的数目：每个滤波器组有3x3x3=27个参数，还有1个偏移量b，则每个滤波器组有27+1=28个参数，两个滤波器组总共包含28x2=56个参数。我们发现，选定滤波器组后，参数数目与输入图片尺寸无关。所以，就不存在由于图片尺寸过大，造成参数过多的情况。例如一张1000x1000x3的图片，标准神经网络输入层的维度将达到3百万，而在CNN中，参数数目只由滤波器组决定，数目相对来说要少得多，这是CNN的优势之一。
+
+CNN单层结构标记符号总结，设层数为 l
+$$
+f^{[l]}: filter\,size\quad p^{[l]}:padding \quad s^{[l]}:stride \quad n_c^{[l]}:number\,of\,filters
+$$
+
+$$
+输入维度:n_H^{[l-1]} \times n_W^{[l-1]} \times n_c^{[l-1]}, \quad 
+每个滤波器组维度:f^{[l]} \times f^{[l]} \times n_c^{[l-1]}
+$$
+
+$$
+权重维度:f^{[l]} \times f^{[l]} \times n_c^{[l-1]} \times n_c^{[l]}, \quad
+输出维度:n_H^{[l]} \times n_W^{[l]} \times n_c^{[l]}
+$$
+
+$$
+其中,\quad n_H^{[l]}=\lfloor \frac{n_H^{[l-1]}+2p^{[l]}-f^{[l]}}{s^{[l]}}+1 \rfloor, \quad
+n_W^{[l]}=\lfloor \frac{n_W^{[l-1]}+2p^{[l]}-f^{[l]}}{s^{[l]}}+1 \rfloor, \quad
+$$
+
+$$
+如果有m个样本，进行向量化运算，相应的输出维度为A^{[l]}=m \times n_H^{[l]} \times n_W^{[l]}\times n_c^{[l]}
+$$
+
