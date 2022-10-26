@@ -505,7 +505,7 @@ Dropout通过每次迭代训练时，随机选择不同的神经元，相当于�
 
 ## 梯度消失/梯度爆炸 Vanishing / Exploding gradients
 
-在神经网络尤其是深度神经网络中存在可能存在这样一个问题：梯度消失和梯度爆炸。意思是当训练一个 层数非常多的神经网络时，计算得到的梯度可能非常小或非常大，甚至是指数级别的减小或增大。这样会让训练过程变得非常困难。
+在神经网络尤其是深度神经网络中存在可能存在这样一个问题：梯度消失和梯度爆炸。意思是当训练一个层数非常多的神经网络时，计算得到的梯度可能非常小或非常大，甚至是指数级别的减小或增大。这样会让训练过程变得非常困难。
 
 举个例子来说明，假设一个多层的每层只包含两个神经元的深度神经网络模型，如下图所示：
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Vanishing%20and%20Exploding%20gradients.png)
@@ -1010,7 +1010,7 @@ $$
 $$
 输入图像尺寸：n \times n \times n_c，filter尺寸：f \times f \times n_c，卷积后的图像尺寸为：(n-f+1) \times (n-f+1) \times n'_c
 $$
-其中，n_c为图像的通道数目，n'_c为滤波器的个数，也可以理解为下一层的通道数
+其中，n_c为图像的通道数目，n'_c为滤波器组的个数，也可以理解为下一层的通道数
 
 ## 单层卷积网络 One Layer Of A Convolutional Network
 
@@ -1021,7 +1021,7 @@ $$
 $$
 Z^{[l]}=W^{[l]}A^{[l-1]}+b^{[l]}，A^{[l]}=g^{[l]}(Z^{[l]})
 $$
-卷积运算对应着上式中的乘积运算，滤波器个数数值对应着权重W ^[ l ] ，所选的激活函数为ReLU。
+卷积运算对应着上式中的乘积运算，滤波器组个数数值对应着权重W ^[ l ] ，所选的激活函数为ReLU。
 
 计算一下上图中参数的数目：每个滤波器组有3x3x3=27个参数，还有1个偏移量b，则每个滤波器组有27+1=28个参数，两个滤波器组总共包含28x2=56个参数。我们发现，选定滤波器组后，参数数目与输入图片尺寸无关。所以，就不存在由于图片尺寸过大，造成参数过多的情况。例如一张1000x1000x3的图片，标准神经网络输入层的维度将达到3百万，而在CNN中，参数数目只由滤波器组决定，数目相对来说要少得多，这是CNN的优势之一。
 
@@ -1049,3 +1049,478 @@ $$
 如果有m个样本，进行向量化运算，相应的输出维度为A^{[l]}=m \times n_H^{[l]} \times n_W^{[l]}\times n_c^{[l]}
 $$
 
+简单的CNN网络模型示例：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Simple%20Convolutional%20Network%20Example.png)
+输出层可以是一个神经元，即二元分类（logistic）；也可以是多个神经元，即多元分类（softmax）。最后得到预测输出hat(y).
+
+注意，随着CNN层数增加，图像的尺寸一般逐渐减小，而滤波器组个数逐渐增加。
+
+CNN有三种类型的layer：
+Convolution层（CONV）
+Pooling层（POOL）
+Fully Connected层（FC）
+
+## 池化层 Pooling Layers
+
+Pooling layers是CNN中用来减小尺寸，提高运算速度的，同样能减小noise影响，让各特征更具有健壮性。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Pooling%20Layers%201.png)
+上图输入是一个 4×4 矩阵，用到的池化类型是最大池化（max pooling)。执行最大池化的树池是一个 2×2 矩阵。执行过程非常简单，把 4×4 的输入拆分成不同的区域，这个区域用不同颜色来标记。对于2×2 的输出，输出的每个元素都是其对应颜色区域中的最大元素值。
+左上区域的最大值是 9，右上区域的最大元素值是 2，左下区域的最大值是 6，右下区域的最大值是 3。为了计算出右侧这 4 个元素值，我们需要对输入矩阵的 2×2 区域做最大值运算。这就像是应用了一个规模为 2 的过滤器，因为我们选用的是 2×2 区域，步幅是 2，这些就是最大池化的超参数。
+
+Pooling layers的做法比convolution layers简单许多，没有卷积运算，仅仅是在滤波器算子滑动区域内取最大值，即max pooling，这是最常用的做法。注意，超参数p很少在pooling layers中使用。
+Max pooling的好处是只保留区域内的最大值（特征），忽略其它值，降低noise影响，提高模型健壮性。而且，max pooling需要的超参数仅为滤波器尺寸f和滤波器步进长度s，没有其他参数需要模型训练得到，计算量很小。
+如果是多个通道，那么就每个通道单独进行max pooling操作。
+
+所以最大化运算的实际作用就是，如果在过滤器中提取到某个特征，那么保留其最大值。如果没有提取到这个特征，可能在右上象限中不存在这个特征，那么其中的最大值也还是很小，这就是最大池化的直观理解。
+
+除了max pooling之外，还有一种做法：average pooling。顾名思义，average pooling就是在滤波器算子滑动区域计算平均值。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Pooling%20Layers%202.png)
+实际应用中，max pooling比average pooling更为常用。
+
+## CNN Example
+
+一个数字识别的CNN示例：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/CNN%20Example%201.png)
+图中，CON层后面紧接一个POOL层，CONV1和POOL1构成第一层，CONV2和POOL2构成第二层。特别注意的是FC3和FC4为全连接层FC，它跟标准的神经网络结构一致。最后的输出层（softmax)由10个神经元构成。
+
+整个网络各层的尺寸和参数如下表格所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/CNN%20Example%202.png)
+
+相比标准神经网络，CNN的优势之一就是参数数目要少得多。参数数目少的原因有两个：
+参数共享：一个特征检测器（例如垂直边缘检测）对图片某块区域有用，同时也可能作用在图片其它区域。
+连接的稀疏性：因为滤波器算子尺寸限制，每一层的每个输出只与输入部分区域内有关。
+
+除此之外，由于CNN参数数目较小，所需的训练样本就相对较少，从而一定程度上不容易发生过拟合现象。而且，CNN比较擅长捕捉区域位置偏移。也就是说CNN进行物体检测时，不太受物体所处图片位置的影响，增加检测的准确性和系统的健壮性。
+
+## 经典网络 Classic Networks
+
+LeNet-5模型是Yann LeCun教授于1998年提出来的，它是第一个成功应用于数字识别问题的卷积神经网络。在MNIST数据中，它的准确率达到大约99.2%。典型的LeNet-5结构包含CONV layer，POOL layer和FC layer，顺序一般是CONV layer->POOL layer->CONV layer->POOL layer->FC layer->FC layer->OUTPUT layer。下图所示的是一个数字识别的LeNet-5的模型结构：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Classic%20Networks%201.png)
+该LeNet模型总共包含了大约6万个参数。值得一提的是，当时Yann LeCun提出的LeNet-5模型池化层使用的是average pool，而且各层激活函数一般是Sigmoid和tanh。现在，我们可以根据需要，做出改进，使用max pool和激活函数ReLU。
+
+AlexNet模型是由Alex Krizhevsky、Ilya Sutskever和Geoffrey Hinton共同提出的，其结构如下所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Classic%20Networks%202.png)
+AlexNet模型与LeNet-5模型类似，只是要复杂一些，总共包含了大约6千万个参数。同样可以根据实际情况使用激活函数ReLU。原作者还提到了一种优化技巧，叫做Local Response Normalization(LRN)。 而在实际应用中，LRN的效果并不突出
+
+VGG-16模型更加复杂一些，一般情况下，其CONV layer和POOL layer设置如下:
+CONV = 3x3 filters, s = 1, same
+MAX-POOL = 2x2, s = 2
+
+VGG-16 网络没有那么多超参数，这是一种只需要专注于构建卷积层的简单网络。首先用 3×3，步幅为 1 的过滤器构建卷积层，padding 参数为 same 卷积中的参数。然后用一个 2×2，步幅为 2 的过滤器构建最大池化层
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Classic%20Networks%203.png)
+要识上图，在最开始的两层用 64 个 3×3 的过滤器对输入图像进行卷积，输出结果是 224×224×64，因为使用了 same 卷积，通道数量也一样；接下来创建一个池化层，池化层将输入图像进行压缩，减少到 112×112×64。然后又是若干个卷积层，使用 128 个过滤器，以及一些 same卷积，112×112×128.然后进行池化，可以推导出池化后的结果是56×56×128；接着再用 256 个相同的过滤器进行三次卷积操作，然后再池化，然后再卷积三次，再池化。如此进行几轮操作后，将最后得到的 7×7×512 的特征图进行全连接操作，得到 4096 个单元，然后进行 softmax 激活，输出从 1000 个对象中识别的结果。VGG-16的参数多达1亿3千万。
+
+## 残差网络 Residual Networks
+
+经网络层数越多，网络越深，源于梯度消失和梯度爆炸的影响，整个模型难以训练成功。解决的方法之一是人为地让神经网络某些层跳过下一层神经元的连接，隔层相连，弱化每层之间的强联系。这种神经网络被称为Residual Networks(ResNets)。
+
+Residual Networks由许多隔层相连的神经元子模块组成，我们称之为Residual block。单个Residual block的结构如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Residual%20Networks%201.png)
+上图中红色部分就是skip connection，直接建立a^[l]与a^[l+2]之间的隔层联系。相应的表达式如下：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Residual%20Networks%202.png)
+直接隔层与下一层的线性输出相连，与共同通过激活函数ReLU输出。
+
+由多个Residual block组成的神经网络就是Residual Network。实验表明，这种模型结构对于训练非常深的神经网络，效果很好。另外，为了便于区分，我们把非Residual Networks称为Plain Network。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Residual%20Networks%203.png)
+Residual Network的结构如上图所示
+
+与Plain Network相比，Residual Network能够训练更深层的神经网络，有效避免发生发生梯度消失和梯度爆炸。从下面两张图的对比中可以看出，随着神经网络层数增加，Plain Network实际性能会变差，training error甚至会变大。然而，Residual Network的训练效果却很好，training error一直呈下降趋势。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Residual%20Networks%204.png)
+
+下面用个例子来解释为什么ResNets能够训练更深层的神经网络。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Residual%20Networks%205.png)
+
+如上图所示，输入x经过很多层神经网络后输出，其中的激活函数为ReLU，经过一个Residual block输出：
+$$
+a^{[l+2]}=g(z^{[l+2]}+a^{[l]})=g(W^{[l+2]}a^{[l+1]}+b^{[l+2]}+a^{[l]})
+$$
+
+$$
+输入x经过Big\,NN后，若W^{[l+2]}=b^{[l+2]}=0，则有a^{[l+2]}=g(a^{[l]})=a^{[l]}，when\,a^{[l]}\geq 0
+$$
+
+可以看出，即使发生了梯度消失，也能直接建立a^[l+2]与a^[l]的线性关系。从效果来说，相当于直接忽略了Big NN之后的这两层神经层。这样，看似很深的神经网络，其实由于许多Residual blocks的存在，弱化削减了某些神经层之间的联系，实现隔层线性传递，而不是一味追求非线性关系，模型本身也就能“容忍”更深层的神经网络了。而且从性能上来说，这两层额外的Residual blocks也不会降低Big NN的性能。
+
+当然，如果Residual blocks确实能训练得到非线性关系，那么也会忽略short cut，跟Plain Network起到同样的效果。
+
+有一点需要注意的是，如果Residual blocks中输入和输出的维度不同，通常可以引入矩阵W_s，W_s与a^[l]相乘，使得的维度与a^[l+2]一致。参数矩阵有来两种方法得到：一种通过模型训练得到；另一种是固定值（类似单位矩阵），padding的值为0，用0填充a^[l]，使其维度与a^[l+2]一致。
+
+下图所示的是CNN中ResNets的结构：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Residual%20Networks%206.png)
+ResNets同类型层之间，例如CONV layers，大多使用same类型，保持维度相同。如果是不同类型层之间的连接，例如CONV layer与POOL layer之间，如果维度不同，则引入矩阵W_s。
+
+普通网络和 ResNets 网络常用的结构是：卷积层-卷积层-卷积层-池化层-卷积层-卷积层-卷积层-池化层……依此重复。直到最后，有一个通过 softmax 进行预测的全连接层。
+
+## 网络中的网络以及 1×1 卷积 Network In Network And 1×1 Convolutions
+
+1x1 Convolutions，也称Networks in Networks。这种结构的特点是滤波器算子filter的维度为1x1。对于单个filter，1x1的维度，意味着卷积操作等同于乘积操作。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Networks%20in%20Networks%201.png)
+
+那么，对于多个filters，1x1 Convolutions的作用实际上类似全连接层的神经网络结构。效果等同于Plain Network中到的过程。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Networks%20in%20Networks%202.png)
+
+1x1 Convolutions可以用来缩减输入图片的通道数目。方法如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Networks%20in%20Networks%203.png)
+
+## Inception网络 Inception Network
+
+CNN单层的滤波算子filter尺寸是固定的，1x1或者3x3等。而Inception Network在单层网络上可以使用多个不同尺寸的filters，进行same convolutions，把各filter下得到的输出拼接起来。除此之外，还可以将CONV layer与POOL layer混合，同时实现各种效果。但是要注意使用same pool。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Inception%20Network%201.png)
+
+Inception Network与其它只选择单一尺寸和功能的filter不同，Inception Network使用不同尺寸的filters并将CONV和POOL混合起来，将所有功能输出组合拼接，再由神经网络本身去学习参数并选择最好的模块。
+
+Inception Network在提升性能的同时，会带来计算量大的问题。例如下面这个例子：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Inception%20Network%202.png)
+此CONV layer需要的计算量为：28x28x32x5x5x192=120m，其中m表示百万单位，可以看出但这一层的计算量都是很大的。为此，我们可以引入1x1 Convolutions来减少其计算量，结构如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Inception%20Network%203.png)
+通常我们把该1x1 Convolution称为“瓶颈层”（bottleneck layer)。引入bottleneck layer之后，总共需要的计算量为：28x28x16x192+28x28x32x5x5x16=12.4m。明显地，虽然多引入了1x1 Convolution层，但是总共的计算量减少了近90%，效果还是非常明显的。由此可见，1x1 Convolutions还可以有效减少CONV layer的计算量。
+
+引入1x1 Convolution后的Inception module如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Inception%20Network%204.png)
+
+多个Inception modules组成Inception Network，效果如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Inception%20Network%205.png)
+上述Inception Network除了由许多Inception modules组成之外，值得一提的是网络中间隐藏层也可以作为输出层Softmax，有利于防止发生过拟合。
+
+## 数据增强 Data Augmentation
+
+常用的Data Augmentation方法是对已有的样本集进行Mirroring和Random Cropping
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Data%20Augmentation%201.png)
+
+另一种Data Augmentation的方法是color shifting。color shifting就是对图片的RGB通道数值进行随意增加或者减少，改变图片色调。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Data%20Augmentation%202.png)
+
+除了随意改变RGB通道数值外，还可以更有针对性地对图片的RGB通道进行PCA color augmentation，也就是对图片颜色进行主成分分析，对主要的通道颜色进行增加或减少，可以采用高斯扰动做法。这样也能增加有效的样本数量。在构建大型神经网络的时候，data augmentation和training可以由两个不同的线程来进行。
+
+# 目标检测 Object Detection
+
+## 目标定位 Object Localization
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Object%20Localization%201.png)
+
+标准的CNN分类模型，如下所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Object%20Localization%202.png)
+原始图片经过CONV卷积层后，Softmax层输出4 x 1向量，分别是：pedestrain，car，motorcycle和background
+
+对于目标定位和目标检测问题，其模型如下所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Object%20Localization%203.png)
+原始图片经过CONV卷积层后，Softmax层输出8 x 1向量。p_c表示是否含有对象，如果对象属于前三类（行人、汽车、摩托车），其值为1，如果是背景，即图片中没有要检测的对象，其值为0，实际上，它表示矩形区域是目标的概率，数值在0～1之间，且值越大概率越大；(bx, by)，表示目标中心位置坐标，b_h和b_w，表示目标所在矩形区域的高和宽。一般设定图片左上角为原点(0, 0)，右下角为(1, 1)。在模型训练时，b_x、b_y、b_h、b_w都由人为确定其数值。例如上图中，可得b_x=0.5，b_y=0.7，b_h=0.3，b_w=0.4。
+
+对于损失函数Loss function，若使用平方误差形式，有两种情况：
+$$
+p_c=1,即取y_1=1,L(\hat{y},y)=(\hat{y}_1-y_1)^2+(\hat{y}_2-y_2)^2+……+(\hat{y}_8-y_8)^2
+$$
+
+$$
+p_c=0,即取y_1=1,表示没有检测到目标，则输出label后面的7个参数都可以忽略,L(\hat{y},y)=(\hat{y}_1-y_1)^2
+$$
+
+## 特征点检测 Landmark Detection
+
+除了使用矩形区域检测目标类别和位置外，我们还可以仅对目标的关键特征点坐标进行定位，这些关键点被称为landmarks。
+
+例如人脸识别，可以对人脸部分特征点坐标进行定位检测，并标记出来，如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Landmark%20Detection%201.png)
+
+该网络模型共检测人脸上64处特征点，加上是否为face的标志位，输出label共有64x2+1=129个值。通过检测人脸特征点可以进行情绪分类与判断，或者应用于AR领域等等。
+
+除了人脸特征点检测之外，还可以检测人体姿势动作，如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Landmark%20Detection%202.png)
+
+## 目标检测 Object Detection
+
+目标检测的一种简单方法是滑动窗算法。这种算法首先在训练样本集上搜集相应的各种目标图片和非目标图片。注意训练集图片尺寸较小，尽量仅包含相应目标，如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Object%20Detection%201.png)
+然后，使用这些训练集构建CNN模型，使得模型有较高的识别率
+
+最后，在测试图片上，选择大小适宜的窗口、合适的步进长度，进行从左到右、从上倒下的滑动。每个窗口区域都送入之前构建好的CNN模型进行识别判断。若判断有目标，则此窗口即为目标区域；若判断没有目标，则此窗口为非目标区域。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Object%20Detection%202.png)
+
+滑动窗算法的优点是原理简单，且不需要人为选定目标区域（检测出目标的滑动窗即为目标区域）。但是其缺点也很明显，首先滑动窗的大小和步进长度都需要人为直观设定。滑动窗过小或过大，步进长度过大均会降低目标检测正确率。而且，每次滑动窗区域都要进行一次CNN网络计算，如果滑动窗和步进长度较小，整个目标检测的算法运行时间会很长。所以，滑动窗算法虽然简单，但是性能不佳，不够快，不够灵活。
+
+## 滑动窗口的卷积实现 Convolutional Implementation of Sliding Windows
+
+滑动窗算法可以使用卷积方式实现，以提高运行速度，节约重复运算成本。
+
+首先，单个滑动窗口区域进入CNN网络模型时，包含全连接层。那么滑动窗口算法卷积实现的第一步就是将全连接层转变成为卷积层，如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Convolutional%20Implementation%20of%20Sliding%20Windows%201.png)
+全连接层转变成卷积层的操作很简单，只需要使用与上层尺寸一致的滤波算子进行卷积运算即可。最终得到的输出层维度是1 x 1 x 4，代表4类输出值。
+
+单个窗口区域卷积网络结构建立完毕之后，对于待检测图片，即可使用该网络参数和结构进行运算。例如16 x 16 x 3的图片，单通道内窗口大小为14 x 14，滑动步进长度为2，则16 x 16的通道内可以划分4个滑动窗口，CNN网络得到的输出层为2 x 2 x 4；其中，2 x 2表示共有4个窗口结果，左上角的蓝色对应16 x 16图像中蓝色区域代表的窗口，右上角对应16 x 16中蓝色区域向右滑动2对应的区域。
+对于更复杂的28 x 28 x3的图片，CNN网络得到的输出层为8 x 8 x 4，共64个窗口结果。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Convolutional%20Implementation%20of%20Sliding%20Windows%202.png)
+
+之前的滑动窗算法需要反复进行CNN正向计算，例如16 x 16 x 3的图片需进行4次，28 x 28 x3的图片需进行64次。而利用卷积操作代替滑动窗算法，则不管原始图片有多大，只需要进行一次CNN正向计算，因为其中共享了很多重复计算部分，这大大节约了运算成本。值得一提的是，窗口步进长度与选择的MAX POOL大小有关，如果需要步进长度为4，只需设置MAX POOL为4 x 4即可。
+
+## Bounding Box Predictions
+
+滑动窗口算法有时会出现滑动窗不能完全涵盖目标的问题，如下图蓝色窗口所示:
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Bounding%20Box%20Predictions%201.png)
+
+YOLO（You Only Look Once）算法可以解决这类问题，生成更加准确的目标区域（如上图红色窗口）。
+
+YOLO算法首先将原始图片分割成n x n网格，每个网格代表一块区域。为简化说明，下图中将图片分成3 x 3网格。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Bounding%20Box%20Predictions%202.png)
+然后，利用上一节卷积形式实现滑动窗口算法的思想，对该原始图片构建CNN网络，得到的的输出层维度为3 x 3 x 8。其中，3 x 3对应9个网格，每个网格的输出包含8个元素：
+$$
+y=
+\begin{bmatrix}
+    p_c\\ b_x\\ b_y\\ b_h \\ b_w \\ c_1 \\ c_2 \\ c_3
+\end{bmatrix}
+$$
+
+如果目标中心坐标不在当前网格内，则当前网格Pc=0；相反，则当前网格Pc=1（即只看中心坐标是否在当前网格内）。判断有目标的网格中，限定了目标区域。值得注意的是，当前网格左上角坐标设定为(0, 0)，右下角坐标设定为(1, 1)，范围限定在[0,1]之间，但是可以大于1。因为目标可能超出该网格，横跨多个区域，如上图所示。目标占几个网格没有关系，目标中心坐标必然在一个网格之内。
+划分的网格可以更密一些，网格越小，则多个目标的中心坐标被划分到一个网格内的概率就越小，这恰恰是我们希望看到的。
+
+## 交并比 Intersection Over Union
+
+IoU，即交集与并集之比，可以用来评价目标检测区域的准确性。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Intersection%20Over%20Union.png)
+如上图所示，红色方框为真实目标区域，蓝色方框为检测目标区域。两块区域的交集为绿色部分，并集为紫色部分。蓝色方框与红色方框的接近程度可以用IoU比值来定义：
+$$
+IoU=\frac{Intersection}{Union}=\frac{A \cap B}{A \cup B}
+$$
+一般约定，在计算机检测任务中，如果 IoU ≥ 0.5，就说检测正确，如果预测器和实际边界框完美重叠，loU 就是 1，因为交集就等于并集。但一般来说只要 IoU ≥ 0.5，那么结果是可以接受的，看起来还可以。一般约定，0.5 是阈值，用来判断预测的边界框是否正确。
+
+## 非最大值抑制 Non-Max Suppression
+
+YOLO算法中，可能会出现多个网格都检测出到同一目标的情况，例如几个相邻网格都判断出同一目标的中心坐标在其内。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Non-max%20Suppression%201.png)
+上图中，三个绿色网格和三个红色网格分别检测的都是同一目标。那如何判断哪个网格最为准确呢？方法是使用非最大值抑制算法。
+
+非最大值抑制（Non-max Suppression）做法很简单，图示每个网格的Pc值可以求出，Pc值反映了该网格包含目标中心坐标的可信度。首先选取Pc最大值对应的网格和区域，然后计算该区域与所有其它区域的IoU，剔除掉IoU大于阈值（例如0.5）的所有网格及区域。这样就能保证同一目标只有一个网格与之对应，且该网格Pc最大，最可信。接着，再从剩下的网格中选取Pc最大的网格，重复上一步的操作。最后，就能使得每个目标都仅由一个网格和区域对应。如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Non-max%20Suppression%202.png)
+
+非最大值抑制算法的流程：
+1、剔除Pc值小于某阈值（例如0.6）的所有网格；
+2、选取Pc值最大的网格，利用IoU，摒弃与该网格交叠较大的网格；
+3、对剩下的网格，重复步骤2。
+
+## Anchor Boxes
+
+对于多个目标重叠的情况，例如一个人站在一辆车前面，使用不同形状的Anchor Boxes再运用YOLO算法进行检测。
+
+如下图所示，同一网格出现了两个目标：人和车。为了同时检测两个目标，我们可以设置两个Anchor Boxes，Anchor box 1检测人，Anchor box 2检测车。也就是说，每个网格多加了一层输出。原来的输出维度是 3 x 3 x 8，现在是3 x 3 x 2 x 8（也可以写成3 x 3 x 16的形式）。这里的2表示有两个Anchor Boxes，用来在一个网格中同时检测多个目标。每个Anchor box都有一个Pc值，若两个Pc值均大于某阈值，则检测到了两个目标
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Anchor%20Boxes.png)
+$$
+y= [p_c\quad b_x\quad b_y\quad b_h\quad b_w\quad c_1\quad c_2\quad c_3\quad p_c\quad b_x\quad b_y\quad b_h\quad b_w\quad c_1\quad c_2\quad c_3]^T
+$$
+在使用YOLO算法时，只需对每个Anchor box使用非最大值抑制即可，Anchor Boxes之间并行实现。
+
+Anchor Boxes形状的选择可以通过人为选取，也可以使用其他机器学习算法，例如k聚类算法对待检测的所有目标进行形状分类，选择主要形状作为Anchor Boxes。
+
+## 候选区域 Region Proposals
+
+滑动窗算法会对原始图片的每个区域都进行扫描，即使是一些空白的或明显没有目标的区域，例如下图所示。这样会降低算法运行效率，耗费时间。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Region%20Proposals%201.png)
+
+为了解决这一问题，尽量避免对无用区域的扫描，可以使用Region Proposals的方法。具体做法是先对原始图片进行分割算法处理，然后支队分割后的图片中的块进行目标检测。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Region%20Proposals%202.png)
+
+Region Proposals共有三种方法：
+1、R-CNN: 滑动窗的形式，一次只对单个区域块进行目标检测，运算速度慢。
+2、Fast R-CNN: 利用卷积实现滑动窗算法。
+3、Faster R-CNN: 利用卷积对图片进行分割，进一步提高运行速度。
+
+## YOLO Algorithm Summarize
+
+网络结构如下图所示，包含了两个Anchor Boxes。
+
+1. For each grid call, get 2 predicted bounding boxes.
+2. Get rid of low probability predictions.
+3. For each class (pedestrian, car, motorcycle) use non-max suppression to generate final predictions.
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/YOLO%20Algorithm.png)
+
+# 人脸识别 Face Recognition
+
+人脸验证 Face Verification：输入一张人脸图片，验证输出与模板是否为同一人，即一对一问题。
+
+人脸识别 Face Recognition：输入一张人脸图片，验证输出是否为K个模板中的某一个，即一对多问题。
+
+一般地，人脸识别比人脸验证更难一些。因为假设人脸验证系统的错误率是1%，那么在人脸识别中，输出分别与K个模板都进行比较，则相应的错误率就会增加，约K%。模板个数越多，错误率越大一些。
+
+## One-Shot Learning
+
+One-shot learning意味着数据库中每个人的训练样本只包含一张照片，然后训练一个CNN模型来进行人脸识别。若数据库有K个人，则CNN模型输出softmax层就是K+1维的（K个人中的一个，或者都不符合）。
+
+但是One-shot learning的性能并不好，其包含了两个缺点：
+每个人只有一张图片，训练样本少，构建的CNN网络不够健壮
+若数据库增加另一个人，输出层softmax的维度就要发生变化，相当于要重新构建CNN网络，使模型计算量大大增加，不够灵活
+
+为了解决One-shot learning的问题，先引入相似函数（similarity function）。相似函数表示两张图片的相似程度，用d(img1,img2) = degree of difference between images 来表示。若d(img1,img2)较小，则表示两张图片相似；若d(img1,img2)较大，则表示两张图片不是同一个人。相似函数可以在人脸验证中使用：
+$$
+d(img1,img2)\leq \tau ：两张图片是同一人 \quad
+d(img1,img2) > \tau ：两张图片不是同一人
+$$
+对于人脸识别问题，则只需计算测试图片与数据库中K个目标的相似函数，取其中d(img1,img2)最小的目标为匹配对象。若所有的d(img1,img2)都很大，则表示数据库没有这个人。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/One%20Shot%20Learning.png)
+
+## Siamese Network
+
+若一张图片经过一般的CNN网络（包括CONV层、POOL层、FC层），最终得到全连接层FC，该FC层可以看成是原始图片的编码encoding，表征了原始图片的关键特征。这个网络结构我们称之为Siamese network。也就是说每张图片经过Siamese network后，由FC层每个神经元来表征。
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Siamese%20Network.png)
+
+建立Siamese network后，两张图片x(1)和x(2)的相似度函数可由各自FC层f(x(1))与f(x(2))之差的范数来表示：
+$$
+d(x^{(1)},x^{(2)})=||f(x^{(1))})-f(x^{(2))})||^2
+$$
+
+$$
+If\;x^{(i)},x^{(j)}\;are\;the\;same\;person,||f(x^{(i))})-f(x^{(j))})||^2\;is\;small
+$$
+
+$$
+If\;x^{(i)},x^{(j)}\;are\;different\;persons,||f(x^{(i))})-f(x^{(j))})||^2\;is\;large
+$$
+
+## Triplet Loss
+
+构建人脸识别的CNN模型，需要定义合适的损失函数，引入Triplet Loss。
+
+Triplet Loss需要每个样本包含三张图片：靶目标（Anchor）、正例（Positive）、反例（Negative），这就是triplet名称的由来。顾名思义，靶目标和正例是同一人，靶目标和反例不是同一人。Anchor和Positive组成一类样本，Anchor和Negative组成另外一类样本。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Triplet%20Loss%201.png)
+
+把三张图片Anchor、Positive、Negative 图片简写成A、P、N。
+我们希望构建的CNN网络输出编码f(A)接近f(P)，即||f(A)−f(P)||^2尽可能小，而||f(A)−f(N)||^2尽可能大，数学上满足：
+$$
+||f(A)-f(P)||^2\leq||f(A)-f(N)||^2,\quad即d(A,P)\leq d(A,N)
+$$
+根据上面的不等式，如果所有的图片都是零向量，即f(A)=0,f(P)=0,f(N)=0，那么上述不等式也满足。但是这对我们进行人脸识别没有任何作用，是不希望看到的。
+我们希望得到||f(A)−f(P)||^2远小于||f(A)−f(N)||^2，所以，添加一个超参数α，且α>0，对上述不等式做出如下修改：
+$$
+||f(A)-f(P)||^2 -||f(A)-f(N)||^2\leq-\alpha,\quad即||f(A)-f(P)||^2 -||f(A)-f(N)||^2+\alpha\leq0
+$$
+超参数α也被称为边界margin，它拉大了 Anchor 和 Positive 图片对和 Anchor 与 Negative 图片对之间的差距，类似与支持向量机中的margin。例如，若d(A,P)=0.5，α=0.2，则d(A,N) ≥ 0.7。
+
+根据A，P，N三张图片，就可以定义Loss function为：
+$$
+L(A,P,N)=max(||f(A)-f(P)||^2 -||f(A)-f(N)||^2+\alpha,0)
+$$
+相应地，对于m组训练样本，Cost function为：
+$$
+J=\sum_{i=1}^mL(A^{(i)},P^{(i)},N^{(i)})
+$$
+关于训练样本，必须保证同一人包含多张照片，否则无法使用这种方法。例如10k张照片包含1k个不同的人脸，则平均一个人包含10张照片，这个训练样本是满足要求的。然后，就可以使用梯度下降算法，不断训练优化CNN网络参数，让Cost Function不断减小接近0。
+
+同一组训练样本，A，P，N的选择尽可能不要使用随机选取方法。因为随机选择的A与P一般比较接近，A与N相差也较大，毕竟是两个不同人脸。这样的话，也许模型不需要经过复杂训练就能实现这种明显识别，但是抓不住关键区别。所以，最好的做法是人为选择A与P相差较大（例如换发型，留胡须等），A与N相差较小（例如发型一致，肤色一致等）。这种人为地增加难度和混淆度会让模型本身去寻找学习不同人脸之间关键的差异，“尽力”让d(A,P)更小，让d(A,N)更大，即让模型性能更好。
+
+一些A，P，N的例子：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Triplet%20Loss%202.png)
+
+值得一提的是，现在许多商业公司构建的大型人脸识别模型都需要百万级别甚至上亿的训练样本。如此之大的训练样本我们一般很难获取。但是一些公司将他们训练的人脸识别模型发布在了网上，可供我们使用。
+
+## 人脸验证与二分类 Face Verification And Binary Classification
+
+除了构造Triplet loss来解决人脸识别问题之外，还可以使用二分类结构。
+做法是将两个siamese网络组合在一起，将各自的编码层输出经过一个逻辑输出单元，该神经元使用sigmoid函数，输出1则表示识别为同一人，输出0则表示识别为不同人。结构示意图如下：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Face%20Verification%20and%20Binary%20Classification%201.png)
+
+每组训练样本包含两张图片，每个siamese网络结构和参数完全相同。这样就把人脸识别问题转化成了一个二分类问题。引入逻辑输出层参数w和b，输出ŷ 表达式为：
+$$
+\widehat{y}=\sigma(\sum_{k=1}^Kw_k|f(x^{(i)})_k-f(x^{(j)})_k|+b)
+$$
+符号解释：𝑓(𝑥(𝑖))𝑘代表图片𝑥(𝑖)的编码，下标𝑘代表选择这个向量中的第𝑘个元素，|𝑓(𝑥(𝑖))𝑘 − 𝑓(𝑥(𝑗))𝑘|对这两个编码取元素差的绝对值，其中参数wk和b都是通过梯度下降算法迭代训练得到。
+
+ŷ的另一种表达形式
+$$
+\widehat{y}=\sigma(\sum_{k=1}^Kw_k\frac{(f(x^{(i)})_k-f(x^{(j)})_k)^2}{f(x^{(i)})_k+f(x^{(j)})_k}+b)，分式部分被称为𝜒2公式，也被称为𝜒平方相似度
+$$
+
+在训练好网络之后，进行人脸识别的常规方法是测试图片与模板分别进行网络计算，编码层输出比较，计算逻辑输出单元。为了减少计算量，可以使用预计算的方式在训练时就将数据库每个模板的编码层输出f(x)保存下来。因为编码层输出f(x)比原始图片数据量少很多，所以无须保存模板图片，只要保存每个模板的f(x)即可，节约存储空间。而且，测试过程中，无须计算模板的siamese网络，只要计算测试图片的siamese网络，得到的f(x(i))直接与存储的模板f(x(j))进行下一步的逻辑输出单元计算即可，计算时间减小了接近一半。这种方法也可以应用在Triplet loss网络中。
+
+总结：把人脸验证当作一个监督学习，创建一个只有成对图片的训练集，不是三个一组，而是成对的图片，目标标签是 1 表示一对图片是一个人，目标标签是 0 表示图片中是不同的人。利用不同的成对图片，使用反向传播算法去训练神经网络，训练 Siamese神经网络。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Face%20Verification%20And%20Binary%20Classification%202.png)
+
+# 神经风格迁移 Neural Style Transfer
+
+神经风格迁移是CNN模型一个非常有趣的应用。它可以实现将一张图片的风格“迁移”到另外一张图片中，生成具有其特色的图片。比如我们可以将毕加索的绘画风格迁移到我们自己做的图中，生成类似的“大师作品”。
+
+下面列出几个神经风格迁移的例子：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Neural%20Style%20Transfer%201.png)
+一般用C表示内容图片，S表示风格图片，G表示生成的图片。
+
+## 深度卷积网络学习什么 What Are Deep ConvNets Learning
+
+在进行神经风格迁移之前，我们先来从可视化的角度看一下卷积神经网络每一层到底是什么样子？它们各自学习了哪些东西。
+
+典型的CNN网络如下所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/What%20Are%20Deep%20ConvNets%20Learning%201.png)
+
+首先来看第一层隐藏层，遍历所有训练样本，找出让该层激活函数输出最大的9块图像区域；然后再找出该层的其它单元（不同的滤波器通道）激活函数输出最大的9块图像区域；最后共找9次，得到9 x 9的图像如下所示，其中每个3 x 3区域表示一个运算单元
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/What%20Are%20Deep%20ConvNets%20Learning%202.png)
+
+可以看出，第一层隐藏层一般检测的是原始图像的边缘和颜色阴影等简单信息。
+继续看CNN的更深隐藏层，随着层数的增加，捕捉的区域更大，特征更加复杂，从边缘到纹理再到具体物体。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/What%20Are%20Deep%20ConvNets%20Learning%203.png)
+
+## 代价函数 Cost Function
+
+神经风格迁移生成图片G的Cost function由两部分组成：C与G的相似程度和S与G的相似程度。
+$$
+J(G)=\alpha J_{content}(C,G)+\beta J_{style}(S,G)
+$$
+其中，α，β是超参数，用来调整Jcontent(C,G)与Jstyle(S,G)的相对比重
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Neural%20Style%20Transfer%20Cost%20Function%201.png)
+
+神经风格迁移的基本算法流程是：首先令G为随机像素点，然后使用梯度下降算法，不断修正G的所有像素点，使得J(G)不断减小，从而使G逐渐有C的内容和G的风格，如下图所示。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Neural%20Style%20Transfer%20Cost%20Function%202.png)
+
+## Content Cost Function
+
+J_content(C,G)表示内容图片C与生成图片G之间的相似度。
+
+使用的CNN网络是之前训练好的模型，例如Alex-Net。C，S，G共用相同模型和参数。首先，需要选择合适的层数 l 计算J_content(C,G)。CNN的每个隐藏层分别提取原始图片的不同深度特征，由简单到复杂。如果 l 太小，则G与C在像素上会非常接近，没有迁移效果；如果 l 太深，则G上某个区域将直接会出现C中的物体。因此，l 既不能太浅也不能太深，一般选择网络中间层。
+$$
+J_{content}(C,G)=\frac{1}{2}||a^{[l][C]}-a^{[l][G]}||^2
+$$
+该代价函数比较的是C和G在l层的激活函数输出，方法就是使用梯度下降算法，不断迭代修正G的像素值，使代价函数减小。
+
+## Style Cost Function
+
+什么是图片的风格？利用CNN网络模型，图片的风格可以定义成第l层隐藏层不同通道间激活函数的乘积（相关性）。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Style%20Cost%20Function%201.png)
+
+例如我们选取第 l 层隐藏层，其各通道使用不同颜色标注，如下图所示。因为每个通道提取图片的特征不同，比如1通道（红色）提取的是图片的垂直纹理特征，2通道（黄色）提取的是图片的橙色背景特征。那么计算这两个通道的相关性大小，相关性越大，表示原始图片及既包含了垂直纹理也包含了该橙色背景；相关性越小，表示原始图片并没有同时包含这两个特征。也就是说，计算不同通道的相关性，反映了原始图片特征间的相互关系，从某种程度上刻画了图片的“风格”。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Style%20Cost%20Function%202.png)
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Style%20Cost%20Function.png)
+
+# 循环神经网络 Recurrent Neural Networks
+
+## 序列模型 Sequence Models
+
+序列模型能够应用在许多领域，例如：语音识别、音乐发生器、情感分类、DNA序列分析、机器翻译、视频动作识别、命名实体识别
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Sequence%20Models%201.png)
+这些序列模型基本都属于监督式学习，输入x和输出y不一定都是序列模型。如果都是序列模型的话，模型长度不一定完全一致
+
+下面以命名实体识别为例，介绍序列模型的命名规则。示例语句为：
+
+Harry Potter and Hermione Granger invented a new spell.
+
+该句话包含9个单词，输出y即为1 x 9向量，每位表征对应单词是否为人名的一部分，1表示是，0表示否。很明显，该句话中“Harry”，“Potter”，“Hermione”，“Granger”均是人名成分，所以，对应的输出y可表示为：y=[1  1  0  1  1  0  0  0  0]
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Sequence%20Models%202.png)
+
+## 循环神经网络模型 Recurrent Neural Network Model
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 长短期记忆网络 Long-Short Term Memory
+
+# 生成对抗网络 Generative Adversarial Networks
+
+# 隐马尔可夫模型 Hidden Markov Model
