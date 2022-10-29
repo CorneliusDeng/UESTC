@@ -1335,6 +1335,8 @@ Region Proposals共有三种方法：
 
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/YOLO%20Algorithm.png)
 
+
+
 # 人脸识别 Face Recognition
 
 人脸验证 Face Verification：输入一张人脸图片，验证输出与模板是否为同一人，即一对一问题。
@@ -1436,6 +1438,8 @@ $$
 总结：把人脸验证当作一个监督学习，创建一个只有成对图片的训练集，不是三个一组，而是成对的图片，目标标签是 1 表示一对图片是一个人，目标标签是 0 表示图片中是不同的人。利用不同的成对图片，使用反向传播算法去训练神经网络，训练 Siamese神经网络。
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Face%20Verification%20And%20Binary%20Classification%202.png)
 
+
+
 # 神经风格迁移 Neural Style Transfer
 
 神经风格迁移是CNN模型一个非常有趣的应用。它可以实现将一张图片的风格“迁移”到另外一张图片中，生成具有其特色的图片。比如我们可以将毕加索的绘画风格迁移到我们自己做的图中，生成类似的“大师作品”。
@@ -1490,6 +1494,8 @@ $$
 
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Style%20Cost%20Function.png)
 
+
+
 # 循环神经网络 Recurrent Neural Networks
 
 ## 序列模型 Sequence Models
@@ -1507,20 +1513,569 @@ Harry Potter and Hermione Granger invented a new spell.
 
 ## 循环神经网络模型 Recurrent Neural Network Model
 
+对于序列模型，如果使用标准的神经网络，其模型结构如下：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Recurrent%20Neural%20Network%20Model%201.png)
+
+使用标准的神经网络模型存在两个问题：
+1、不同样本的输入序列长度或输出序列长度不同，即T_x和T_y可能不同，造成模型难以统一。解决办法之一是设定一个最大序列长度，对每个输入和输出序列补零并统一到最大长度，但是这种做法实际效果并不理想。
+2、这种标准神经网络结构无法共享从文本的不同位置上学到的特征。例如，如果某个位置识别到“Harry”是人名成分，那么句子其它位置出现了“Harry”也能自动识别其为人名的一部分，这是共享特征的结果，如同CNN网络特点一样。但是，上图所示的网络不具备共享特征的能力。值得一提的是，共享特征还有助于减少神经网络中的参数数量，一定程度上减小了模型的计算复杂度。例如上图所示的标准神经网络，假设每个扩展到最大序列长度为100，且词汇表长度为10000，则输入层就已经包含了100 x 10000个神经元了，权重参数很多，运算量将是庞大的。
+
+标准的神经网络不适合解决序列模型问题，而循环神经网络（RNN）是专门用来解决序列模型问题的。RNN模型结构如下：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Recurrent%20Neural%20Network%20Model%202.png)
+序列模型从左到右，依次传递，由输入序列生成输出序列，同时也要考虑前期时间步的结果，以实现特征共享。在这个模型中 T_x=T_y，如果它们不同，模型要做出适当改变。
+
+循环神经网络是从左向右扫描数据，同时每个时间步的参数也是共享的。要开始整个流程，需要在零时刻构造一个激活值a^<0>，它通常是零向量；用W_ax来表示管理着从x^<1>到隐藏层的连接的一系列参数，每个时间步使用的都是相同的参数W_ax；而激活值也就是水平联系是由参数W_𝑎𝑎决定的，同时每一个时间步都使用相同的参数，输出结果由W\_ya决定。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Recurrent%20Neural%20Network%20Model%203.png)
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Recurrent%20Neural%20Network%20Model%204.png)
+
+RNN的正向传播（Forward Propagation）过程为（激活函数g的选择依模型而定）：
+$$
+a^{<t>}=g_1(W_{aa}a^{<t-1>}+W_{ax}x^{<t>}+b_a),\quad \widehat{y}^{<t>}=g_2(W_{ya}a^{<t>}+b_y)
+$$
+为了简化表达式:
+$$
+W_{aa}a^{<t-1>}+W_{ax}x^{<t>}=[W_{aa}\;W_{ax}]
+\begin{bmatrix}
+    a^{<t-1>} \\ x^{<t>}
+\end{bmatrix} 
+\rightarrow 
+W_a[a^{<t-1>}\;x^{<t>}],\quad
+其中W_a=[W_{aa}\;W_{ax}]
+$$
+那么可以RNN正向传播可以表达为：
+$$
+a^{<t>}=g_1(W_a[a^{<t-1>}\;x^{<t>}]+b_a),\quad \widehat{y}^{<t>}=g_2(W_ya^{<t>}+b_y)
+$$
+如果在任意层，a的维度是100，x的维度是10000，那么W_aa的维度为（100，100），W_ax的维度为（100，10000），W_a的维度为：（100，10100）
+
+以上所述的RNN为单向RNN，即按照从左到右顺序，单向进行，只与左边的元素有关。但是，有时候也可能与右边元素有关。例如下面两个句子中，单凭前三个单词，无法确定“Teddy”是否为人名，必须根据右边单词进行判断。
+
+He said, “Teddy Roosevelt was a great President.”
+He said, “Teddy bears are on sale!”
+
+因此，有另外一种RNN结构是双向RNN，简称为BRNN，与左右元素均有关系。
+
+RNN模型包含以下几个类型：
+Many to many
+Many to one
+One to many
+One to one
+
+不同类型相应的示例结构如下：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Different%20Types%20Of%20RNNs.png)
+
+## 通过时间的反向传播 Backpropagation Through Time
+
+针对上面识别人名的例子，经过RNN正向传播，单个元素的Loss function为：
+$$
+L^{<t>}(\widehat{y}^{<t>},y^{<t>})=-y^{<t>}log\widehat{y}^{<t>}-(1-y^{<t>})log(1-\widehat{y}^{<t>})
+$$
+该样本所有元素的Loss function为：
+$$
+L(\widehat{y},y)=\sum_{t=1}^{T_y}L^{<t>}(\widehat{y}^{<t>},y^{<t>})
+$$
+然后，反向传播（Backpropagation）过程就是从右到左分别计算对参数求偏导数。思路与做法与标准的神经网络是一样的。一般可以通过成熟的深度学习框架自动求导，例如PyTorch、Tensorflow等。这种从右到左的求导过程被称为Backpropagation through time。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Backpropagation%20through%20time.png)
 
 
 
+## 语言模型和序列生成 Language Model And Sequence Generation
+
+语言模型是自然语言处理（NLP）中最基本和最重要的任务之一，使用RNN能够很好地建立需要的不同语言风格的语言模型。
+
+语言模型的例子：
+在语音识别中，某句语音有两种翻译
+The apple and pair salad.
+The apple and pear salad.
+
+很明显，第二句话更有可能是正确的翻译。语言模型实际上会计算出这两句话各自的出现概率。比如第一句话概率为3.2x10^-13，第二句话概率为5.7x10^-10。也就是说，利用语言模型得到各自语句的概率，选择概率最大的语句作为正确的翻译。概率计算的表达式为：
+$$
+P(y^{<1>},y^{<2>}……,y^{<T_y>})
+$$
+使用RNN构建语言模型：首先，需要一个足够大的训练集，训练集由大量的单词语句语料库（corpus）构成。然后，对corpus的每句话进行切分词（tokenize），建立vocabulary，对每个单词进行one-hot编码。例如下面这句话：
+
+The Egyptian Mau is a bread of cat.
+
+还需注意的是，每句话结束末尾，需要加上< EOS >作为语句结束符。另外，若语句中有词汇表中没有的单词，用< UNK >表示。假设单词“Mau”不在词汇表中，则上面这句话可表示为：
+
+The Egyptian < UNK > is a bread of cat. < EOS >
+
+准备好训练集并对语料库进行切分词等处理之后，接下来构建相应的RNN模型：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Language%20Model%20And%20Sequence%20Generation.png)
+语言模型的RNN结构如上图所示，𝑎^[0]和x^<1>均为零向量。于是𝑎^<1>要做的就是它会通过 softmax 进行一些预测，来计算出第一个词可能会是什么，其结果就是𝑦^<1>，这一步其实就是通过一个 softmax 层来预测字典中的任意单词会是第一个词的概率，比如说第一个词是𝑎的概率有多少，第一个词是 Aaron 的概率有多少，第一个词是 cats 的概率又有多少，就这样一直到 Zulu 是第一个词的概率是多少，还有第一个词是 UNK（未知词)的概率有多少，还有第一个词是句子结尾标志< EOS >的概率有多少，表示不必阅读。所以𝑦^<1>的输出是 softmax 的计算结果，它只是预测第一个词的概率，而不去管结果是什么。对于x^<2>=y^<1>，此处我们告知模型真实的第一个词是什么，后面的输入同理。
+
+RNN 中的每一步都会考虑前面得到的单词，比如给它前 3 个单词，让它给出下个词的分布，这就是 RNN 如何学习从左往右地每次预测一个词。接下来为了训练这个网络，要定义代价函数。于是，在某个时间步𝑡，如果真正的词是𝑦^<𝑡>，而神经网络的 softmax 层预测结果值是hat(𝑦)<𝑡>，那么单个元素的 softmax loss function表示为：
+$$
+L^{<t>}(\widehat{y}^{<t>},y^{<t>})=-\sum_iy_i^{<t>}log\widehat{y}_i^{<t>}
+$$
+总的Loss function为：
+$$
+L(\widehat y,y)=\sum_tL^{<t>}(\widehat{y}^{<t>},y^{<t>})
+$$
+对语料库的每条语句进行RNN模型训练，最终得到的模型可以根据给出语句的前几个单词预测其余部分，将语句补充完整。例如给出“Cats average 15”，RNN模型可能预测完整的语句是“Cats average 15 hours of sleep a day.”。
+
+最后补充一点，整个语句出现的概率等于语句中所有元素出现的条件概率乘积。例如某个语句包含y<1>,y<2>,y<3>，则整个语句出现的概率为：
+$$
+P(y^{<1>},y^{<2>},y^{<3>})=P(y^{<1>})·P(y^{<2>}|y^{<1>})·P(y^{<3>}|y^{<1>},y^{<2>})
+$$
+
+## 对新序列采样 Sampling Novel Sequences
+
+利用训练好的RNN语言模型，可以进行新的序列采样，从而随机产生新的语句，相应的RNN模型如下所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Language%20Model%20And%20Sequence%20Generation.png)
+首先，从第一个元素输出的softmax分布中随机选取一个word作为新语句的首单词。然后，让其作为下一层的输入，得到的softmax分布。从中选取概率最大的word作为，继续将其作为下一层的输入，以此类推，直到产生< EOS >结束符，则标志语句生成完毕。当然，也可以设定语句长度上限，达到长度上限即停止生成新的单词。最终，根据随机选择的首单词，RNN模型会生成一条新的语句。
+
+举例：假如说对第一个词进行采样后，得到的是 The，The 作为第一个词的情况很常见，然后把 The 当成𝑥^<2>，现在𝑥^<2>就是𝑦^<1>，现在需要计算出在第一词是 The 的情况下，第二个词应该是什么，然后得到的结果就是hat(𝑦)^<2>，然后再次用这个采样函数来对𝑦^<2>进行采样；然后再到下一个时间步，无论得到什么样的用 one-hot 码表示的选x择结果，都把它传递到下一个时间步，然后对第三个词进行采样。不管得到什么都把它传递下去，一直这样直到最后一个时间步。
+
+值得一提的是，如果不希望新的语句中包含< UNK >标志符，可以在每次产生< UNK >时重新采样，直到生成非< UNK >标志符为止。
+
+以上介绍的是word level RNN，即每次生成单个word，语句由多个words构成。另外一种情况是character level RNN，即词汇表由单个英文字母或字符组成。
+Character level RNN与Word level RNN不同的是，由单个字符组成而不是word。训练集中的每句话都当成是由许多字符组成的。Character level RNN的优点是能有效避免遇到词汇表中不存在的单词< UNK >。但是，character level RNN的缺点也很突出，由于是字符表征，每句话的字符数量很大，这种大的跨度不利于寻找语句前部分和后部分之间的依赖性。另外，character level RNN的在训练时的计算量也是庞大的。基于这些缺点，目前character level RNN的应用并不广泛，但是在特定应用下仍然有发展的趋势。
+
+## 循环神经网络的梯度消失 Vanishing Gradients With RNNs
+
+语句中可能存在跨度很大的依赖关系，即某个word可能与它距离较远的某个word具有强依赖关系。例如下面这两条语句：
+
+The cat, which already ate fish, was full.
+
+The cats, which already ate fish, were full.
+
+第一句话中，was受cat影响；第二句话中，were受cats影响，它们之间都跨越了很多单词。而一般的RNN模型每个元素受其周围附近的影响较大，难以建立跨度较大的依赖性。上面两句话的这种依赖关系，由于跨度很大，普通的RNN网络容易出现梯度消失，捕捉不到它们之间的依赖，造成语法错误。
+
+另一方面，RNN也可能出现梯度爆炸的问题，即gradient过大。常用的解决办法是设定一个阈值，一旦梯度最大值达到这个阈值，就对整个梯度向量进行尺度缩小，这种做法被称为梯度修剪gradient clipping。
+
+## 门控循环单元 Gated Recurrent Unit(GRU)
+
+RNN的隐藏层单元结构如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Gated%20Recurrent%20Unit%201.png)
+在这个模型中，RNN的正向传播公式为：
+$$
+a^{<t>}=tanh(W_a[a^{<t-1>}\;x^{<t>}]+b_a),\quad \widehat{y}^{<t>}=softmax(W_ya^{<t>}+b_y)
+$$
+为了解决梯度消失问题，对上述单元进行修改，添加了记忆单元，构建GRU，如下图所示:
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Gated%20Recurrent%20Unit%202.png)
+GRU 单元将会有个新的变量称为𝑐，代表细胞（cell)，即记忆细胞。记忆细胞的作用是提供了记忆的能力，比如说一只猫是单数还是复数，所以当它看到之后的句子的时候，它仍能够判断句子的主语是单数还是复数。
+在 GRU 中真正重要的思想是我们有一个门，我先把这个门叫做𝛤𝑢，这是个下标为𝑢的大写希腊字母𝛤，𝑢代表更新门，这是一个 0 到 1 之间的值，实际上这个值是把这个式子带入 sigmoid 函数得到的。
+GRU 的关键部分是用候选值𝑐̃更新𝑐的等式，然后更新门𝛤𝑢决定是否要真的更新它。记忆细胞𝑐<𝑡>将被设定为 0 或者 1，这取决于考虑的谓词在句子中是单数还是复数，如果假定单数情况设为1，复数情况设为0。然后 GRU 单元将会一直记住𝑐<𝑡>的值，直到需要表达谓词单复数不同的情况，如果𝑐<𝑡>的值还是 1，这就说明是单数。而门𝛤𝑢的作用就是决定什么时候会更新这个值，假如是看到词组 the cat，即句子的主语是单数，这就是一个好的时机去更新𝑐<𝑡>。然后当𝑐<𝑡>使用完的时候，即确定了“The cat, which already ate……, was full.”，那么就可以不必再记忆。
+如果更新值𝛤𝑢 = 1，也就是说把这个新值𝑐<𝑡>设为候选值，𝛤𝑢 = 1时简化上式𝑐<𝑡> = 𝑐̃<𝑡>，将门值设为 1，然后往前再更新这个值。那么对于所有中间的值，应该把门的值设为 0，即𝛤𝑢 = 0，意思就是说不更新它，就用旧的值，因为如果𝛤𝑢 = 0，则𝑐<𝑡> = 𝑐<𝑡−1>，𝑐<𝑡>等于旧的值。
+因此，𝑐 和 𝛤 能够保证RNN模型中跨度很大的依赖关系不受影响，消除梯度消失问题。
+$$
+\widetilde{c}^{<t>}=tanh(W_c[c^{<t-1>},x^{<t>}]+b_c)
+$$
+
+$$
+\Gamma_u=\sigma(W_u[c^{<t-1>},x^{<t>}]+b_u)
+$$
+
+$$
+c^{<t>}=\Gamma_u*\widetilde{c}^{<t>}+(1-\Gamma_u)*c^{<t-1>}
+$$
+
+上面介绍的是简化的GRU模型，完整的GRU添加了另外一个gate，即𝛤𝑟，r可以认为代表相关性（relevance），这个𝛤𝑟门表示计算出的下一个𝑐<𝑡>的候选值𝑐̃<𝑡>跟𝑐<𝑡−1>有多大的相关性，表达式如下：
+$$
+\widetilde{c}^{<t>}=tanh(W_c[\Gamma_r*c^{<t-1>},x^{<t>}]+b_c)
+$$
+
+$$
+\Gamma_u=\sigma(W_u[c^{<t-1>},x^{<t>}]+b_u)
+$$
+
+$$
+\Gamma_r=\sigma(W_r[c^{<t-1>},x^{<t>}]+b_r)
+$$
+
+$$
+c^{<t>}=\Gamma_u*\widetilde{c}^{<t>}+(1-\Gamma_u)*c^{<t-1>}
+$$
+
+$$
+a^{<t>}=c^{<t>}
+$$
+
+## 长短期记忆 Long-Short Term Memory(LSTM)
+
+LSTM是另一种更强大的解决梯度消失问题的方法，它对应的RNN隐藏层单元结构如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Long%20Short%20Term%20Memory.png)
+LSTM有三个门，𝛤𝑢（更新门）、𝛤𝑓 （遗忘门）、𝛤𝑜（输出门)。上图表示的模型对应的表达式为：
+$$
+\widetilde{c}^{<t>}=tanh(W_c[a^{<t-1>},x^{<t>}]+b_c)\quad LSTM\;中不再有𝑎^{<𝑡>} = 𝑐^{<𝑡>}的情况
+$$
+
+$$
+\Gamma_u=\sigma(W_u[a^{<t-1>},x^{<t>}]+b_u)
+$$
+
+$$
+\Gamma_f=\sigma(W_f[a^{<t-1>},x^{<t>}]+b_f)
+$$
+
+$$
+\Gamma_o=\sigma(W_o[a^{<t-1>},x^{<t>}]+b_o)
+$$
+
+$$
+c^{<t>}=\Gamma_u*\widetilde{c}^{<t>}+\Gamma_f*c^{<t-1>}
+$$
+
+$$
+a^{<t>}=\Gamma_o*tanh(c^{<t>})
+$$
+
+GRU可以看成是简化的LSTM，两种方法都具有各自的优势。
+
+## 双向循环神经网络 Bidirectional RNN
+
+Bidirectional RNN，它的结构如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Bidirectional%20RNN.png)
+
+BRNN对应的输出表达式为：
+$$
+\widehat{y}^{<t>}=g(W_y[a^{\rightarrow<t>},a^{\leftarrow<t>}]+b_y)
+$$
+BRNN的基本单元不仅仅是标准 RNN 单元，也可以是 GRU单元或者 LSTM 单元。事实上，很多的 NLP 问题，对于大量有自然语言处理问题的文本，有 LSTM 单元的双向 RNN 模型是用的最多的。BRNN能够同时对序列进行双向处理，性能大大提高，但是计算量较大，且在处理实时语音时，需要等到完整的一句话结束时才能进行分析。
+
+## 深层循环神经网络 Deep RNNs
+
+Deep RNNs由多层RNN组成，其结构如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Deep%20RNNs%201.png)
+
+与DNN一样，用中括号上标表示层数。Deep RNNs中的表达式为：
+$$
+a^{[l]<t>}=g(W_a^{[l]}[a^{[l]<t-1>},a^{[l-1]<t>}]+b_a^{[l]})
+$$
+DNN层数可达100多，而Deep RNNs一般没有那么多层，3层RNNs已经较复杂了。
+
+另外一种Deep RNNs结构是每个输出层上还有一些垂直单元，如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Deep%20RNNs%202.png)
 
 
 
+# 自然语言处理与词嵌入 Natural Language Processing And Word Embeddings
+
+## 词汇表征 Word Representation
+
+前文内容中表征单词的方式是首先建立一个较大的词汇表（例如10000），然后使用one-hot的方式对每个单词进行编码。但是one-hot表征单词的方法最大的缺点就是每个单词都是独立的、正交的，无法知道不同单词之间的相似程度。例如Apple和Orange都是水果，词性相近，但是单从one-hot编码上来看，内积为零，无法知道二者的相似性。在NLP中，我们更希望能掌握不同单词之间的相似程度。
+
+因此，我们可以使用特征表征（Featurized representation）的方法对每个单词进行编码，也就是使用一个特征向量表征单词，特征向量的每个元素都是对该单词某一特征的量化描述，量化范围可以是[-1,1]之间。特征表征的例子如下图所示
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Word%20Representation%201.png)
+
+特征向量的长度依情况而定，特征元素越多则对单词表征得越全面。这里的特征向量长度设定为300。使用特征表征之后，词汇表中的每个单词都可以使用对应的300 x 1的向量来表示，该向量的每个元素表示该单词对应的某个特征值。
+这种特征表征的优点是根据特征向量能清晰知道不同单词之间的相似程度，例如Apple和Orange之间的相似度较高，很可能属于同一类别。这种单词“类别”化的方式，大大提高了有限词汇量的泛化能力，这种特征化单词的操作被称为Word Embeddings，即单词嵌入。
+
+值得一提的是，这里特征向量的每个特征元素含义是具体的，对应到实际特征，例如性别、年龄等。而在实际应用中，特征向量很多特征元素并不一定对应到有物理意义的特征，是比较抽象的。但是，这并不影响对每个单词的有效表征，同样能比较不同单词之间的相似性。
+
+每个单词都由高维特征向量表征，为了可视化不同单词之间的相似性，可以使用降维操作，例如t-SNE算法，将300D降到2D平面上。如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Word%20Representation%202.png)
+从上图可以看出相似的单词分布距离较近，从而也证明了Word Embeddings能有效表征单词的关键特征。
+
+## 使用词嵌入 Using Word Embeddings
+
+在Named Entity识别中，每个单词采用的是one-hot编码。如下图所示，因为“orange farmer”是份职业，很明显“Sally Johnson”是一个人名。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Using%20Word%20Embeddings.png)
+
+如果采用featurized representation对每个单词进行编码，再构建该RNN模型。对于一个新的句子：
+Robert Lin is an apple farmer
+由于这两个句子中，“apple”与“orange”特征向量很接近，很容易能判断出“Robert Lin”也是一个人名，这就是featurized representation的优点之一。
+
+可以看出，featurized representation的优点是可以减少训练样本的数目，前提是对海量单词建立特征向量表述（word embedding）。这样，即使训练样本不够多，测试时遇到陌生单词，例如“durian cultivator”，根据之前海量词汇特征向量就判断出“durian”也是一种水果，与“apple”类似，而“cultivator”与“farmer”也很相似，从而得到与“durian cultivator”对应的应该也是一个人名。这种做法将单词用不同的特征来表示，即使是训练样本中没有的单词，也可以根据word embedding的结果得到与其词性相近的单词，从而得到与该单词相近的结果，有效减少了训练样本的数量。
+
+featurized representation的特性使得很多NLP任务能方便地进行迁移学习，具体步骤是：
+1、从海量词汇库中学习word embeddings，即所有单词的特征向量，或者从网上下载预训练好的word embeddings
+2、使用较少的训练样本，将word embeddings迁移到新的任务中
+3、（可选）：继续使用新数据微调word embeddings
+
+建议仅当训练样本足够大的时候，再进行上述第三步。
+
+有趣的是，word embeddings与人脸特征编码有很多相似性，人脸图片经过Siamese网络，得到其特征向量，这点跟word embedding是类似的。二者不同的是Siamese网络输入的人脸图片可以是数据库之外的，而word embedding一般都是已建立的词汇库中的单词，非词汇库单词统一用< UNK >表示。
+
+## 词嵌入的特性 Properties Of Word Embeddings
+
+Word embeddings可以帮助我们找到不同单词之间的相似类别关系，如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Properties%20Of%20Word%20Embeddings%201.png)
+
+上例中，特征维度是4维的，分别是[Gender, Royal, Age, Food]。常识地，“Man”与“Woman”的关系类比于“King”与“Queen”的关系，而利用Word embeddings可以找到这样的对应类比关系。
+
+将“Man”的embedding vector与“Woman”的embedding vector相减：
+$$
+e_{man}-e_{woman}=
+\begin{bmatrix}
+-1 \\ 0.01 \\ 0.03 \\ 0.09
+\end{bmatrix}
+-
+\begin{bmatrix}
+1 \\ 0.02 \\ 0.02 \\ 0.01
+\end{bmatrix}
+=
+\begin{bmatrix}
+-2 \\ -0.01 \\ 0.01 \\ 0.08
+\end{bmatrix}
+\approx
+\begin{bmatrix}
+-2 \\ 0 \\ 0 \\ 0
+\end{bmatrix}
+$$
+类似地，将“King”的embedding vector与“Queen”的embedding vector相减：
+$$
+  e_{king}-e_{queen}=
+\begin{bmatrix}
+-0.95 \\ 0.93 \\ 0.70 \\ 0.02
+\end{bmatrix}
+-
+\begin{bmatrix}
+0.97 \\ 0.95\\ 0.69 \\ 0.01
+\end{bmatrix}
+=
+\begin{bmatrix}
+-1.92 \\ -0.02 \\ 0.01 \\ 0.01
+\end{bmatrix}
+\approx
+\begin{bmatrix}
+-2 \\ 0 \\ 0 \\ 0
+\end{bmatrix}
+$$
+相减结果表明，“Man”与“Woman”的主要区别是性别，“King”与“Queen”也是一样。
+
+一般地，A类比于B相当于C类比于“？”，这类问题可以使用embedding vector进行运算
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Properties%20Of%20Word%20Embeddings%202.png)
+如上图所示，那么要做的就是找到单词w来最大化相似程度：
+$$
+Find\;word\;w:arg\;max\;Sim(e_w,e_{king}-e_{man}+e_{woman}) 
+$$
+通过这种方法来做类比推理准确率大概只有 30%~75%.
+
+最常用的相似度函数叫做余弦相似度cosine similarity，其表达式为：
+$$
+Sim(u,v)=\frac{u^Tv}{||u||_2||v||_2}=cos\theta
+$$
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Properties%20Of%20Word%20Embeddings%203.png)
+这种相似度取决于角度在向量𝑢和𝑣之间。如果向量𝑢和𝑣非常相似，它们的余弦相似度将接近1; 如果它们不相似，余弦相似度将取较小值
+
+## 嵌入矩阵 Embedding Matrix
+
+假设某个词汇库包含了10000个单词，每个单词包含的特征维度为300，那么表征所有单词的embedding matrix维度为300 x 10000，用E来表示，某单词w的one-hot向量表示为𝑂w，维度为10000 x 1，则该单词的embedding vector表达式为：
+$$
+e_w=E·O_w
+$$
+因此，只要知道了embedding matrix ，就能计算出所有单词的embedding vector 。值得一提的是，上述这种矩阵乘积运算效率并不高，矩阵维度很大，且大部分元素为零，通常做法是直接从中选取 E 第w列即可。
+
+Embedding matrix 可以通过构建自然语言模型，运用梯度下降算法得到。
+
+举个简单的例子，输入样本是：I want a glass of orange (juice).通过这句话的前6个单词，预测最后的单词“juice”。
+待求未知，每个单词可用one-hot vector 表示，然后要做的就是生成一个embedding matrix E，embedding matrix 乘以 one-hot vector 得到 embedding vector。构建的神经网络模型结构如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Embedding%20Matrix.png)
+
+神经网络输入层包含6个embedding vactors，每个embedding vector维度是300，则输入层总共有1800个输入。Softmax层有10000个概率输出，与词汇表包含的单词数目一致，正确的输出label是“juice”。对足够的训练例句样本，运用梯度下降算法，迭代优化，最终求出embedding matrix 。
+
+为了让神经网络输入层数目固定，可以选择只取预测单词的前4个单词作为输入，例如该句中只选择“a glass of orange”四个单词作为输入，这里的4是超参数，可调。
+
+一般地，我们把输入叫做context，输出叫做target。对应到上面的例子：
+context: a glass of orange
+target: juice
+
+关于context的选择有多种方法：
+target前n个单词或后n个单词，n可调
+target前1个单词
+target附近某1个单词（Skip-Gram）
+
+事实证明，不同的context选择方法都能计算出较准确的embedding matrix 
+
+## Word2Vec Algorithm
+
+Context和Target的选择方法，比较流行的是采用Skip-Gram模型。
+以这句话为例：I want a glass of orange juice to go along with my cereal.
+Skip-Gram模型的做法是：首先随机选择一个单词作为context，例如“orange”；然后使用一个宽度为5或10（自定义）的滑动窗，在context附近选择一个单词作为target，可以是“juice”、“glass”、“my”等等。最终得到了多个context—target对作为监督式学习样本。
+
+但是构造这个监督学习问题的目标并不是想要解决这个监督学习问题本身，而是想要使用这个学习问题来学到一个好的词嵌入模型。训练的过程是构建自然语言模型，𝑒𝑐是context的embedding vector，经过softmax单元的输出为：
+$$
+e_c=E·O_c\quad Softmax:p(t|c)=\frac{e^{\theta^T_te_c}}{\sum_{j=1}^{10000}e^{\theta^T_je_c}},其中\theta_t是一个与输出𝑡有关的参数，表示某个词𝑡和标签相符的概率是多少
+$$
+我们用𝑦表示目标词，𝑦和hat(y)都是用 one-hot 表示的，于是损失函数就会是：
+$$
+L(\widehat{y},y)=-\sum_{i=1}^{10000}y_ilog\widehat{y}_i
+$$
+然后，运用梯度下降算法，迭代优化，最终得到embedding matrix 。
+
+然而，这种算法计算量大，影响运算速度。主要因为softmax输出单元为10000个，计算公式中包含了大量的求和运算。解决的办法之一是使用hierarchical softmax classifier，即树形分类器。其结构如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Word2Vec%20Algorithm.png)
+
+这种树形分类器是一种二分类，与之前的softmax分类器不同，它在每个数节点上对目标单词进行区间判断，最终定位到目标单词。这好比是猜数字游戏，数字范围0～100。我们可以先猜50，如果分类器给出目标数字比50大，则继续猜75，以此类推，每次从数据区间中部开始。这种树形分类器最多需要log_2^N步就能找到目标单词，N为单词总数。
+
+实际应用中，对树形分类器做了一些改进。改进后的树形分类器是非对称的，通常选择把比较常用的单词放在树的顶层，而把不常用的单词放在树的底层，这样更能提高搜索速度。
+
+关于context的采样，需要注意的是如果使用均匀采样，那么一些常用的介词、冠词，例如the, of, a, and, to等出现的概率更大一些。但是，这些单词的embedding vectors通常不是我们最关心的，我们更关心例如orange, apple， juice等这些名词等。所以，实际应用中，一般不选择随机均匀采样的方式来选择context，而是使用其它算法来处理这类问题。
+
+Skip-Gram模型是Word2Vec的一种，Word2Vec的另外一种模型是CBOW（Continuous Bag of Words）。CBOW 是从原始语句推测目标字词；而 Skip-Gram 正好相反，是从目标字词推测出原始语句。 Skip-Gram 模型关键问题在于 softmax 这个步骤的计算成本非常昂贵，因为它需要在分母里对词汇表中所有词求和。通常情况下，Skip-Gram 模型用地更多。
+
+## 负采样 Negative Sampling
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Negative%20Sampling.png)
+Negative sampling是另外一种有效的求解embedding matrix 的方法。它的做法是判断选取的context word和target word是否构成一组正确的context-target对，一般包含一个正样本和k个负样本。例如，“orange”为context word，“juice”为target word，很明显“orange juice”是一组context-target对，为正样本，相应的target label为1。若“orange”为context word不变，target word随机选择“king”、“book”、“the”或者“of”等。这些都不是正确的context-target对，为负样本，相应的target label为0。一般地，固定某个context word对应的负样本个数k一般遵循：若训练样本较小，k一般选择5～20；若训练样本较大，k一般选择2～5即可。
+
+新的输入𝑥，𝑦将是要预测的值。为了定义模型，使用记号𝑐表示上下文词，记号𝑡表示可能的目标词，再用𝑦表示 0 和 1，表示是否是一对上下文-目标词。要做的是定义一个逻辑回归模型，给定输入的𝑐，𝑡对的条件下，𝑦 = 1的概率，即：
+$$
+P(y=1|c,t)=\sigma(\theta_t^T·e_c)\quad \sigma表示sigmoid函数
+$$
+很明显，negative sampling某个固定的正样本对应k个负样本，即模型总共包含了k+1个binary classification。对比之前介绍的10000个输出单元的softmax分类，negative sampling转化为k+1个二分类问题，计算量要小很多，大大提高了模型运算速度。
+
+这个算法有一个重要的细节就是如何选取负样本，即在选取了上下文词 (例如orange) 之后，如何对这些词进行采样生成负样本？可以使用随机选择的方法。但有资料提出一个更实用、效果更好的方法，就是根据该词出现的频率进行选择，相应的概率公式为：
+$$
+P(w_i)=\frac{f(w_i)^{\frac{3}{4}}}{\sum_{j=1}^{10000}f(w_j)^\frac{3}{4}}\quad 𝑓(𝑤_𝑖)是观测到的在语料库中的某个英文词的词频
+$$
+
+## GloVe 词向量 GloVe Word Vectors
+
+GloVe 代表用词表示的全局变量（global vectors for word representation）,在此之前，我们曾通过挑选语料库中位置相近的两个词，列举出词对，即上下文和目标词，GloVe 算法做的就是使其关系开始明确化。
+
+GloVe算法引入了一个新的参数：X_ij (表示i出现在j之前的次数，即i和j同时出现的次数)
+
+其中，i表示context，j表示target。一般地，如果不限定context一定在target的前面，则有对称关系，即X_ij=X_ji。接下来的讨论中，我们默认存在对称关系。
+对于 GloVe 算法，我们可以定义上下文和目标词为任意两个位置相近的单词，假设是左右各 10 词的距离，那么𝑋𝑖𝑗就是一个能够获取单词𝑖和单词𝑗出现位置相近时或是彼此接近的频率的计数器。GloVe 模型做的就是进行优化，我们将他们之间的差距进行最小化处理：
+$$
+loss function:minimize\sum_{i=1}^{10000}\sum_{j=1}^{10000}=f(X_{ij})(\theta_i^Te_j+b_i+b'_j-logX_{ij})^2
+$$
+从上式可以看出，若两个词的embedding vector越相近，同时出现的次数越多，则对应的loss越小。b_i 和 b'_j 是偏移量。为了防止出现“log 0”，即两个单词不会同时出现，无相关性的情况，对loss function引入一个权重因子：f(X_ij)，那么即使是像 durion 这样不常用的词，它也能给予大量有意义的运算，同时也能够给像 this，is，of，a 这样在英语里出现更频繁的词更大但不至于过分的权重。
+
+关于这个算法𝜃和𝑒现在是完全对称的，所以𝜃𝑖和𝑒𝑗就是对称的。如果只看数学式的话，𝜃𝑖和𝑒𝑗 的功能其实很相近，可以将它们颠倒
+或者将它们进行排序，实际上它们都输出了最佳结果。因此一种训练算法的方法是一致地初始化𝜃和𝑒，然后使用梯度下降来最小化输出，当每个词都处理完之后取平均值，所以，给定一个词𝑤，使用优化算法得到所有参数之后，最终的可表示为：
+$$
+e_w=\frac{e_w+\theta_w}{2}
+$$
+因为𝜃和𝑒在这个特定的公式里是对称的，而不像之前提到的模型，𝜃和𝑒功能不一样，因此也不能像那样取平均。
+
+最后提一点的是，无论使用Skip-Gram模型还是GloVe模型等等，计算得到的embedding matrix 的每一个特征值不一定对应有实际物理意义的特征值，如gender，age等。
+
+## 情感分类 Sentiment Classification
+
+情感分类一般是根据一句话来判断其喜爱程度，例如1～5星分布。如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Sentiment%20Classification%201.png)
+
+情感分类问题的一个主要挑战是缺少足够多的训练样本，而Word embedding恰恰可以帮助解决训练样本不足的问题，使用word embedding能够有效提高模型的泛化能力，即使训练样本不多，也能保证模型有不错的性能。
+
+使用word embedding解决情感分类问题的一个简单模型算法表示如下：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Sentiment%20Classification%202.png)
+如上图所示，这句话的4个单词分别用embedding vector表示。计算均值，这样得到的平均向量的维度仍是300，最后经过softmax输出1～5星。这种模型结构简单，计算量不大，不论句子长度多长，都使用平均的方式得到300D的embedding vector，该模型实际表现较好。
+
+但是，这种简单模型的缺点是使用平均方法，没有考虑句子中单词出现的次序，忽略其位置信息。而有时候，不同单词出现的次序直接决定了句意，即情感分类的结果。例如下面这句话：
+
+Completely lacking in good taste, good service, and good ambience.
+
+虽然这句话中包含了3个“good”，但是其前面出现了“lacking”，很明显这句话句意是negative的。如果使用上面介绍的平均算法，则很可能会错误识别为positive的，因为忽略了单词出现的次序。
+
+为了解决这一问题，情感分类的另一种模型是RNN：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Sentiment%20Classification%20%203.png)
+该RNN模型是典型的many-to-one模型，考虑单词出现的次序，能够有效识别句子表达的真实情感。
+
+## 词嵌入除偏 Debiasing Word Embeddings
+
+Word embeddings中存在一些性别、宗教、种族等偏见或者歧视。例如下面这三句话：
+
+Man: Woman as King: Queen
+
+Man: Computer programmer as Woman: Homemaker
+
+Father: Doctor as Mother: Nurse
+
+很明显，第二句话和第三句话存在性别偏见，因为Woman和Mother也可以是Computer programmer和Doctor。
+
+以性别偏见为例，接下来探讨如何消除word embeddings中偏见。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Debiasing%20Word%20Embeddings%201.png)
+上图展示了bias direction和non-bias direction。
+
+首先，确定偏见bias的方向，方法是对所有性别对立的单词求差值，再平均：
+$$
+bias\;direction=\frac{1}{N}[(e_{he}-e_{she})+(e_{male}-e_{female})+...]
+$$
+然后，单词中立化Neutralize。将需要消除性别偏见的单词投影到non-bias direction上去，消除bias维度，例如babysitter，doctor等。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Debiasing%20Word%20Embeddings%202.png)
+
+最后，均衡对（Equalize pairs）。让性别对立单词与上面的中立词距离相等，具有同样的相似度。例如让grandmother和grandfather与babysitter的距离同一化。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Debiasing%20Word%20Embeddings%203.png)
+
+值得注意的是，掌握哪些单词需要中立化非常重要。一般来说，大部分英文单词，例如职业、身份等都需要中立化，消除embedding vector中性别这一维度的影响。
 
 
 
+# 序列模型 Sequence Models
 
+## Sequence To Sequence Models
 
+Sequence to sequence模型在机器翻译和语音识别方面都有着广泛的应用。
 
-# 长短期记忆网络 Long-Short Term Memory
+机器翻译的简单例子：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Sequence%20To%20Sequence%20Models%201.png)
+针对该机器翻译问题，可以使用“编码网络（encoder network）”+“解码网络（decoder network）”两个RNN模型组合的形式来解决。encoder network将输入语句编码为一个特征向量，传递给decoder network，完成翻译。具体模型结构如下图所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Sequence%20To%20Sequence%20Models%202.png)
+其中，encoder vector代表了输入语句的编码特征。encoder network和decoder network都是RNN模型，可使用GRU或LSTM单元。这种“编码网络（encoder network）”+“解码网络（decoder network)”的模型，在实际的机器翻译应用中有着不错的效果。
 
-# 生成对抗网络 Generative Adversarial Networks
+这种模型也可以应用到图像捕捉领域。图像捕捉，即捕捉图像中主体动作和行为，描述图像内容。例如下面这个例子，根据图像，捕捉图像内容。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Sequence%20To%20Sequence%20Models%203.png)
+首先，可以将图片输入到CNN，例如使用预训练好的AlexNet，删去最后的softmax层，保留至最后的全连接层。则该全连接层就构成了一个图片的特征向量（编码向量)，表征了图片特征信息。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Sequence%20To%20Sequence%20Models%204.png)
+然后，将encoder vector输入至RNN，即decoder network中，进行解码翻译。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Sequence%20To%20Sequence%20Models%205.png)
 
-# 隐马尔可夫模型 Hidden Markov Model
+## 选择最可能的句子 Picking The Most Likely Sentence
+
+Sequence to sequence machine translation model与Language model有一些相似，但也存在不同之处，二者模型结构如下所示：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Picking%20The%20Most%20Likely%20Sentence%201.png)
+Language model是自动生成一条完整语句，语句是随机的。而machine translation model是根据输入语句，进行翻译，生成另外一条完整语句。上图中，绿色部分表示encoder network，紫色部分表示decoder network。decoder network与language model是相似的，encoder network可以看成是language model的，是整个模型的一个条件。也就是说，machine translation model在输入语句的条件下，生成正确的翻译语句。因此，machine translation可以看成是有条件的语言模型（conditional language model)。这就是二者之间的区别与联系。
+
+所以，machine translation的目标就是根据输入语句，作为条件，找到最佳翻译语句，使其概率最大：
+$$
+max\;P(y^{<1>},y^{<2>},...,y^{<T_y>}|x^{<1>},x^{<2>},...,x^{<T_x>})
+$$
+例如，列举几个模型可能得到的翻译：
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Picking%20The%20Most%20Likely%20Sentence%202.png)
+显然，第一条翻译“Jane is visiting Africa in September.”最为准确，那我们的优化目标就是要让这条翻译对应的最大化。
+
+实现优化目标的方法之一是使用贪婪搜索（greedy search）。Greedy search根据条件，每次只寻找一个最佳单词作为翻译输出，力求把每个单词都翻译准确。例如，首先根据输入语句，找到第一个翻译的单词“Jane”，然后再找第二个单词“is”，再继续找第三个单词“visiting”，以此类推。这也是其“贪婪”名称的由来。
+
+Greedy search存在一些缺点。首先，因为greedy search每次只搜索一个单词，没有考虑该单词前后关系，概率选择上有可能会出错。例如，上面翻译语句中，第三个单词“going”比“visiting”更常见，模型很可能会错误地选择了“going”，而错失最佳翻译语句。其次，greedy search大大增加了运算成本，降低运算速度。
+
+因此，greedy search并不是最佳的方法。
+
+Greedy search每次是找出预测概率最大的单词，而集束搜索Beam search则是每次找出预测概率最大的B个单词。其中，参数B表示取概率最大的单词个数，可调。
+按照beam search的搜索原理，首先，先从词汇表中找出翻译的第一个单词概率最大的B个预测单词。例如上面的例子中，令B=3，预测得到的第一个单词为：in，jane，september。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Picking%20The%20Most%20Likely%20Sentence%203.png)
+
+然后，再分别以in，jane，september为条件，计算每个词汇表单词作为预测第二个单词的概率。从中选择概率最大的3个作为第二个单词的预测值，得到：in september，jane is，jane visits。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Picking%20The%20Most%20Likely%20Sentence%204.png)
+此时，得到的前两个单词的3种情况的概率为：
+$$
+P(\widehat{y}^{<1>},\widehat{y}^{<2>}|x)=P(\widehat{y}^{<1>}|x)·P(\widehat{y}^{<2>}|x,\widehat{y}^{<1>})
+$$
+接着，再预测第三个单词。方法一样，分别以in september，jane is，jane visits为条件，计算每个词汇表单词作为预测第三个单词的概率。从中选择概率最大的3个作为第三个单词的预测值，得到：in september jane，jane is visiting，jane visits africa。
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Picking%20The%20Most%20Likely%20Sentence%205.png)
+此时，得到的前三个单词的3种情况的概率为：
+$$
+P(\widehat{y}^{<1>},\widehat{y}^{<2>}，\widehat{y}^{<3>}|x)=P(\widehat{y}^{<1>}|x)·P(\widehat{y}^{<2>}|x,\widehat{y}^{<1>})·P(\widehat{y}^{<3>}|x,\widehat{y}^{<1>},\widehat{y}^{<2>})
+$$
+以此类推，每次都取概率最大的三种预测。最后，选择概率最大的那一组作为最终的翻译语句。
+
+Jane is visiting Africa in September.
+
+值得注意的是，如果参数B=1，则就等同于greedy search。实际应用中，可以根据不同的需要设置B为不同的值。一般B越大，机器翻译越准确，但同时也会增加计算复杂度。
+
+## 改进集束搜索 Refinements To Beam Search
+
+Beam search中，最终机器翻译的概率是乘积的形式：
+$$
+arg\;max\displaystyle \prod_{t=1}^{T_y}P(\widehat{y}^{<t>}|x,\widehat{y}^{<1>},...,\widehat{y}^{<t-1>})
+$$
+多个概率相乘可能会使乘积结果很小，远小于1，造成数值下溢。为了解决这个问题，可以对上述乘积形式进行取对数log运算，即：
+$$
+arg\;max\displaystyle \sum_{t=1}^{T_y}logP(\widehat{y}^{<t>}|x,\widehat{y}^{<1>},...,\widehat{y}^{<t-1>})
+$$
+因为取对数运算，将乘积转化为求和形式，避免了数值下溢，使得数据更加稳定有效。
+
+这种概率表达式还存在一个问题，就是机器翻译的单词越多，乘积形式或求和形式得到的概率就越小，这样会造成模型倾向于选择单词数更少的翻译语句，使机器翻译受单词数目的影响，这显然是不太合适的。因此，一种改进方式是进行长度归一化，消除语句长度影响。
+$$
+arg\;max\frac{1}{T_y}\displaystyle \sum_{t=1}^{T_y}logP(\widehat{y}^{<t>}|x,\widehat{y}^{<1>},...,\widehat{y}^{<t-1>})
+$$
+实际应用中，通常会引入归一化因子𝑎：
+$$
+arg\;max\frac{1}{T_y^\alpha}\displaystyle \sum_{t=1}^{T_y}logP(\widehat{y}^{<t>}|x,\widehat{y}^{<1>},...,\widehat{y}^{<t-1>})
+$$
+在实践中，有个探索性的方法，相比于直接除𝑇𝑦，也就是输出句子的单词总数，我们有时会用一个更柔和的方法，在𝑇𝑦上加上指数𝑎，𝑎可以等于 0.7。如果𝑎等于 1，就相当于完全用长度来归一化，如果𝑎等于 0，𝑇𝑦的 0 次幂就是 1，就相当于完全没有归一化，这就是在完全归一化和没有归一化之间。𝑎就是算法另一个超参数（hyper parameter），需要调整大小来得到最好的结果。不得不承认，这样用𝑎实际上是试探性的，它并没有理论验证。但是大家都发现效果很好，大家都发现实践中效果不错，所以很多人都会这么做。你可以尝试不同的𝑎值，看看哪一个能够得到最好的结果。
+
+值得一提的是，与BFS (Breadth First Search) 、DFS (Depth First Search)算法不同，beam search运算速度更快，但是并不保证一定能找到正确的翻译语句。
