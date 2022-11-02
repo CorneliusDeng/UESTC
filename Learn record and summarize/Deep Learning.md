@@ -1214,7 +1214,7 @@ p_c=1,即取y_1=1,L(\hat{y},y)=(\hat{y}_1-y_1)^2+(\hat{y}_2-y_2)^2+……+(\hat{
 $$
 
 $$
-p_c=0,即取y_1=1,表示没有检测到目标，则输出label后面的7个参数都可以忽略,L(\hat{y},y)=(\hat{y}_1-y_1)^2
+p_c=0,即取y_1=0,表示没有检测到目标，则输出label后面的7个参数都可以忽略,L(\hat{y},y)=(\hat{y}_1-y_1)^2
 $$
 
 ## 特征点检测 Landmark Detection
@@ -1311,7 +1311,7 @@ $$
 
 Anchor Boxes形状的选择可以通过人为选取，也可以使用其他机器学习算法，例如k聚类算法对待检测的所有目标进行形状分类，选择主要形状作为Anchor Boxes。
 
-## 候选区域 Region Proposals
+## 候选区域网络 Region Proposals Network
 
 滑动窗算法会对原始图片的每个区域都进行扫描，即使是一些空白的或明显没有目标的区域，例如下图所示。这样会降低算法运行效率，耗费时间。
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Region%20Proposals%201.png)
@@ -1324,6 +1324,27 @@ Region Proposals共有三种方法：
 1、R-CNN: 滑动窗的形式，一次只对单个区域块进行目标检测，运算速度慢。
 2、Fast R-CNN: 利用卷积实现滑动窗算法。
 3、Faster R-CNN: 利用卷积对图片进行分割，进一步提高运行速度。
+
+RPN全称是Region Proposal Network，Region
+Proposal的中文意思是“区域选取”，也就是“提取候选框”的意思，所以RPN就是用来提取候选框的网络
+
+RPN的引入，可以说是真正意义上把物体检测整个流程融入到一个神经网络中，这个网络结构叫做Faster R-CNN；
+Faster R-CNN = RPN + Fast RCNN
+
+Faster R-CNN的整体结构如下图所示
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/RPN%201.png)
+
+RPN的结构如下图所示
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/RPN%202.png)
+
+Faster R-CNN和RPN的结构关系如下图所示
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/RPN%203.png)
+
+关于Anchor的问题解释如下图所示
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/RPN%204.png)
+
+RPN整个流程：首先通过一系列卷积得到公共特征图，假设他的大小是N x 16 x 16，然后我们进入RPN阶段，首先经过一个3 x 3的卷积，得到一个256 x 16 x 16的特征图，也可以看作16 x 16个256维特征向量，然后经过两次1 x 1的卷积，分别得到一个18 x 16 x 16的特征图，和一个36 x 16 x 16的特征图，也就是16 x 16 x 9个结果，每个结果包含2个分数和4个坐标，再结合预先定义的Anchors，经过后处理，就得到候选框
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/RPN%205.png)
 
 ## YOLO Algorithm Summarize
 

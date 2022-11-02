@@ -465,3 +465,31 @@ More Hard Computational Problems
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Complexity%205.png)
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Complexity%206.png)
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/Complexity%207.png)
+
+# 近似算法 Approximation Algorithms
+
+Q. Suppose I need to solve an NP-hard problem. What should I do?
+
+A. Theory says you're unlikely to find a poly-time algorithm.
+
+- Must sacrifice one of three desired features.
+  - Solve problem to optimality.
+  - Solve problem in poly-time.
+  - Solve arbitrary instances of the problem.
+- ρ-approximation algorithm.
+  - Guaranteed to run in poly-time.
+  - Guaranteed to solve arbitrary instance of the problem
+  - Guaranteed to find solution within ratio ρ of true optimum.
+- Challenge. Need to prove a solution's value is close to optimum, without even knowing what optimum value is!
+
+## Load Balancing
+
+## Center Selection
+
+## The Pricing Method: Vertex Cover
+
+## LP Rounding: Vertex Cover
+
+## Knapsack Problem
+
+## Load Balancing Reloaded
