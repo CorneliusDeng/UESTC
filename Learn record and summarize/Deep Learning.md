@@ -448,9 +448,9 @@ Dropout有不同的实现方法，一种常用的方法是Inverted dropout（反
 用一个三层（𝑙 = 3）网络来举例说明。
 
 ```Python
-# 假设对于第𝑙层神经元，设定保留神经元比例概率keep_prob=0.8，即该层有20%的神经元停止工作。为dropout向量，设置为随机vector，其中80%的元素为1，20%的元素为0。在python中可以使用如下语句生成dropout vector：
+# 假设对于第𝑙层神经元，设定保留神经元比例概率keep_prob=0.8，即该层有20%的神经元停止工作。dl 为dropout向量，设置为随机vector，其中80%的元素为1，20%的元素为0。在python中可以使用如下语句生成dropout vector：
 dl = np.random.rand(al.shape[0],al.shape[1])< keep_prob
-# 然后，第𝑙 层经过dropout，随机删减20%的神经元，只保留80%的神经元，其输出为：
+# 然后，第 𝑙 层经过dropout，随机删减20%的神经元，只保留80%的神经元，其输出为：
 al = np.multiply(al,dl)
 # 最后，还要对进行scale up处理，即：
 al /= keep_prob
@@ -729,7 +729,7 @@ $$
 
 𝑆𝑑𝑊的平方根加上𝜀）
 $$
-W:=W-\alpha \frac{V^{corrected}_{dW}}{\sqrt{S^{corrected}_{dW}}+\varepsilon},b:=b-\alpha \frac{V^{corrected}_{db}}{\sqrt{S^{corrected}_{db}}+\varepsilon},
+W:=W-\alpha \frac{V^{corrected}_{dW}}{\sqrt{S^{corrected}_{dW}}+\varepsilon},b:=b-\alpha \frac{V^{corrected}_{db}}{\sqrt{S^{corrected}_{db}}+\varepsilon}
 $$
 所以 Adam 算法结合了 Momentum 和 RMSprop 梯度下降法，并且是一种极其常用的学习算法，被证明能有效适用于不同神经网络，适用于广泛的结构。
 
@@ -934,6 +934,8 @@ softmax classifier的反向传播过程仍然使用梯度下降算法，其推�
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Edge%20Detection%202.png)
 
 图片的边缘检测可以通过与相应滤波器进行卷积来实现。以垂直边缘检测为例，原始图片尺寸为6x6，滤波器filter尺寸为3x3，卷积后的图片尺寸为4x4。在6x6的矩阵上，每一行最多可以匹配4个3x3的滤波器，每一列也最多可以匹配4个3x3的滤波器，所以卷积后的图片尺寸是4x4。
+滤波器：卷积核的集合。这两个术语之间有着本质的区别，仅在 1 通道的情况下，滤波器和卷积核这两个术语等价。
+
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Deep%20Learning/Edge%20Detection%203.png)
 
 ∗表示卷积操作

@@ -160,3 +160,123 @@ with engine.connect() as con:
 df = pd.read_sql_query("SELECT * FROM Orders", engine)
 ```
 
+# 距离度量方法
+
+距离度量用于计算给定问题空间中两个对象之间的差异，即数据集中的特征，然后可以使用该距离来确定特征之间的相似性， 距离越小特征越相似。
+
+对于距离的度量，我们可以在几何距离测量和统计距离测量之间进行选择，应该选择哪种距离度量取决于数据的类型。特征可能有不同的数据类型（例如，真实值、布尔值、分类值），数据可能是多维的或由地理空间数据组成。
+
+## 欧氏距离 Euclidean Distance
+
+欧氏距离度量两个实值向量之间的最短距离，由于其直观，使用简单和对许多用例有良好结果，所以它是最常用的距离度量和许多应用程序的默认距离度量。
+
+欧氏距离也可称为 l2 范数，其计算方法为:
+$$
+d = \sqrt{\sum_{i=1}^n(x_i-y_i)^2}
+$$
+
+```python
+from scipy.spatial import distance
+distance.euclidean(vector_1, vector_2)
+```
+
+欧氏距离有两个主要缺点
+
+1. 距离测量不适用于比2D或3D空间更高维度的数据
+2. 如果我们不将特征规范化和/或标准化，距离可能会因为单位的不同而倾斜
+
+## 曼哈顿距离 Manhattan Distance
+
+曼哈顿距离也被称为出租车或城市街区距离，因为两个实值向量之间的距离是根据一个人只能以直角移动计算的。这种距离度量通常用于离散和二元属性，这样可以获得真实的路径。
+
+曼哈顿距离以 l1 范数为基础，计算公式为:
+$$
+d=\sum_{i=1}^n(x_i-y_i)
+$$
+
+```python
+from scipy.spatial import distance
+distance.cityblock(vector_1, vector_2)
+```
+
+曼哈顿的距离有两个主要的缺点
+
+1. 它不如高维空间中的欧氏距离直观
+2. 它也没有显示可能的最短路径
+
+## 切比雪夫距离 Chebyshev Distance
+
+切比雪夫距离也称为棋盘距离，因为它是两个实值向量之间任意维度上的最大距离。它通常用于仓库物流中，其中最长的路径决定了从一个点到另一个点所需的时间。
+
+切比雪夫距离由 l - 无穷范数计算:
+$$
+d=max_i(|x_i-y_i|)
+$$
+
+```python
+from scipy.spatial import distance
+distance.chebyshev(vector_1, vector_2)
+```
+
+切比雪夫距离只有非常特定的用例，因此很少使用。
+
+## 闵可夫斯基距离 Minkowski Distance
+
+闵可夫斯基距离是上述距离度量的广义形式。它可以用于相同的用例，同时提供高灵活性。我们可以选择 p 值来找到最合适的距离度量。
+
+闵可夫斯基距离的计算方法为:
+$$
+d=\sqrt[p]{\sum_{i=1}^n(x_i-y_i)^p} \\
+Chebyshev\;Distance->p=\infty \quad Manhattan\;Distance->p=1 \quad Euclidean\;Distance->p=2
+$$
+
+```python
+ from scipy.spatial import distance
+ distance.minkowski(vector_1, vector_2, p)
+```
+
+由于闵可夫斯基距离表示不同的距离度量，它就有与它们相同的主要缺点，例如在高维空间的问题和对特征单位的依赖。此外，p值的灵活性也可能是一个缺点，因为它可能降低计算效率，因为找到正确的p值需要进行多次计算。
+
+## 余弦相似度 Cosine Similarity
+
+余弦相似度是方向的度量，他的大小由两个向量之间的余弦决定，并且忽略了向量的大小。余弦相似度通常用于与数据大小无关紧要的高维，例如，推荐系统或文本分析
+
+余弦相似度可以介于-1(相反方向)和1(相同方向)之间，余弦相似度常用于范围在0到1之间的正空间中。余弦距离就是用1减去余弦相似度，位于0(相似值)和1(不同值)之间，计算方法为:
+$$
+Sim(u,v)=\frac{u^Tv}{||u||_2||v||_2}=cos\theta
+$$
+
+```python
+from scipy.spatial import distance
+distance.cosine(vector_1, vector_2)
+```
+
+余弦距离的主要缺点是它不考虑大小而只考虑向量的方向。因此，没有充分考虑到值的差异。
+
+## 半正矢距离 Haversine Distance
+
+半正矢距离测量的是球面上两点之间的最短距离。因此常用于导航，其中经度和纬度和曲率对计算都有影响
+
+半正矢距离的公式如下：
+$$
+d=2r·arcsin(\sqrt{sin^2(\frac{\varphi_2-\varphi_1}{2})+cos\varphi_1cos\varphi_2sin^2(\frac{\lambda_2-\lambda_1}{2})}) \\
+r\;为球面半径，\varphi\;为经度，\lambda\;为纬度
+$$
+
+```python
+from sklearn.metrics.pairwise import haversine_distances
+haversine_distances([vector_1, vector_2])
+```
+
+半正矢距离的主要缺点是假设是一个球体，而这种情况很少出现。
+
+## 汉明距离
+
+汉明距离衡量两个二进制向量或字符串之间的差异，对向量按元素进行比较，并对差异的数量进行平均，如果两个向量相同，得到的距离是0，如果两个向量完全不同，得到的距离是1。
+
+```python
+from scipy.spatial import distance
+distance.hamming(vector_1, vector_2)
+```
+
+汉明距离有两个主要缺点：距离测量只能比较相同长度的向量，它不能给出差异的大小。所以当差异的大小很重要时，不建议使用汉明距离。
