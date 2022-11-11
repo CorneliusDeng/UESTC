@@ -9,6 +9,7 @@
 - 虽然、尽管 albeit
 - 抵消、中和 counteract
 - 串联 concatenate
+- 场景 scenario
 
 ## Phrase
 
@@ -17,10 +18,16 @@
 - Moving forward 进一步
 - open-ended or subjective 开放或主观的
 
+# Abstract 、Introduction
+
+- Motivated by the challenge in practice
+- Contributions of this work are three-fold
+
 # Training、Method
 
 - This section describes the training regime for our models.
 - Motivating our use of self-attention we consider three desiderata.
+- Different from the previous works on
 
 # Conclusion、Summarization 
 
