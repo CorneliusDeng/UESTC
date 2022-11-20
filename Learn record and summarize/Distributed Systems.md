@@ -1640,6 +1640,218 @@ Lamport(1978)指出：不进行交互的两个进程之间不需要时钟同步�
 
 
 
+# 谷歌文件系统(GFS)
+
+## 简介
+
+- Google云计算基础组件
+
+  - GFS，分布式文件存储
+  - BigTable，结构化数据表
+  - MapReduce，并行数据处理模型
+  - Chubby，分布式锁（GFS，BigTable, MapReduce都依赖）
+
+- 组件调用关系分析
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%201.png" style="zoom:50%;" />
+
+- GFS
+
+  - 作用：存储BigTable的子表文件，提供大尺寸文件存储功能
+  - 文件被分成块（Chunk）：64MB/块，分布和复制在服务器上
+  - 两个实体：一个Master，多个Chunkserver
+    Master 维护所有文件系统元数据：命名空间，访问控制信息，文件名到块的映射，块的当前位置
+    Master 复制其数据以实现容错
+    Master 定期与所有Chunkserver通信：通过心跳消息，获取状态并发送命令
+    Chunkserver响应read/write请求和Master的命令
+
+- Bigtable
+
+  - 作用：为Google服务提供数据结构化存储功能（Google Analytics，Google Finance，个人搜索，Google Earth & Google Maps 等），为客户提供一个大的逻辑表视图（逻辑表被分成片（tablets）并分布在 Bigtable 服务器上）
+  - 三个实体：Client库，一个Master，多个Tablet服务器
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%202.png)
+  - Row Key：行名是一个反向URL
+  - Column Key
+    - Contents column family包含页面内容：例如，CNN主页有3个版本，分别是t3, t5和t6
+    - Anchor column family包含引用页面的所有anchor的文本：例如，cnnsi.com和my.look.ca都引用了CNN主页，所以包含anchor:cnnsi.com和anchor:my.look.ca两列，每个anchor只有1个版本
+
+- MapReduce
+
+  - 作用：对BigTable中的数据进行并行计算处理（如统计、归类等），实现Map和Reduce两个功能【Map：分配和处理任务（任务分解），Reduce：分类和归纳结果（结果聚合）】
+
+  - 执行框架：在一组服务器上执行Map和Reduce功能，一个Master，多个workers
+
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%203.png)
+
+  - 为什么需要MapReduce：计算问题简单，但求解困难
+
+  - MapReduce求解步骤
+
+    - Step 1: 自动对文本进行分割
+    - Step 2: 在分割之后的每一对<key,value>进行用户定义的Map进行处理，再生成新的<key,value>对
+    - Step 3: 对输出的结果集归拢、排序（shuffle）
+    - Step 4: 通过Reduce操作生成最后结果
+
+- GFS，BigTable和MapReduce的共同点
+
+  - 为什么只有一个Master？
+    - 这种设计简化了系统复杂度
+    - 主要用于处理元数据，减少单个主服务器的负载很重要
+    - 无需处理一致性问题
+    - 适合内存访问，速度快
+  - 主要问题：单点失效
+    - 一个Primary和几个Backup
+    - 从对等节点中选出Primary
+  - 选择Master时需要Chubby的锁服务
+
+- Chubby
+
+  - 作用：帮助开发人员处理系统中粗粒度的同步问题，特别是选择Master
+    为什么是粗粒度锁：细粒度锁通常只保持很短时间（几秒或更少），粗粒度锁持数小时和数天（Master的作用时间）
+    如何选择Master：潜在的Master尝试在Chubby上创建一个锁，第一个获得锁的成为Master
+  - GFS使用Chubby：指定Master服务器，存储一小部分元数据
+  - BigTable使用Chubby：选择一个Master，允许Master发现它控制的其它服务器，允许Client发现Master，存储一小部分元数据
+  - Chubby的系统架构
+    <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%204.png" style="zoom:50%;" />
+    Chubby单元由一小部分服务器（通常为5台）组成，这些服务器称为副本服务器，它们放置位置不同，以减少相关故障的可能性（例如，在不同的机架中)。副本服务器使用分布式共识协议选举主服务器。主副本服务器必须从大多数副本服务器获得投票，并保证这些副本服务器不会在几秒钟的间隔内选出另一个主副本服务器，这称为主租约。副本服务器维护简单数据库的副本，但是只有主副本服务器会启动数据库的读取和写入。所有其他副本服务器仅复制使用共识协议发送的来自主服务器的更新。
+
+## 系统设计
+
+- GFS 动机
+  - 组件失效被认为是常态事件，而不是意外事件
+    GFS包括几百甚至几千台普通的廉价设备组装的存储机器，同时被相当数量的客户机访问。GFS组件的数量和质量导致在事实上，任何给定时间内都有可能发生某些组件无法工作，某些组件无法从它们目前的失效状态中恢复。
+  - 以通常的标准衡量，文件非常巨大
+    数GB的文件非常普遍。当我们经常需要处理快速增长的、并且由数亿个对象构成的、数以TB的数据集时，采用管理数亿个KB大小的小文件的方式是非常不明智的，尽管有些文件系统支持这样的管理方式。设计的假设条件和参数，比如I/O操作和Block的尺寸都需要重新考虑。
+  - 绝大部分文件的修改是采用在文件尾部追加数据，而不是覆盖原有数据的方式
+    对文件的随机写入操作在实际中几乎不存在。一旦写完之后，对文件的操作就只有读，而且通常是按顺序读。对于这种针对海量文件的访问模式，Client对数据块缓存是没有意义的，数据的追加操作是性能优化和原子性保证的主要考量因素。
+  - 应用程序和文件系统协同设计以提高整个系统的灵活性
+    放松了对一致性模型的要求。原子性的记录追加操作，从而保证多个Client能够同时进行追加操作，不需要额外的同步操作来保证数据的一致性。
+- GFS假设
+  - 系统由许多廉价的普通组件组成，组件失效是一种常态
+    系统必须持续监控自身的状态，必须能够迅速地侦测、冗余并恢复失效的组件
+  - 系统存储一定数量的大文件
+    预期会有几百万文件，大小通常在100MB或者以上。数个GB大小的文件也是普遍存在，需有效管理。必须支持小文件，但是不针对小文件做专门的优化。
+  - 大规模的流式读取和小规模的随机读取
+    大规模的流式读取通常一次读取数百KB的数据，更常见的是一次读取1MB甚至更多的数据。来自同一个Client的连续操作通常是读取同一个文件中连续的一个区域。
+  - 大规模的、顺序的、数据追加方式的写操作
+  - 系统必须高效的、行为定义明确的实现多客户端并行追加数据到同一个文件里的语义
+  - 高性能的稳定网络带宽远比低延迟重要
+- GFS设计思想
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%205.png)
+  - 文件以数据块 (Chunk) 的形式存储
+    数据块大小固定，每个数据块拥有句柄
+  - 利用副本技术保证可靠性
+    每个数据块至少在3个Chunkserver上存储副本。每个数据块作为本地文件存储在Linux文件系统中。
+  - Master维护所有文件系统的元数据 (metadata)
+    每个GFS簇只有一个Master，利用周期性的心跳消息向Chunkserver发送命令和收集状态
+  - Master服务器在不同的数据文件里保持元数据。数据以64MB为单位存储在文件系统中。Client与Master服务器通讯在文件上做元数据操作并且找到包含用户需要的数据
+    只存储元数据，不存储文件数据，不让磁盘容量成为Master瓶颈；元数据会存储在磁盘和内存里，不让磁盘IO成为Master瓶颈；元数据大小内存完全能装得下，不让内存容量成为Master瓶颈；所有数据流，数据缓存，都不通过Master，不让带宽成为Master瓶颈；元数据可以缓存在Client，每次从Client本地缓存访问元数据，只有元数据不准确的时候，才会访问Master，不让CPU成为成为Master瓶颈
+  - Chunkserver在硬盘上存储实际数据
+  - 每个块跨3个不同的Chunkserver备份以创建冗余避免服务器崩溃
+  - 一旦被Master服务器指明，Client会直接从Chunkserver读取文件 
+- 缓存
+  - 无论是Client还是Chunkserver都不需要缓存文件数据（不过，Client会缓存元数据） 
+  - Client 缓存数据几乎没有作用，因为大部分程序要么以流的方式读取一个巨大文件，要么工作集太大而无法被缓存
+  - 无需考虑缓存相关的问题也简化了Client和整个系统的设计和实现
+  - Chunkserver 也不需要缓存文件数据，因为Linux操作系统的文件系统缓存会把经常访问的数据缓存在内存中
+- GFS体系结构
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%206.png)
+  - 系统的流程从Client开始
+    Client以块偏移量制作目录索引并发送请求
+    Master收到请求通过块映射表映射反馈Client
+    Client获得块句柄和块位置，将文件名和块的目录索引缓存，并向Chunkserver发送请求
+    Chunkserver回复请求传输块数据
+  - Master是在独立的主机上运行的一个进程
+  - 存储的元数据信息：文件命名空间、文件到数据块的映射信息、数据块的位置信息、访问控制信息、数据块版本号
+  - 内存数据结构
+    - Master可以在后台定期扫描整个状态
+      块垃圾收集。为平衡负载和磁盘空间而进行的块迁移。Chunkserver出现故障时的副本复制
+    - 整个系统的容量受限于Master的内存，每个块（64MB）保留少于64B的元数据
+    - 若要支持更大的文件系统，只需增加一些保存元数据的内存即可完成扩展，这种设计简单、可靠、高效和灵活
+  - 文件数据块：64MB的大数据块
+    - 优点：减少Master上保存的元数据的规模，使得可以将元数据 (metadata) 放在内存中；Client在一个给定块上很可能执行多个操作，和一个Chunkserver保持较长时间的TCP连接可以减少网络负载；在Client中缓存更多的块位置信息
+    - 缺点：一个文件可能只包含一个块，如果很多Client访问该文件，存储块的Chunkserver可能会成为访问热点
+  - 块位置信息
+    Master并不为Chunkserver的所有块的副本保存一个不变的记录，Master在启动时或者在有新的Client加入这个簇时通过简单的查询获取这些信息
+  - Master可以保持这些信息的更新，因为它控制所有块的放置并通过心跳消息监控
+  - Master和Chunkserver之间的通信：定期地获取状态信息
+  - 操作日志
+    操作日志包含了对metadata所作的修改的历史记录，被复制在多个远程Chunkserver上。它可以从本地磁盘装入最近的检查点来恢复状态。它作为逻辑时间基线定义了并发操作的执行顺序。文件、块以及它们的版本号都由它们被创建时的逻辑时间而唯一地、永久地被标识。 Master可以用操作日志来恢复它的文件系统的状态。
+  - 服务请求
+    - Client 从Master检索元数据（metadata）
+    - 单个Master并不会成为瓶颈，因为Master仅提供查询数据块所在的Chunkserver以及详细位置
+    - Client直接与Chunkserver通讯，传输数据块
+
+- 一致性模型
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%2014.png)
+  - 并发的写将导致一致性问题，不同的Client对同一文件区域执行写
+    一致：所有的Client读取相同数据。确定：所有的Client读取有效数据
+  - Serial success：当多个Client 串行写时，写入并没有相互干扰，所有Client可以看到明确的写的过程，写的区域是 Defined，也是Consistent
+  - Concurrent success：Primary决定Client写的顺序。当多个Client并发写多个存在交叉的Chunk时，由于Primary之间并不通信，不同Primary可能选择不同的Client写顺序。如果执行成功，会导致所有Client看到相同的数据 (Consistent)，但数据无效 (Undefined)
+  - Record append：Primary根据当前文件大小决定写入的offset，GFS不保证所有Replica上字节都相同，只保证至少一次写 (at-least-once semantics)，因此副本的同一个块可能包含重复的数据，Append成功的区域数据是Defined，但Append失败重试会导致介于中间的区域是Inconsistent（也是Undefined）
+- 数据完整性
+  - Writer为每条记录增加额外的校检和信息用于验证记录的有效性
+  - 一个数据块被分为64KB大小的小块，每个小块有一个32bit的校检和
+  - 读取时，Reader先验证数据块的校检和，检测数据块的错误和重复
+- 容错
+  - 恢复：不管如何终止服务，Master和Chunkserver都会在几秒钟内恢复状态和运行
+  - 数据块备份 ：每个数据块都会被备份到放到不同机架上的多个Chunkserver上
+  - Master备份：为确保可靠性，Master的状态、操作记录和检查点都在多台机器上进行了备份。一个操作只有在Chunkserver硬盘上刷新并被记录在Master和其备份的上之后才算成功。如果Master或是硬盘失败，系统监视器会发现并通过改变域名启动一个影子Master，而Client并不会发现Master改变
+- 创建、复制、平衡数据块
+  当Master创建新数据块时，如何放置新数据块要考虑以下因素：放置在磁盘利用率低的Chunkservers、控制在一个Chunkserver上的“新创建”次数、把数据块放置于不同的机架上
+- 垃圾收集
+  - 文件删除后，GFS 不会立即回收可用的存储空间
+    删除文件会被重命名为包含删除时间戳的隐藏名
+    在Master定期扫描文件系统命名空间期间（常规后台活动），如果隐藏文件已存在超过3天（间隔可配置），删除此隐藏文件
+  - 存储回收比立即回收具有以下优点
+    在组件故障常见的大规模分布式系统中，存储回收简单可靠
+    将存储回收合并到Master常规的后台活动，实现成本摊销
+    回收存储的延迟可以防止意外、不可逆删除
+
+## 系统操作
+
+- GFS读操作
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%207.png" style="zoom: 67%;" />
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%208.png" style="zoom:67%;" />
+
+  - 例子：计算数据块位置信息（假设：文件位置在134,250,297 bytes）
+    块大小=64MB，64MB=1024\*1024*64 bytes= 67,108,864 bytes，134,250,297 bytes=67,108,864 * 2 + 32,569 bytes；所以，Client的位置索引是3
+  - 应用程序发起读取请求
+  - Client从（文件名，字节范围）->（文件名，组块索引）转换请求，并将其发送到Master
+  - Master以块句柄和副本位置（即存储副本的Chunkserver）作为响应
+  - Client选择一个位置，然后将（块句柄，字节范围）请求发送到该位置
+  - Chunkserver将请求的数据发送到Client
+  - Client将数据转发到应用程序
+
+- GFS互斥操作
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%209.png)
+
+  - 互斥：任何的写或者追加操作
+    数据需要被写到所有的Replica上，当多个Client请求修改操作时，保证同样的次序
+
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%2010.png)
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%2011.png)
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%2012.png)
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Distributed%20Systems/GFS%2013.png)
+
+  1. Client发送请求到Master
+  2. Master返回块的句柄和Replica位置信息
+  3. Client将写数据推送给所有Replica（可以根据网络拓扑）
+  4. 数据存储在Replica的缓存中
+  5. Client发送写命令到Primary
+  6. Primary给出写的次序（可能请求来自多个Client）
+  7. Primary将该次序发送给Secondaries
+  8. Secondaries响应Primary
+  9. Primary响应Client
+
+- Append操作
+
+  - 谷歌文件系统中非常重要的操作：把多个主机的结果合并到一个文件中、将文件组织成生产者消费者队列、Clients可以并发读、Clients可以并发写、Clients可以并发地执行添加操作
+  - Client将数据推送给所有Replica，然后向Primary发送请求
+  - Primary检查Append是否会导致该块超过64MB
+    如果小于64MB，按正常情况处理。如果超过64MB，将该块扩充到最大范围（写0），并要求所有Secondary做同样的操作，同时通知Client该操作需要在下一个块上重新尝试。
+
+
+
 # P2P、DHT及Chord
 
 ## P2P

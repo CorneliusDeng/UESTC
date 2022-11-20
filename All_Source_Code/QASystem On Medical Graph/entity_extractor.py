@@ -1,6 +1,6 @@
 import os
 import ahocorasick
-import joblib
+from sklearn.externals import joblib
 import jieba
 import numpy as np
 

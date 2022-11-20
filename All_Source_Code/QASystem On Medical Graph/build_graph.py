@@ -1,4 +1,3 @@
-
 from py2neo import Graph, Node, Relationship
 import pandas as pd
 import re
@@ -9,7 +8,7 @@ class MedicalGraph:
     def __init__(self):
         cur_dir = '/'.join(os.path.abspath(__file__).split('/')[:-1])
         self.data_path = os.path.join(cur_dir, 'DATA/disease.csv')
-        self.graph = Graph("http://localhost:7474", username="neo4j", password="CorneliusDeng7")
+        self.graph = Graph("http://localhost:7474", auth=("neo4j", "CorneliusDeng7"))
 
     def read_file(self):
         """

@@ -23,7 +23,7 @@ class KBQA:
 if __name__ == "__main__":
     handler = KBQA()
     while True:
-        question = input("用户：")
+        question = input("Author：")
         if not question:
             break
         answer = handler.qa_main(question)
