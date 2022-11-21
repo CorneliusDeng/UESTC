@@ -23,9 +23,9 @@ class KBQA:
 if __name__ == "__main__":
     handler = KBQA()
     while True:
-        question = input("Author：")
+        question = input("User：")
         if not question:
             break
         answer = handler.qa_main(question)
-        print("Siri：", answer)
-        print("*"*50)
+        print("Assistant：", answer)
+        print("-"*50)
