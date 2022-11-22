@@ -3,6 +3,8 @@ import pandas as pd
 import re
 import os
 
+
+# 建立知识图谱
 class MedicalGraph:
     def __init__(self):
         cur_dir = '/'.join(os.path.abspath(__file__).split('/')[:-1])
@@ -12,7 +14,6 @@ class MedicalGraph:
     def read_file(self):
         """
         读取文件，获得实体，实体关系
-        :return:
         """
         # cols = ["name", "alias", "part", "age", "infection", "insurance", "department", "checklist", "symptom",
         #         "complication", "treatment", "drug", "period", "rate", "money"]
@@ -35,6 +36,7 @@ class MedicalGraph:
         disease_to_complication = []  # 疾病与并发症关系
         disease_to_drug = []  # 疾病与药品关系
 
+        # 读数据
         all_data = pd.read_csv(self.data_path, encoding='gb18030').loc[:, :].values
         for data in all_data:
             disease_dict = {}  # 疾病信息
@@ -107,7 +109,6 @@ class MedicalGraph:
         创建节点
         :param label: 标签
         :param nodes: 节点
-        :return:
         """
         count = 0
         for node_name in nodes:
@@ -121,7 +122,6 @@ class MedicalGraph:
         """
         创建疾病节点的属性
         :param disease_info: list(Dict)
-        :return:
         """
         count = 0
         for disease_dict in disease_info:
@@ -138,7 +138,6 @@ class MedicalGraph:
     def create_graphNodes(self):
         """
         创建知识图谱实体
-        :return:
         """
         disease, symptom, alias, part, department, complication, drug, rel_alias, rel_symptom, rel_part, \
         rel_department, rel_complication, rel_drug, rel_infos = self.read_file()
@@ -152,26 +151,14 @@ class MedicalGraph:
 
         return
 
-    def create_graphRels(self):
-        disease, symptom, alias, part, department, complication, drug, rel_alias, rel_symptom, rel_part, \
-        rel_department, rel_complication, rel_drug, rel_infos = self.read_file()
-
-        self.create_relationship("Disease", "Alias", rel_alias, "ALIAS_IS", "别名")
-        self.create_relationship("Disease", "Symptom", rel_symptom, "HAS_SYMPTOM", "症状")
-        self.create_relationship("Disease", "Part", rel_part, "PART_IS", "发病部位")
-        self.create_relationship("Disease", "Department", rel_department, "DEPARTMENT_IS", "所属科室")
-        self.create_relationship("Disease", "Complication", rel_complication, "HAS_COMPLICATION", "并发症")
-        self.create_relationship("Disease", "Drug", rel_drug, "HAS_DRUG", "药品")
-
     def create_relationship(self, start_node, end_node, edges, rel_type, rel_name):
         """
         创建实体关系边
-        :param start_node:
-        :param end_node:
-        :param edges:
-        :param rel_type:
-        :param rel_name:
-        :return:
+        :param start_node: 起始节点
+        :param end_node: 终止节点
+        :param edges: 边
+        :param rel_type: 关系类型
+        :param rel_name: 关系名称
         """
         count = 0
         # 去重处理
@@ -192,6 +179,20 @@ class MedicalGraph:
             except Exception as e:
                 print(e)
         return
+
+    def create_graphRels(self):
+        """
+        创建知识图谱关系
+        """
+        disease, symptom, alias, part, department, complication, drug, rel_alias, rel_symptom, rel_part, \
+        rel_department, rel_complication, rel_drug, rel_infos = self.read_file()
+
+        self.create_relationship("Disease", "Alias", rel_alias, "ALIAS_IS", "别名")
+        self.create_relationship("Disease", "Symptom", rel_symptom, "HAS_SYMPTOM", "症状")
+        self.create_relationship("Disease", "Part", rel_part, "PART_IS", "发病部位")
+        self.create_relationship("Disease", "Department", rel_department, "DEPARTMENT_IS", "所属科室")
+        self.create_relationship("Disease", "Complication", rel_complication, "HAS_COMPLICATION", "并发症")
+        self.create_relationship("Disease", "Drug", rel_drug, "HAS_DRUG", "药品")
 
 
 if __name__ == "__main__":

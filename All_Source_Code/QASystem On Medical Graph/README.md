@@ -5,14 +5,11 @@
 
 本文参考：[https://github.com/zhihao-chen/QASystemOnMedicalKG](https://github.com/zhihao-chen/QASystemOnMedicalKG)
 
-# 项目效果 #
-以下两张图是系统实际运行效果：
-![系统运行效果图](https://github.com/zhihao-chen/QASystemOnMedicalGraph/blob/master/img/%E6%95%88%E6%9E%9C%E5%9B%BE.png)
 
 # 项目运行方式
 运行环境：Python3
 数据库：neo4j
-预训练词向量：[https://github.com/Embedding/Chinese-Word-Vectors](https://github.com/Embedding/Chinese-Word-Vectors)或https://pan.baidu.com/s/14JP1gD7hcmsWdSpTvA3vKA
+预训练词向量：[https://github.com/Embedding/Chinese-Word-Vectors](https://github.com/Embedding/Chinese-Word-Vectors)
 
 1、搭建知识图谱：python build_grapy.py。大概几个小时，耐心等待。
 2、启动问答测试：python kbqa_test.py
@@ -89,6 +86,3 @@
  - 知识图谱太小了，对于许多问题都检索不出答案。今后可以爬取其它的健康网站数据或者利用命名实体识别和关系抽取技术从医学文献中抽取出实体与关系，以此来扩充知识图谱。
  - 在本项目中采用了预训练的词向量来找近似词。由于该词向量特别大，加载非常耗时，因此影响了整个系统的效率。这个可能是因为电脑配置太低的原因吧。
  - 没有实现推理的功能，后续将采用多轮对话的方式来理解用户的查询意图。同时将对检索出的结果进行排序，可靠度高的排在前面。
- 
-希望各位不吝赐教，任何建议请联系我。
-邮箱：andrew_czh@163.com

@@ -1,6 +1,6 @@
 from py2neo import Graph
 
-
+# 查询结果
 class AnswerSearching:
     def __init__(self):
         self.graph = Graph("http://localhost:7474", auth=("neo4j", "CorneliusDeng7"))
@@ -8,9 +8,8 @@ class AnswerSearching:
 
     def question_parser(self, data):
         """
-        主要是根据不同的实体和意图构造cypher查询语句
+        根据不同的实体和意图构造cypher查询语句
         :param data: {"Disease":[], "Alias":[], "Symptom":[], "Complication":[]}
-        :return:
         """
         sqls = []
         if data:

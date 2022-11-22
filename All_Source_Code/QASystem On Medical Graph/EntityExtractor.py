@@ -4,7 +4,7 @@ from sklearn.externals import joblib
 import jieba
 import numpy as np
 
-
+# 提取实体
 class EntityExtractor:
     def __init__(self):
         cur_dir = '/'.join(os.path.abspath(__file__).split('/')[:-1])
@@ -12,11 +12,10 @@ class EntityExtractor:
         self.vocab_path = os.path.join(cur_dir, 'data/vocab.txt')
         self.stopwords_path =os.path.join(cur_dir, 'data/stop_words.utf8')
         self.word2vec_path = os.path.join(cur_dir, 'data/merge_sgns_bigram_char300.txt')
-        # self.same_words_path = os.path.join(cur_dir, 'DATA/同义词林.txt')
         self.stopwords = [w.strip() for w in open(self.stopwords_path, 'r', encoding='utf8') if w.strip()]
 
         # 意图分类模型文件
-        self.tfidf_path = os.path.join(cur_dir, 'model/tfidf_model.m')
+        self.tfidf_path = os.path.join(cur_dir, 'model/tfidf_model.m')  # tfidf模型
         self.nb_path = os.path.join(cur_dir, 'model/intent_reg_model.m')  # 朴素贝叶斯模型
         self.tfidf_model = joblib.load(self.tfidf_path)
         self.nb_model = joblib.load(self.nb_path)
@@ -61,8 +60,7 @@ class EntityExtractor:
     def build_actree(self, wordlist):
         """
         构造actree，加速过滤
-        :param wordlist:
-        :return:
+        :param wordlist
         """
         actree = ahocorasick.Automaton()
         # 向树中添加单词
@@ -75,7 +73,6 @@ class EntityExtractor:
         """
         模式匹配, 得到匹配的词和类型。如疾病，疾病别名，并发症，症状
         :param question:str
-        :return:
         """
         self.result = {}
 
@@ -112,8 +109,7 @@ class EntityExtractor:
     def find_sim_words(self, question):
         """
         当全匹配失败时，就采用相似度计算来找相似的词
-        :param question:
-        :return:
+        :param question
         """
         import re
         import string
@@ -151,9 +147,8 @@ class EntityExtractor:
     def editDistanceDP(self, s1, s2):
         """
         采用DP方法计算编辑距离
-        :param s1:
-        :param s2:
-        :return:
+        :param s1
+        :param s2
         """
         m = len(s1)
         n = len(s2)
@@ -178,7 +173,6 @@ class EntityExtractor:
         相同字符的个数/min(|A|,|B|)   +  余弦相似度
         :param word: str
         :param entities:List
-        :return:
         """
         a = len(word)
         scores = []
@@ -212,9 +206,8 @@ class EntityExtractor:
     def check_words(self, wds, sent):
         """
         基于特征词分类
-        :param wds:
-        :param sent:
-        :return:
+        :param wds
+        :param sent
         """
         for wd in wds:
             if wd in sent:
@@ -224,9 +217,8 @@ class EntityExtractor:
     def tfidf_features(self, text, vectorizer):
         """
         提取问题的TF-IDF特征
-        :param text:
-        :param vectorizer:
-        :return:
+        :param text
+        :param vectorizer
         """
         jieba.load_userdict(self.vocab_path)
         words = [w.strip() for w in jieba.cut(text) if w.strip() and w.strip() not in self.stopwords]
@@ -238,8 +230,7 @@ class EntityExtractor:
     def other_features(self, text):
         """
         提取问题的关键词特征
-        :param text:
-        :return:
+        :param text
         """
         features = [0] * 7
         for d in self.disase_qwds:
@@ -284,9 +275,8 @@ class EntityExtractor:
     def model_predict(self, x, model):
         """
         预测意图
-        :param x:
-        :param model:
-        :return:
+        :param x
+        :param model
         """
         pred = model.predict(x)
         return pred
