@@ -11,29 +11,29 @@ class MedicalGraph:
     '''读取文件'''
     def read_nodes(self):
         # 共７类节点
-        drugs = [] # 药品
-        foods = [] #　食物
-        checks = [] # 检查
-        departments = [] #科室
-        producers = [] #药品大类
-        diseases = [] #疾病
-        symptoms = []#症状
+        drugs = []  # 药品
+        foods = []  # 食物
+        checks = []  # 检查
+        departments = []  # 科室
+        producers = []  # 药品大类
+        diseases = []  # 疾病
+        symptoms = []  # 症状
 
-        disease_infos = []#疾病信息
+        disease_infos = []  # 疾病信息
 
         # 构建节点实体关系
-        rels_department = [] #　科室－科室关系
-        rels_noteat = [] # 疾病－忌吃食物关系
-        rels_doeat = [] # 疾病－宜吃食物关系
-        rels_recommandeat = [] # 疾病－推荐吃食物关系
-        rels_commonddrug = [] # 疾病－通用药品关系
-        rels_recommanddrug = [] # 疾病－热门药品关系
-        rels_check = [] # 疾病－检查关系
-        rels_drug_producer = [] # 厂商－药物关系
+        rels_department = []  # 科室－科室关系
+        rels_noteat = []  # 疾病－忌吃食物关系
+        rels_doeat = []  # 疾病－宜吃食物关系
+        rels_recommandeat = []  # 疾病－推荐吃食物关系
+        rels_commonddrug = []  # 疾病－通用药品关系
+        rels_recommanddrug = []  # 疾病－热门药品关系
+        rels_check = []  # 疾病－检查关系
+        rels_drug_producer = []  # 厂商－药物关系
 
-        rels_symptom = [] #疾病症状关系
-        rels_acompany = [] # 疾病并发关系
-        rels_category = [] #　疾病与科室之间的关系
+        rels_symptom = []  # 疾病症状关系
+        rels_acompany = []  # 疾病并发关系
+        rels_category = []  #　疾病与科室之间的关系
 
 
         count = 0

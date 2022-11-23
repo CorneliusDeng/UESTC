@@ -1,11 +1,10 @@
-
 import os
 import ahocorasick
 
 class QuestionClassifier:
     def __init__(self):
         cur_dir = '/'.join(os.path.abspath(__file__).split('/')[:-1])
-        #　特征词路径
+        # 特征词路径
         self.disease_path = os.path.join(cur_dir, 'dict/disease.txt')
         self.department_path = os.path.join(cur_dir, 'dict/department.txt')
         self.check_path = os.path.join(cur_dir, 'dict/check.txt')
@@ -59,7 +58,7 @@ class QuestionClassifier:
         if not medical_dict:
             return {}
         data['args'] = medical_dict
-        #收集问句当中所涉及到的实体类型
+        # 收集问句当中所涉及到的实体类型
         types = []
         for type_ in medical_dict.values():
             types += type_
@@ -94,7 +93,7 @@ class QuestionClassifier:
                 question_type = 'disease_do_food'
             question_types.append(question_type)
 
-        #已知食物找疾病
+        # 已知食物找疾病
         if self.check_words(self.food_qwds+self.cure_qwds, question) and 'food' in types:
             deny_status = self.check_words(self.deny_words, question)
             if deny_status:
@@ -123,7 +122,7 @@ class QuestionClassifier:
             question_type = 'check_disease'
             question_types.append(question_type)
 
-        #　症状防御
+        # 症状防御
         if self.check_words(self.prevent_qwds, question) and 'disease' in types:
             question_type = 'disease_prevent'
             question_types.append(question_type)

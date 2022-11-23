@@ -1,5 +1,4 @@
 class QuestionPaser:
-
     '''构建实体节点'''
     def build_entitydict(self, args):
         entity_dict = {}
