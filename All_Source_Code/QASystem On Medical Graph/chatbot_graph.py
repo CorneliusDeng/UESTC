@@ -1,4 +1,3 @@
-
 from question_classifier import *
 from question_parser import *
 from answer_search import *
@@ -11,7 +10,7 @@ class ChatBotGraph:
         self.searcher = AnswerSearcher()
 
     def chat_main(self, sent):
-        answer = '您好，我是医药智能助理Siri，希望可以帮到您。！'
+        answer = '您好，请重新输入，我不太确定您的问题'
         res_classify = self.classifier.classify(sent)
         if not res_classify:
             return answer
