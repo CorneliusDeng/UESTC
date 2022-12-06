@@ -229,6 +229,7 @@ A computer program is an instance, or concrete representation, for an algorithm 
           M[n] = max(vn + M-Compute-Opt(p(n)), M-Compute-Opt(n-1))
     	return M[n]
       }
+
     ```
 
   - Weighted Interval Scheduling: Bottom-Up
