@@ -4,7 +4,6 @@ from lxml import etree
 import pymongo
 import re
 
-'''基于司法网的犯罪案件采集'''
 class CrimeSpider:
     def __init__(self):
         self.conn = pymongo.MongoClient()
