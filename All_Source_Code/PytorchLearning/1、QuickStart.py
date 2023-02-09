@@ -1,9 +1,17 @@
+# PyTorch has two primitives to work with data: torch.utils.data.DataLoader and torch.utils.data.Dataset. 
+# Dataset stores the samples and their corresponding labels, and DataLoader wraps an iterable around the Dataset.
+
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 
+"""
+The torchvision.datasets module contains Dataset objects for many real-world vision data like CIFAR, COCO. 
+In this tutorial, we use the FashionMNIST dataset. 
+Every TorchVision Dataset includes two arguments: transform and target_transform to modify the samples and labels respectively.
+"""
 # Download training data from open datasets.
 training_data = datasets.FashionMNIST(
     root="data",
@@ -22,6 +30,11 @@ test_data = datasets.FashionMNIST(
 
 batch_size = 64
 
+"""
+We pass the Dataset as an argument to DataLoader. This wraps an iterable over our dataset, 
+and supports automatic batching, sampling, shuffling and multiprocess data loading. 
+Here we define a batch size of 64, i.e. each element in the dataloader iterable will return a batch of 64 features and labels.
+"""
 # Create data loaders.
 train_dataloader = DataLoader(training_data, batch_size=batch_size)
 test_dataloader = DataLoader(test_data, batch_size=batch_size)
@@ -36,11 +49,9 @@ To define a neural network in PyTorch, we create a class that inherits from nn.M
 the network in the __init__ function and specify how data will pass through the network in the forward function. 
 To accelerate operations in the neural network, we move it to the GPU if available.
 """
-
 # Get cpu or gpu device for training.
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
-
 
 # Define model
 class NeuralNetwork(nn.Module):
@@ -106,9 +117,11 @@ def test(dataloader, model, loss_fn):
     correct /= size
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
-# The training process is conducted over several iterations (epochs). During each epoch, the model learns parameters
-# to make better predictions. We print the model’s accuracy and loss at each epoch; we’d like to see the accuracy increase
-# and the loss decrease with every epoch.
+"""
+The training process is conducted over several iterations (epochs). During each epoch, the model learns parameters
+to make better predictions. We print the model’s accuracy and loss at each epoch; we’d like to see the accuracy increase
+and the loss decrease with every epoch.
+"""
 epochs = 5
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
@@ -119,3 +132,27 @@ print("Done!")
 # A common way to save a model is to serialize the internal state dictionary (containing the model parameters).
 torch.save(model.state_dict(), "model.pth")
 print("Saved PyTorch Model State to model.pth")
+
+# The process for loading a model includes re-creating the model structure and loading the state dictionary into it.
+model = NeuralNetwork()
+model.load_state_dict(torch.load("model.pth"))
+# This model can now be used to make predictions.
+classes = [
+    "T-shirt/top",
+    "Trouser",
+    "Pullover",
+    "Dress",
+    "Coat",
+    "Sandal",
+    "Shirt",
+    "Sneaker",
+    "Bag",
+    "Ankle boot",
+]
+
+model.eval()
+x, y = test_data[0][0], test_data[0][1]
+with torch.no_grad():
+    pred = model(x)
+    predicted, actual = classes[pred[0].argmax(0)], classes[y]
+    print(f'\n Predicted: "{predicted}", Actual: "{actual}"')
