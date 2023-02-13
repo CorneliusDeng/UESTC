@@ -162,6 +162,21 @@ A computer program is an instance, or concrete representation, for an algorithm 
     ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/master%20theorem%203.png)
     ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Design%20and%20Analysis%20of%20Algorithms/master%20theorem%204.png)
 
+如果子问题的规模不一样，那么可以用递归树来分析，算术表达式如下
+$$
+\begin{aligned}
+T(n)
+& = T(n/3)+T(2n/3)+n \\
+& = [T(n/9) + T(2n/9)]+[T(2n/9)+T(4n/9)]+[n/3+2n/3]+n \;=T(n/9)+2T(2n/9)+T(4n/9)+2n \\
+& = [T(n/27)+T(2n/27)]+2[T(2n/27)+T(4n/27)]+[T(4n/27)+T(8n/27)]+3n \\
+& =T(n/27)+3T(2n/27)+3T(4n/27)+T(8n/27) +3n \\
+& =\cdots \\
+& = T(1)+T(1)+ \cdots + xn\\
+& 显然，x为二叉树的高度，则整体时间复杂度为 O(nlogn)
+\end{aligned}
+$$
+
+
 
 ## **Dynamical Programming动态规划**
 
@@ -482,3 +497,4 @@ A. Theory says you're unlikely to find a poly-time algorithm.
   - Guaranteed to solve arbitrary instance of the problem
   - Guaranteed to find solution within ratio ρ of true optimum.
 - Challenge. Need to prove a solution's value is close to optimum, without even knowing what optimum value is!
+

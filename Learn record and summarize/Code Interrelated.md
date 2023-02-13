@@ -762,3 +762,58 @@ class AttentionPooling(nn.Module):
         return attention_embeddings
 ```
 
+
+
+# 损失函数
+
+## L1范数损失 L1Loss
+
+计算 output 和 target 之差的绝对值。
+
+```python
+torch.nn.L1Loss(reduction='mean')
+```
+
+参数：reduction-三个值，none: 不使用约简；mean:返回loss和的平均值；sum:返回loss的和。默认：mean。
+
+## 均方误差损失 MSELoss
+
+计算 output 和 target 之差的均方差
+
+```python
+torch.nn.MSELoss(reduction='mean')
+```
+
+参数：reduction-三个值，none: 不使用约简；mean:返回loss和的平均值；sum:返回loss的和。默认：mean。
+
+## 交叉熵损失 CrossEntropyLoss
+
+当训练有 C 个类别的分类问题时很有效. 可选参数 weight 必须是一个1维 Tensor, 权重将被分配给各个类别. 对于不平衡的训练集非常有效。
+
+在多分类任务中，经常采用 softmax 激活函数+交叉熵损失函数，因为交叉熵描述了两个概率分布的差异，然而神经网络输出的是向量，并不是概率分布的形式。所以需要 softmax激活函数将一个向量进行“归一化”成概率分布的形式，再采用交叉熵损失函数计算 loss。
+
+```python
+torch.nn.CrossEntropyLoss(weight=None,ignore_index=-100, reduction='mean')
+```
+
+参数
+
+weight (Tensor, optional) – 自定义的每个类别的权重. 必须是一个长度为 C 的 Tensor
+
+ignore_index (int, optional) – 设置一个目标值, 该目标值会被忽略, 从而不会影响到 输入的梯度。
+
+reduction-三个值，none: 不使用约简；mean:返回loss和的平均值；sum:返回loss的和。默认：mean。
+
+##  KL 散度损失 KLDivLoss
+
+计算 input 和 target 之间的 KL 散度。KL 散度可用于衡量不同的连续分布之间的距离, 在连续的输出分布的空间上(离散采样)上进行直接回归时很有效
+
+```python
+torch.nn.KLDivLoss(reduction='mean')
+```
+
+参数：reduction-三个值，none: 不使用约简；mean:返回loss和的平均值；sum:返回loss的和。默认：mean。
+
+## Others
+
+可参考：https://mp.weixin.qq.com/s/-fgZZ4nBdKsBeCsmDBVVsA
