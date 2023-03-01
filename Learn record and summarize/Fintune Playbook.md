@@ -97,7 +97,32 @@
 
 #### The incremental tuning strategy
 
+**Summary: Start with a simple configuration and incrementally make improvements while building up insight into the problem. Make sure that any improvement is based on strong evidence to avoid adding unnecessary complexity.**
+
+- Our ultimate goal is to find a configuration that maximizes the performance of our model.
+- In principle, we could maximize performance by using an algorithm to automatically search the entire space of possible configurations, but this is not a practical option. The space of possible configurations is extremely large and there are not yet any algorithms sophisticated enough to efficiently search this space without human guidance.
+- Most automated search algorithms rely on a hand-designed search space that defines the set of configurations to search in, and these search spaces can matter quite a bit.
+- The most effective way to maximize performance is to start with a simple configuration and incrementally add features and make improvements while building up insight into the problem. We use automated search algorithms in each round of tuning and continually update our search spaces as our understanding grows.
+- As we explore, we will naturally find better and better configurations and therefore our "best" model will continually improve. We call it a launch when we update our best configuration (which may or may not correspond to an actual launch of a production model). For each launch, we must make sure that the change is based on strong evidence – not just random chance based on a lucky configuration – so that we don't add unnecessary complexity to the training pipeline.
+- At a high level, our incremental tuning strategy involves repeating the following four steps:
+  - Identify an appropriately-scoped goal for the next round of experiments.
+  - Design and run a set of experiments that makes progress towards this goal.
+  - Learn what we can from the results.
+  - Consider whether to launch the new best configuration.
+
 #### Exploration vs exploitation
+
+**Summary: Most of the time, our primary goal is to gain insight into the problem.**
+
+- Although one might think we would spend most of our time trying to maximize performance on the validation set, in practice we spend the majority of our time trying to gain insight into the problem, and comparatively little time greedily focused on the validation error. In other words, we spend most of our time on "exploration" and only a small amount on "exploitation".
+- In the long run, understanding the problem is critical if we want to maximize our final performance. Prioritizing insight over short term gains can help us:
+  - Avoid launching unnecessary changes that happened to be present in well-performing runs merely through historical accident.
+  - Identify which hyperparameters the validation error is most sensitive to, which hyperparameters interact the most and therefore need to be re-tuned together, and which hyperparameters are relatively insensitive to other changes and can therefore be fixed in future experiments.
+  - Suggest potential new features to try, such as new regularizers if overfitting is an issue.
+  - Identify features that don't help and therefore can be removed, reducing the complexity of future experiments.
+  - Recognize when improvements from hyperparameter tuning have likely saturated.
+  - Narrow our search spaces around the optimal value to improve tuning efficiency.
+- When we are eventually ready to be greedy, we can focus purely on the validation error even if the experiments aren't maximally informative about the structure of the tuning problem.
 
 #### Choosing the goal for the next round of experiments
 
