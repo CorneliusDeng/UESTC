@@ -292,6 +292,8 @@ Logistic回归算法是一种分类算法，它适用于标签取值离散的情
 
 # 支持向量机 Support Vector Machines
 
+可以学习的推文 https://mp.weixin.qq.com/s/171zIYlnxEoqpcZfJJRbGw
+
 ## 优化目标 Optimization Objective
 
 与Logistic回归和神经网络相比，支持向量机（SVM）在学习复杂的非线性方程时提供了一种更为清晰、更加强大的方式。
