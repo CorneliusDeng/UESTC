@@ -65,6 +65,7 @@
   - Supervised learning: targets to learn the mapping function or relationship between the features and the labels based on the labeled data.
   - Unsupervised learning: aims at learning the intrinsic structure from unlabeled data.
   - Semi-supervised learning: can be regarded as the unsupervised learning with some constraints on labels, or the supervised learning with additional information on the distribution of data. 
+
 - Supervised Learning
   - Given training data $X=\{(x_1,y_1),(x_2,y_2),\cdots,(x_N,y_N)\}$ where $y_i$ is the corresponding label of data $x_i$, supervised learning learns the mapping function $Y=F(X|\theta)$, or the posterior distribution $P(Y|X)$
   - Supervised problems: Classification、Regression、 Learn to Rank、Tagging
@@ -171,7 +172,36 @@
 
 - Support Vector Machine
 
-  
+  There are infinite lines (hyperplanes) separating the two classes but we want to find the best one (the one that minimizes classification error on unseen data)
+
+  SVM searches for the hyperplane with the largest margin, i.e., maximum marginal hyperplane (MMH)
+
+- SVM—Linearly Separable
+
+  A separating hyperplane can be written as: $W\cdot X+b=0$, The hyperplane defining the sides of the margin: $H_1:w_0+w_1x_1+w_1x_1\geq1,for \; y_i=+1$, H_2:w_0+w_1x_1+w_1x_1\leq-1,for \; y_i=-1$
+
+  Any training tuples that fall on hyperplanes $H_1$ or $H_2$ (i.e., the sides defining the margin) are support vectors.
+
+  This becomes a constrained (convex) quadratic optimization problem: 
+  $$
+  margin=\underset{w,b}{max}\frac{2}{||w||}\Longleftrightarrow\underset{w,b}{min}\frac{1}{2}||w||^2 \\
+  s.t. \; y_i(w\cdot x_i+b)\geq1,\; i=1,2,\cdots,N \\
+  \\
+  \text{1、Constrained optimization problem to non-constrained problem with augmented Lagrangian multipliers
+  } \\
+  L(w,b,\alpha)=\frac{1}{2}||w||^2-\displaystyle\sum_{i=1}^N\alpha_i(y_i(w\cdot x_i+b)-1) \\
+  2、Let \; \theta(w)=\underset{\alpha_i\geq0}{max}L(w,b,\alpha)  \\
+  \theta(w)=
+  \begin{cases}
+  \frac{1}{2}||w||^2, & y_i(w\cdot x_i+b)\geq1 \\
+  +\infty, & y_i(w\cdot x_i+b)\leq1
+  \end{cases}
+  \Longrightarrow
+  \underset{w,b}{min}\;\theta(w)=\underset{w,b}{min}\;\underset{\alpha_i\geq0}{max}L(w,b,\alpha) =p^*\\ \\
+  \text{Because Lagrange duality},\quad \underset{w,b}{min}\;\theta(w)=\underset{w,b}{min}\;\underset{\alpha_i\geq0}{max}L(w,b,\alpha) =p^* \rightarrow \underset{\alpha_i\geq0}{max}\; \underset{w,b}{min}L(w,b,\alpha) =d^*
+  $$
+
+- SVM—Kernel functions
 
 # Hashing 
 
@@ -241,7 +271,7 @@
 
   - Basic idea: class margin maximum 
 
-  - Define any three parallel hyperplane   
+  - Define **any** three parallel hyperplane   
     $$
     \begin{cases}
     wx+b=1 \\
