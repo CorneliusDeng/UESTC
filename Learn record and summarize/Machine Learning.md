@@ -3,7 +3,7 @@
 - **机器学习定义**
   - Arthur Samuel(1959): Field of study that gives computers the ability to learn without being explicitly programmed. 在没有明确设置的情况下，使计算机具有学习能力的研究领域。
   
-  - ​      Tom Mitchell(1998): Well-posed Learning Problem:A computer program is said to learn from experience E with respect to some task T and some performance measure P, if its performance on T, as measured by P, improves with experience E. 计算机程序从经验E中学习解决某一任务T，进行某一性能度量P，通过P测定在T上的表现因经验E而提高。例如，在人机玩跳棋游戏中，经验E是程序与自己下几万次跳棋；任务T是玩跳棋；性能度量P是与新对手玩跳棋时赢的概率。
+  -  Tom Mitchell(1998): Well-posed Learning Problem:A computer program is said to learn from experience E with respect to some task T and some performance measure P, if its performance on T, as measured by P, improves with experience E. 计算机程序从经验E中学习解决某一任务T，进行某一性能度量P，通过P测定在T上的表现因经验E而提高。例如，在人机玩跳棋游戏中，经验E是程序与自己下几万次跳棋；任务T是玩跳棋；性能度量P是与新对手玩跳棋时赢的概率。
   
 - **机器学习分类**
   - 监督学习(Supervised Learning): 教计算机如何去完成任务。它的训练数据是有标签的，训练目标是能够给新数据（测试数据）以正确的标签。
@@ -672,3 +672,108 @@ $$
 期望形式：H(p,q)= E_{x～p(x)}[-log(q(x))]
 $$
 在机器学习中，我们需要评估label和predicts之间的差距，使用KL散度刚刚好，即 $D_{KL}(y|| \hat{y})$，而其前一部分是熵，保持不变，故在优化过程中，只需要关注交叉熵即可。所以一般在机器学习中直接使用 Cross Entropy Loss 来评估模型
+
+
+
+# Loss functions and Probability theory
+
+贝叶斯公式： $P(\theta|x)=\frac{P(x|\theta)P(\theta)}{P(x)})$
+
+$P(\theta)$ 是先验概率，$P(x|\theta)$ 是似然概率，$P(\theta|x)$ 是后验概率
+
+机器学习中，有频率派和贝叶斯派
+
+- 频率派和贝叶斯派是两种不同的看待世界的方法论
+
+  - 频率派把模型参数看成**未知的定量**，用极大似然法MLE（一种参数点估计方法）求解参数，往往最后变成**最优化**问题，这一分支又被称为统计学习
+
+    极大似然法 MLE: $\theta=arg\,max\,log\,P(x|\theta)$
+
+    补充：arg 是自变量 argument 的缩写。arg min 就是使后面这个式子达到最小值时的变量的取值；arg max 就是使后面这个式子达到最大值时的变量的取值
+
+  - 贝叶斯派把模型参数看成**未知的变量（概率分布）**，用最大化后验概率MAP求解参数
+
+    最大后验法 MAP: $\theta=arg\,max\,log\,P(\theta|x)=arg\,max\,log\,P(x|\theta)P(\theta)$
+
+可以看到两者**最大的区别在于对参数的认知。**频率派认为参数是常量，数据是变量；贝叶斯派则认为参数是变量，不可能求出固定的参数，数据是常量。
+
+## 最小二乘法
+
+回归任务可以化为下式，其中 $y$ 是真实的连续值，$f^w(x)$ 是预测的连续值，$\varepsilon$  则是噪声
+
+$y=f^w(x)+\varepsilon$，$f^w(x)=w^Tx$
+
+我们假设噪声 $\varepsilon$ 符合正态分布，即 $\varepsilon\sim N(0,\delta^2)$
+
+因此当我们给定 $w$ 和 $x$ 时，$y|w,x\sim N(w^Tx,\delta^2)$
+
+得 $P(y|x,w)=\frac{1}{\sqrt{2\pi}\delta}exp(-\frac{(y-w^Tx)^2}{2\delta^2})$
+
+下面就用频率派的思想，极大似然法MLE
+$$
+\begin{align}
+L(w)  
+& = log(Y|X,w) \\
+& = log\prod(y_i|x_i,w) \\
+& = \sum log(y_i|x_i,w) \\
+& = \sum(log\frac{1}{\sqrt{2\pi}\delta}-\frac{(y_i-w^Tx_i)^2}{2\delta^2})
+\end{align}
+$$
+那么我们要求 $w$，转换为最优化问题
+
+$w=argmaxL(w)=argmax\sum-\frac{(y_i-w^Tx_i)^2}{2\delta^2}=argmin\sum(y_i-w^Tx_i)^2$
+
+至此我们证明了，最小二乘法就是噪声符合正态分布的极大似然法的数学形式。从概率角度给出了最小二乘法的理论支撑。我们发现频率派，往往转换为极大似然法问题，也就是最优化求极值问题，这也被称为统计学习，像决策树，支持向量机都有最优化思想，都属于这一分支。
+
+## 交叉熵
+
+我们知道交叉熵用在分类任务上。以二分类为例，假设符合伯努利分布，则
+
+$P(y|x)=g(x)^y\ast(1-g(x))^{1-y}$
+
+$y$ 就是真实的类别，取值为0或1，$g(x)=sigmoid(w^Tx)$ 表示为1类的概率
+
+用极大似然法
+
+$L(w)=\sum logP(y_i|w,x_i)=\sum y_ilog(g(x_i))+(1-y_i)log(1-g(x_i))$
+
+$w=argmaxL(w)=argmin\sum-y_ilog(g(x_i))-(1-y_i)log(1-g((x_i))$
+
+这就是交叉熵的数学形式
+
+## L2正则化、L1正则化
+
+L2正则化，又被称为岭回归Ridge regression，是避免过拟合的有效手段
+
+以回归任务为例： $y=f^w(x)+\varepsilon$，$f^w(x)=w^Tx$
+
+我们假设噪声 $\varepsilon$ 符合正态分布，即 $\varepsilon\sim N(0,\delta_0^2)$
+
+把 $x$ 看成常量，当给定 $w$ 时，$y|w\sim N(w^Tx,\delta_0^2)$
+
+得 $P(y|w)=\frac{1}{\sqrt{2\pi}\delta_0}exp(-\frac{(y-w^Tx)^2}{2\delta_0^2})$
+
+并且我们引入先验，假设参数 $w$ 符合正态分布，即 $w\sim N(0,\delta_1^2)$，因此
+
+$P(w)=\frac{1}{\sqrt{2\pi}\delta_1}exp(-\frac{||w||^2}{2\delta_1^2})$
+
+利用最大后验法MAP：
+$$
+\begin{align}
+L(w)  
+& = argmaxP(w|y) \\
+& = argmax\frac{P(y|w)P(w)}{P(y)} \\
+& = argmaxlogP(y|w)P(w) \\
+& = argmaxlog(\frac{1}{\sqrt{2\pi}\delta_0}\frac{1}{\sqrt{2\pi}\delta_1})-\frac{(y-w^Tx)^2}{2\delta_0^2}-\frac{||w||^2}{2\delta_1^2} \\
+& = argmin\frac{(y-w^Tx)^2}{2\delta_0^2}+\frac{||w||^2}{2\delta_1^2} \\
+& = argmin(y-w^Tx)^2+\frac{\delta_0^2}{\delta_1^2}||w||^2
+\end{align}
+$$
+一顿操作后，发现L2正则化就是假设参数符合正态分布的最大后验法的数学形式
+
+同理可得L1正则化是假设参数符合拉普拉斯分布的最大后验法。
+
+我们现在可以从概率角度解释正则化到底在干什么了。正则化就是引入了先验知识，我们知道世界上大多数事件是服从正态分布的，像身高、体重、成绩等等。因此我们假设参数也符合正态分布。引入先验知识有什么好处呢，我们现在抛一枚硬币，50次中有30次都是正面向上，问你抛这枚硬币的概率分布，这时你想起你人生中遇到的大多数硬币都是均匀的，尽管数据显示不均匀，你还是会认为这枚硬币是均匀的。如果你是这么想的，那你就引入了先验知识。因此引入先验知识在数据不足的时候有很大好处。
+
+- 频率派认为模型参数是客观存在的，它就在那里。因此把参数看成常量，如果有一个全知全能神，就能告诉你参数值是多少，当数据量成千上万时，我们可以不断逼近那个真实的参数。
+- 贝叶斯派认为认为一切概率都是主观的，因此把参数看成变量，不存在客观存在的概率。
