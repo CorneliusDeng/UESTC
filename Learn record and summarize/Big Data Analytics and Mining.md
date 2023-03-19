@@ -198,10 +198,38 @@
   \end{cases}
   \Longrightarrow
   \underset{w,b}{min}\;\theta(w)=\underset{w,b}{min}\;\underset{\alpha_i\geq0}{max}L(w,b,\alpha) =p^*\\ \\
-  \text{Because Lagrange duality},\quad \underset{w,b}{min}\;\theta(w)=\underset{w,b}{min}\;\underset{\alpha_i\geq0}{max}L(w,b,\alpha) =p^* \rightarrow \underset{\alpha_i\geq0}{max}\; \underset{w,b}{min}L(w,b,\alpha) =d^*
+  \text{Because Lagrange duality},\quad \underset{w,b}{min}\;\theta(w)=\underset{w,b}{min}\;\underset{\alpha_i\geq0}{max}L(w,b,\alpha) =p^* \rightarrow \underset{\alpha_i\geq0}{max}\; \underset{w,b}{min}L(w,b,\alpha) =d^* \\
+  
+  \text{KTT Conditions}
+  \begin{cases}
+  \alpha_i \geq 0 \\
+  y_i(w_i\cdot x_i+b) - 1 \geq 0 \\
+  \alpha_i(y_i(w_i\cdot x_i+b) - 1) = 0, \quad \text{$\alpha_i$ is support vector }
+  \end{cases} \\
+  \begin{align}
+  L(w,b,\alpha)
+  & =\frac{1}{2}\displaystyle\sum_{i=1}^N\sum_{j=1}^N \alpha_i\alpha_jy_iy_j(x_i\cdot x_j)-\sum_{i=1}^N\alpha_iy_i((\sum_{j=1}^N\alpha_jy_jx_j)\cdot x_i+b)+\sum_{i=1}^N\alpha_i  \\
+  & = -\frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i\alpha_jy_iy_j(x_i\cdot x_j)+\sum_{i=1}^N\alpha_i \\
+  \end{align}
   $$
 
-- SVM—Kernel functions
+- SVM—Linearly Inseparable
+
+  Transform the original input data into a higher dimensional space
+
+  Search for a linear separating hyperplane in the new space
+
+  Kernel Trick: Instead of computing the dot product on the transformed data tuples, it is mathematically equivalent to instead applying a kernel function $K(X_i,X_j)$ to the original data, i.e., $K(x,z)=\phi(x)\phi(z)$
+  $$
+  SVM+Kernel \quad 
+  \frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i\alpha_jy_iy_j(\phi(x_i)\cdot \phi(x_j))-\sum_{i=1}^N\alpha_i \\
+  s.t. \; \sum_{i=1}^N\alpha_iy_i=0;\quad 0\leq\alpha_i\leq C \\
+  \text{Objective function}\quad \frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i\alpha_jy_iy_j\cdot k(x,z)-\sum_{i=1}^N\alpha_i \\
+  Classifier \quad sign(\sum_{i=1}^N\alpha_iy_i(x_i\cdot x+1)^p+b) \\
+  Kmeans+Kernel \quad \underset{H^TH=1,H\geq0}{max}Tr(H^TX^TXH) \\
+  PCA+Kernel \quad C_F=\frac{1}{N}\phi(X)[\phi(X)]^T=\frac{1}{N}\sum_{i=1}^N\phi(x_i)\phi(x_i)^T
+  $$
+  
 
 # Hashing 
 
