@@ -177,10 +177,12 @@ There are infinite lines (hyperplanes) separating the two classes but we want to
 
 SVM searches for the hyperplane with the largest margin, i.e., maximum marginal hyperplane (MMH)
 
+The data point closest to the separation hyperplane in the sample points of the training data set is called the support vector. Only the support vector plays a role in determining the optimal hyperplane, while the other data points do not.Moving or even deleting the non-support vectors does not have any effect on the optimal hyperplane. In other words, the support vector plays a decisive role in the model
+
 - SVM—Linearly Separable
 
 
-A separating hyperplane can be written as: $W\cdot X+b=0$, The hyperplane defining the sides of the margin: $H_1:w_0+w_1x_1+w_1x_1\geq1,for \; y_i=+1$, H_2:w_0+w_1x_1+w_1x_1\leq-1,for \; y_i=-1$
+A separating hyperplane can be written as: $W\cdot X+b=0$, The hyperplane defining the sides of the margin: $H_1:w_0+w_1x_1+w_1x_1\geq1,for \; y_i=+1; H_2:w_0+w_1x_1+w_1x_1\leq-1,for \; y_i=-1$
 
 Any training tuples that fall on hyperplanes $H_1$ or $H_2$ (i.e., the sides defining the margin) are support vectors.
 
@@ -207,11 +209,19 @@ L(w,b,\alpha)=\frac{1}{2}||w||^2-\displaystyle\sum_{i=1}^N\alpha_i(y_i(w\cdot x_
 \alpha_i \geq 0 \\
 y_i(w_i\cdot x_i+b) - 1 \geq 0 \\
 \alpha_i(y_i(w_i\cdot x_i+b) - 1) = 0, \quad \text{$\alpha_i$ is support vector }
-\end{cases} \\
+\end{cases}
+$$
+
+$$
 \begin{align}
 L(w,b,\alpha)
 & =\frac{1}{2}\displaystyle\sum_{i=1}^N\sum_{j=1}^N \alpha_i\alpha_jy_iy_j(x_i\cdot x_j)-\sum_{i=1}^N\alpha_iy_i((\sum_{j=1}^N\alpha_jy_jx_j)\cdot x_i+b)+\sum_{i=1}^N\alpha_i  \\
-& = -\frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i\alpha_jy_iy_j(x_i\cdot x_j)+\sum_{i=1}^N\alpha_i \\
+& = -\frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i\alpha_jy_iy_j(x_i\cdot x_j)+\sum_{i=1}^N\alpha_i \\ \\
+
+& \underset{w,b}{min}L(w,b,\alpha)=-\frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i\alpha_jy_iy_j(x_i\cdot x_j)+\sum_{i=1}^N\alpha_i \\
+
+& \underset{\alpha}{max} -\frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i\alpha_jy_iy_j(x_i\cdot x_j)+\sum_{i=1}^N\alpha_i \\
+& s.t. \sum_{i=1}^N\alpha_iy_i=0, \quad\alpha_i\geq0,i=1,2,\cdots,N
 \end{align}
 $$
 
@@ -224,6 +234,24 @@ Search for a linear separating hyperplane in the new space
 
 Kernel Trick: Instead of computing the dot product on the transformed data tuples, it is mathematically equivalent to instead applying a kernel function $K(X_i,X_j)$ to the original data, i.e., $K(x,z)=\phi(x)\phi(z)$
 $$
+\begin{aligned}
+\text{Typical Kernel Functions: } \\
+
+\text{Polynomial kernel: }
+&\quad k(x,z)=(x\cdot z+1)^p,p\geq1
+\\
+\text{Gaussian kernel(RBF):}
+&\quad k(x,z)=exp(-\frac{||x-z||^2}{2\theta^2})
+\\
+\text{Laplace kernel:}
+&\quad k(x,z)=exp(-\frac{||x-z||^2}{\theta}),\theta>0
+\\
+\text{Sigmoid kernel:}
+&\quad k(x,z)=tanh(\beta x\cdot z+\theta),\beta>0,\theta<0
+\end{aligned}
+$$
+
+$$
 SVM+Kernel \quad 
 \frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i\alpha_jy_iy_j(\phi(x_i)\cdot \phi(x_j))-\sum_{i=1}^N\alpha_i \\
 s.t. \; \sum_{i=1}^N\alpha_iy_i=0;\quad 0\leq\alpha_i\leq C \\
@@ -234,6 +262,8 @@ PCA+Kernel \quad C_F=\frac{1}{N}\phi(X)[\phi(X)]^T=\frac{1}{N}\sum_{i=1}^N\phi(x
 $$
 
 ## Ensemble Learning
+
+- Criteria: Good performance + Diversity
 
 - Strategies: Bagging、Boosting、Stacking
 
@@ -274,9 +304,132 @@ AdaBoost is a specific boosting method.
 
 ### Stacking
 
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Stacking%20Framework.png" style="zoom: 50%;" />
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Stacking.png)
+
 ## Clustering
 
+### K-means Clustering
 
+- Partitional clustering approach 
+
+  Each cluster is associated with a centroid (center point) 
+
+  Each point is assigned to the cluster with the closest centroid
+
+  Number of clusters, K, must be specified
+
+  The basic algorithm is very simple
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/K-means%20Clustering.png)
+
+- Solutions to Initial Centroids Problem
+  - Multiple runs (Helps, but probability is not on your side)
+  - Sample and use hierarchical clustering to determine initial centroids
+  - Select more than k initial centroids and then select among these initial centroids (Select most widely separated)
+- Evaluating K-means Clusters. Most common measure is Sum of Squared Error (SSE)
+  - For each point, the error is the distance to the nearest cluster
+  - To get SSE, we square these errors and sum them. $SSE=\displaystyle\sum_{i=1}^K\sum_{x\in C_i}dist^2(m_i,x)$
+  - $x$ is a data point in cluster $C_i$ and  $m_i$ is the representative point for cluster $C_i$ (can show that $m_i$ corresponds to the center (mean) of the cluster)
+  - Given two clusters, we can choose the one with the smallest error
+  - One easy way to reduce SSE is to increase K (the number of cluster)
+  - A good clustering with smaller K can have a lower SSE than a poor clustering with higher K
+
+### Hierarchical Clustering 
+
+- Produces a set of nested clusters organized as a hierarchical tree
+
+  Can be visualized as a dendrogram (A tree like diagram that records the sequences of merges or splits)
+
+- Strengths of Hierarchical Clustering
+  - Do not have to assume any particular number of clusters. Any desired number of clusters can be obtained by ‘cutting’ the dendogram at the proper level
+  - They may correspond to meaningful taxonomies. 
+- Two main types of hierarchical clustering (Similarity or distance matrix is crucia)
+  - Agglomerative:  Start with the points as individual clusters. At each step, merge the closest pair of clusters until only one cluster (or k clusters) left
+  - Divisive: Start with one, all-inclusive cluster. At each step, split a cluster until each cluster contains a point (or there are k clusters).
+
+Basic algorithm (Key operation is the computation of the similarity of two clusters)
+
+1. Compute the proximity matrix
+2. Let each data point be a cluster
+3. Repeat
+4. ​		Merge the two closest clusters
+5. ​		Update the proximity matrix
+6. Until only a single cluster remains
+
+Note: Different approaches to defining the distance between clusters distinguish the different algorithms
+
+### Density-based Clustering: DBSCAN
+
+- Clustering based on density (local cluster criterion), such as density-connected points
+- Major features: 
+  - Discover clusters of arbitrary shape
+  - Handle noise
+  - One scan
+  - Need density parameters as termination condition
+- Several interesting studies:
+  - DBSCAN: Ester, et al. (KDD’96)
+  - OPTICS: Ankerst, et al (SIGMOD’99).
+  - DENCLUE: Hinneburg & D. Keim  (KDD’98)
+  - CLIQUE: Agrawal, et al. (SIGMOD’98)
+- DBSCAN Key concepts
+  - Density = number of points within a specified radius (Eps)
+  - A point is a core point if it has more than a specified number of points (MinPts) within Eps [These are points that are at the interior of a cluster]
+  - A border point has fewer than MinPts within Eps, but is in the neighborhood of a core point
+  - A noise point is any point that is not a core point or a border point
+- Two parameters:
+  - Eps: Maximum radius of the neighbourhood
+  - MinPts: Minimum number of points in an Eps-neighbourhood of that point
+- $N_{Eps}(p):\{q\; belongs \; to\; D |dist(p,q)\leq Eps\}$
+- Directly density-reachable: A point $p$ is directly density-reachable from a point $q$ wrt. $Eps, MinPts$ if
+  - $p$ belongs to $N_{Eps}(q)$
+  - core point condition: $|N_{Eps}(q)\geq MinPts|$
+- Density-reachable:  A point $p$ is density-reachable from a point $q$ wrt. Eps, MinPts if there is a chain of points $p_1,\cdots,p_n,\;p_1=q,p_n=p$ such that $p_{i+1}$ is directly density-reachable from $p_i$
+- Density-connected: A point $p$ is density-connected to a point $q$ wrt. Eps, MinPts if there is a point $o$ such that both, $p$ and $q$ are density-reachable from $o$ wrt. Eps and MinPts.
+- A cluster is defined as a maximal set of density-connected points
+
+## Subspace Learning
+
+### Motivation
+
+- Curse of dimensionality (Neighbors Search). Similarity Calculation is a difficult thing for high-dimensional data.
+- Curse of dimensionality (Classification)
+  - The required number of samples (to achieve the same accuracy) grows exponentially with the number of variables
+  - In practice: number of training examples is fixed. => the classifier’s performance usually will degrade for a large number of features
+
+### Dimension Reduction
+
+- Linear methods
+
+  - Principal component analysis (PCA)
+  - Multidimensional scaling (MDS)
+
+- Nonlinear methods
+
+  - Locally linear embedding (LLE)
+  - Laplacian eigenmaps (LEM)
+  - Isomap
+
+- Principal Component Analysis (PCA)
+
+  - Find projections that capture the largest amounts of variation in data
+
+  - Find the eigenvectors of the covariance matrix, and these eigenvectors define the new space
+
+  - Definition: Given a set of data $X\in R^{d\times N}$, find the principal axes are those orthonormal axes onto which the variance retained under projection is maximal
+
+  - Formulation
+
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/PCA.png)
+
+- Multidimensional Scaling (MDS)
+
+### Feature Selection
+
+### Subspace Clustering
+
+### Conclusion
 
 
 
@@ -362,6 +515,22 @@ AdaBoost is a specific boosting method.
     min\frac{1}{2}||w||^2
     \end{cases}
     $$
+
+- Kernel trick: $k(x,z)=\Phi(x)\cdot \Phi(z)$
+
+- Ensemble Learning
+
+  - Bagging -> Random Forest
+  
+  - Booting -> Adaboost / XGBoost
+  
+  - Stacking
+  
+- Clustering
+
+  - K-Means
+
+  - DBSCAN
 
 - next time
 
