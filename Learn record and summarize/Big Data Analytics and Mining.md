@@ -405,11 +405,12 @@ Note: Different approaches to defining the distance between clusters distinguish
   - Principal component analysis (PCA)
   - Multidimensional scaling (MDS)
 
-- Nonlinear methods
+- Nonlinear methods Goal: to unfold, rather than to project (linearly)
 
   - Locally linear embedding (LLE)
   - Laplacian eigenmaps (LEM)
   - Isomap
+  - Stochastic Neighbor Embedding (SNE)
 
 - Principal Component Analysis (PCA)
 
@@ -425,17 +426,147 @@ Note: Different approaches to defining the distance between clusters distinguish
 
 - Multidimensional Scaling (MDS)
 
+  - Attempts to preserve pairwise distances
+
+  - Different formulation of PCA, but yields similar result form
+    $$
+    \underset{Y}{min} \sum_{i=1}^N\sum_{j=1}^N(d_{ij}^{(X)}-d_{ij}^{(Y)})^2 \\
+    where \; d_{ij}^{(X)}=||x_i-x_j||^2 \; and \; d_{ij}^{(Y)}=||y_i-y_j||^2
+    $$
+
+
+- Locally Linear Embedding (LLE)
+
+  Procedure: 
+
+  Identify the neighbors of each data point
+
+  Compute weights that best linearly reconstruct the point from its neighbors $\underset{w}{min}\displaystyle\sum_{i=1}^N||x_i-\sum_{j=1}^kw_{ij}x_{N_{i(j)}}||^2$
+
+  Find the low-dimensional embedding vector which is best reconstructed by the weights determined in Step 2 $\underset{w}{min}\displaystyle\sum_{i=1}^N||y_i-\sum_{j=1}^kw_{ij}y_{N_{i(j)}}||^2 \; \Leftrightarrow \; \underset{Y}{min}\;tr(Y^TYL)$, Centering Y with unit variance
+
+- Laplacian Eigenmaps (LEM)
+
+  - Similar to locally linear embedding
+
+  - Different in weights setting and objective function
+    $$
+    Weights: \quad W_{ij}=
+    \begin{cases}
+    1, & \text {i, j are connected} \\
+    exp(\frac{-||x_i-x_j||^2}{s}), & \text {otherwise}
+    \end{cases}
+    $$
+    Objective:  $\underset{Y}{min}\displaystyle\sum_{i=1}^N\sum_{j=1}^N(y_i-y_j)^2W_{ij}\;\Leftrightarrow\; \underset{Y}{min}\;tr(YLY^T)$, where $L=R-W, R$ is diagonal and $R_{ii}=\sum_{j=1}^NW_{ij}$
+
+- Isometric Feature Mapping (ISOMAP)
+
+  - Construct the neighborhood graph
+  - Compute the shortest path length (geodesic distance) between pairwise  data points
+  - Recover the low-dimensional  embeddings of the data by Multi-Dimensional Scaling (MDS) with  preserving those geodesic distances
+
+- Stochastic Neighbor Embedding (SNE)
+
+  - The probability that $i$ picks $j$ as its neighbor, $p_{ij}=\frac{exp(-d_{ij}^2)}{\sum_{k≠i}exp(-d_{ik}^2)}$
+  - Neighborhood distribution in the embedded space $q_{ij}\frac{exp(-||y_i-y_j||^2)}{\sum_{k≠i}exp(-||y_i-y_k||^2)}$
+  - Neighborhood distribution preservation $\zeta=\displaystyle\sum_{ij}p_{ij}log\frac{p_{ij}}{q_{ij}}=\sum_iKL(P_i||Q_i)$
+
 ### Feature Selection
+
+- Motivation
+
+  - Especially when dealing with a large number of variables there is a need for dimensionality reduction
+  - Feature Selection can significantly improve a learning algorithm’s performance
+
+- Feature Subset Selection Goal: Find the optimal feature subset. (or at least a “good one.”)
+
+- Classification of methods:
+
+  - Filters
+  - Wrappers
+  - Embedded Methods
+
+- Filter Methods Select subsets of variables as a pre-processing step,independently of the used classifier
+
+- Wrapper Methods
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Wrapper%20Methods.png" style="zoom:50%;" />
+
+- Embedded Methods
+
+  - Specific to a given learning machine
+
+  - Performs variable selection (implicitly) in the process of training
+
+  - LASSO
+
+    <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/LASSO.png" style="zoom:50%;" />
 
 ### Subspace Clustering
 
-### Conclusion
+- Challenge: Traditional clustering algorithms are inappropriate to handle high-dimensional data, due to the “curse of dimensionality”.
+
+  What is curse of dimensionality?
+
+  1⃣️ The more features we have, the more difficult we process it.
+
+  2⃣️ Distances among points are disappear. $\underset{d\to\infty}{lim}\frac{dist_{max}-dist_{min}}{dist_{min}}\to 0$
+
+  3⃣️ Existing relevant and irrelevant attributes. However, The relevance of certain attributes differ for different groups of objects within the same dataset. Thus global feature reduction methods are failed!
+
+  4⃣️ There are correlations among subsets of attributes. There are redundant attributes in the data set. Somehow it can be regarded as a breakthrough point for subspace clustering. 
+
+- PCA-based algorithms: 4C
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/PCA-based%20algorithms%204C.png" style="zoom:50%;" />
+
+- Sparse subspace clustering (SSC)
+
+  $\underset{Z}{min}\;||Z||_0, \;s.t.X=XZ,diag(Z)=0$
+
+  $\underset{Z}{min}\;||Z||_1, \;s.t.X=XZ,diag(Z)=0$ (convex relaxation)
+
+  Affinity matrix: $W=\frac{1}{2}(|Z|+|Z|^T)$
+
+- Low-rank representation (LRR)
+
+  $\underset{Z}{min}\;rank(Z), \;s.t.X=XZ$
+
+  $\underset{Z}{min}\;||Z||_*, \;s.t.X=XZ$ (convex relaxation)
+
+  The solution Z to the LRR is block diagonal when the  subspaces are independent.
 
 
 
 # Hashing 
 
+Challenge in big data applications: Curse of dimensionality、Storage cost、Query speed
 
+## Locality-Sensitive Hashing, Find Similar Items
+
+- Many Web-mining problems can be expressed as finding “similar” sets:
+  - Pages with similar words, e.g., for classification by topic.
+  - NetFlix users with similar tastes in movies, for recommendation systems.
+  - Movies with similar sets of fans.
+  - Images of related things.
+
+## CASE STUDY, Finding Similar Documents
+
+- Given a body of documents, e.g., the Web, find pairs of documents with a lot of text in common, e.g.:
+  - Mirror sites, or approximate mirrors. Application: Don’t want to show both in a search.
+  - Plagiarism, including large quotations.
+  - Similar news articles at many news sites. Application: Cluster articles by “same story.”
+- Three Essential Techniques for Similar Documents
+  - Shingling : convert documents, emails, etc., to sets.
+  - Minhashing : convert large sets to short . signatures, while preserving similarity.
+  - Locality-sensitive hashing : focus on pairs of signatures likely to be similar.
+- Shingles
+  - A k -shingle (or k -gram) for a document is a sequence of k  characters that appears in the document.
+  - Example: k=2; doc = abcab.  Set of 2-shingles = {ab, bc, ca}. Option: regard shingles as a bag, and count ab twice.
+  - Represent a doc by its set of k-shingles.
+  - Assumption
+    - Documents that have lots of shingles in common have similar text, even if the text appears in different order.
+    - Careful: you must pick k  large enough, or most documents will have most shingles. k = 5 is OK for short documents; k = 10 is better for long documents.
+- Min-Hashing
 
 
 
@@ -521,17 +652,57 @@ Note: Different approaches to defining the distance between clusters distinguish
 - Ensemble Learning
 
   - Bagging -> Random Forest
-  
+
   - Booting -> Adaboost / XGBoost
-  
+
   - Stacking
-  
+
 - Clustering
 
   - K-Means
 
   - DBSCAN
 
+- Subspace Learning
+
+  - Dimension Reduction
+
+    - Linear: PCA, MDS
+
+    - Non-Linear: LLE, LEM, Isomap, NSE
+
+  - Feature Selection 
+
+    - Filter: Information Gain
+    - Wrappers: 
+    - Embedded: LASSO
+
+  - Subspace Clustering
+
+    - Local PCA-based method: 4C
+
+    - Self-expressive Representation
+
+      SSC: min$||Z||_1$, s.t. X=XZ, diag(Z)=0
+
+      LRR: min$||Z||_*$, s.t. X=XZ
+
+- 
+
 - next time
 
-  
+
+
+# Report
+
+- Research Report / Research Survey 
+- Format
+  - Abstract 
+  - Key words
+  - Instruction
+  - Methods
+  - Experiment 
+  - Conclusion 
+- Deadline: Next Sunday of the end of this course 
+- Topic: AI-field 
+- Requirement: English & 3000 words
