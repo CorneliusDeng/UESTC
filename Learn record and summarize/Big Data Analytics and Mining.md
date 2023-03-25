@@ -541,15 +541,7 @@ Note: Different approaches to defining the distance between clusters distinguish
 
 Challenge in big data applications: Curse of dimensionality、Storage cost、Query speed
 
-## Locality-Sensitive Hashing, Find Similar Items
-
-- Many Web-mining problems can be expressed as finding “similar” sets:
-  - Pages with similar words, e.g., for classification by topic.
-  - NetFlix users with similar tastes in movies, for recommendation systems.
-  - Movies with similar sets of fans.
-  - Images of related things.
-
-## CASE STUDY, Finding Similar Documents
+## Case Study, Finding Similar Documents
 
 - Given a body of documents, e.g., the Web, find pairs of documents with a lot of text in common, e.g.:
   - Mirror sites, or approximate mirrors. Application: Don’t want to show both in a search.
@@ -559,14 +551,130 @@ Challenge in big data applications: Curse of dimensionality、Storage cost、Que
   - Shingling : convert documents, emails, etc., to sets.
   - Minhashing : convert large sets to short . signatures, while preserving similarity.
   - Locality-sensitive hashing : focus on pairs of signatures likely to be similar.
-- Shingles
-  - A k -shingle (or k -gram) for a document is a sequence of k  characters that appears in the document.
-  - Example: k=2; doc = abcab.  Set of 2-shingles = {ab, bc, ca}. Option: regard shingles as a bag, and count ab twice.
-  - Represent a doc by its set of k-shingles.
-  - Assumption
-    - Documents that have lots of shingles in common have similar text, even if the text appears in different order.
-    - Careful: you must pick k  large enough, or most documents will have most shingles. k = 5 is OK for short documents; k = 10 is better for long documents.
-- Min-Hashing
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Case%20Study%20Finding%20Similar%20Documents.png" style="zoom:50%;" />
+
+### Shingles
+
+- A k -shingle (or k -gram) for a document is a sequence of k  characters that appears in the document.
+
+  Example: k=2; doc = abcab.  Set of 2-shingles = {ab, bc, ca}. Option: regard shingles as a bag, and count ab twice.
+
+- Represent a doc by its set of k-shingles.
+
+- Assumption
+  - Documents that have lots of shingles in common have similar text, even if the text appears in different order.
+  - Careful: you must pick k  large enough, or most documents will have most shingles. k = 5 is OK for short documents; k = 10 is better for long documents.
+
+### Min-Hashing
+
+- Basic Data Model: Sets
+
+  Many similarity problems can be couched as finding subsets of some universal set that have significant intersection.
+
+  Examples include: Documents represented by their sets of shingles (or hashes of those shingles). Similar customers or products.
+
+- Jaccard Similarity of Sets
+
+  The Jaccard similarity  of two sets is the size of their intersection divided by the size of their union.
+
+  $Sim(C_1,C_2)=\frac{C_1\cap C_2}{C_1\cup C_2}$
+
+- From Sets to Boolean Matrices
+
+  - Rows = elements of the universal set.
+  - Columns = sets.
+  - 1 in row $e$ and column $S$  if and only if $e$ is a member of $S$.
+  - Column similarity is the Jaccard similarity of the sets of their rows with 1.
+  - Typical matrix is sparse.
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Example%20Jaccard%20Similarity%20of%20Columns.png" style="zoom:25%;" />
+
+- When Is Similarity Interesting?
+
+  - When the sets are so large or so many that they cannot fit in main memory.
+  - Or, when there are so many sets that comparing all pairs of sets takes too much time.
+  - Or both above.
+
+- Outline of Min-Hashing 
+
+  - Compute signatures of columns = small summaries of columns.
+
+  - Examine pairs of signatures to find similar signatures.
+
+    Essential: similarities of signatures and columns are related.
+
+  - Optional: check that columns with similar signatures are really similar.
+
+- Signatures
+
+  - Key idea: “hash” each column C  to a small signature Sig (C), such that:
+
+    Sig (C) is small enough that we can fit a signature in main memory for each column.
+
+    $Sim(C_1,C_2)$ is the same as the “similarity” of $Sig(C_1)$ and $Sig(C_2)$
+
+  - Imagine the rows permuted randomly.
+
+    Define “hash” function $h(C)$ = the number of the first (in the permuted order) row in which column $C$ has 1
+
+    Use several (e.g., 100) independent hash functions to create a signature.
+
+  - The probability (over all permutations of the rows) that $h(C_1)$ = $h(C_2)$ is the same as $Sim(C_1, C_2)$.
+
+- Minhash Signatures
+
+  - Pick (say) 100 random permutations of the rows.
+  - Think of $Sig(C)$ as a column vector.
+  - Let $Sig(C)[i]$ = according to the  $i_{th}$ permutation, the number of the first row that has a 1 in column C. 
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Example%20Min%20Hashing.png" style="zoom:50%;" />
+
+- Implementation 
+
+  - Suppose 1 billion rows. 
+
+    Hard to pick a random permutation from 1…billion. 
+
+    Representing a random permutation requires 1 billion entries. 
+
+    Accessing rows in permuted order leads to thrashing.
+
+  - A good approximation to permuting rows: pick 100 (?) hash functions.
+
+    For each column $c$ and each hash function $h_i$,  keep a “slot” $M(i,c)$
+
+    Intent: $M(i,c)$ will become the smallest value of $h_i(r)$ for which column $c$  has 1 in row $r$.
+
+    I.e., $h_i(r)$ gives order of rows for $i_{th}$ permuation.
+
+  ```c
+  Initialize M(i,c) to ∞ for all i and c
+  for each row r
+    for each column c 
+      if c has 1 in row r
+        for each hash function h_i do
+          if h_i(r) is a smaller value than M(i,c)
+            M(i,c):= h_i(r);
+  ```
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Example%20Minhashing%20Implementation.png" style="zoom:50%;" />
+
+  - Often, data is given by column, not row.
+
+    E.g., columns = documents, rows = shingles.
+
+    If so, sort matrix once so it is by row.
+
+    And always  compute $h_i(r)$ only once for each row.
+
+### Locality-Sensitive Hashing, Find Similar Items
+
+- Many Web-mining problems can be expressed as finding “similar” sets:
+  - Pages with similar words, e.g., for classification by topic.
+  - NetFlix users with similar tastes in movies, for recommendation systems.
+  - Movies with similar sets of fans.
+  - Images of related things.
 
 
 
