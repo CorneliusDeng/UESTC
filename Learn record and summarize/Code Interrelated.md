@@ -817,3 +817,120 @@ torch.nn.KLDivLoss(reduction='mean')
 ## Others
 
 可参考：https://mp.weixin.qq.com/s/-fgZZ4nBdKsBeCsmDBVVsA
+
+
+
+# PyTorch-dataloader
+
+PyTorch的dataloader是用于读取训练数据的工具，它可以自动将数据分割成小batch，并在训练过程中进行数据预处理。
+
+以下是制作PyTorch的dataloader的简单步骤：
+
+1. 导入必要的库。定义数据集类，需要自定义一个继承自`torch.utils.data.Dataset`的类，在该类中实现`__len__`和`__getitem__`方法
+
+   ```python
+   import torch
+   from torch.utils.data import DataLoader, Dataset
+   
+   class MyDataset(Dataset):
+       def __init__(self, data):
+           self.data = data
+       
+       def __len__(self):
+           return len(self.data)
+       
+       def __getitem__(self, index):
+           # 返回第index个数据样本
+           return self.data[index]
+   ```
+
+2. 创建数据集实例
+
+   ```python
+   data = [1, 2, 3, 4, 5]
+   dataset = MyDataset(data)
+   ```
+
+3. 创建dataloader实例。使用`torch.utils.data.DataLoader`创建dataloader实例，可以设置`batch_size、shuffle`等参数
+
+   ```python
+   dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
+   ```
+
+4. 使用dataloader读取数据。至此是制作PyTorch的dataloader的简单步骤，根据实际需求可以进行更复杂的操作，如数据增强、并行读取等。
+
+   ```python
+   for batch in dataloader:
+       # batch为一个batch的数据，可以直接用于训练
+       print(batch)
+   ```
+
+5. 已经分类的文件生成标注文件
+
+   假设你已经将所有的图片按照类别分别放到了十个文件夹中，可以使用以下代码生成标注文件：
+
+   ```python
+   import os
+   # 定义图片所在的文件夹路径和标注文件的路径
+   img_dir = '/path/to/image/directory'
+   ann_file = '/path/to/annotation/file.txt'
+   # 遍历每个类别文件夹中的图片，将标注信息写入到标注文件中
+   with open(ann_file, 'w') as f:
+       for class_id in range(1, 11):
+           class_dir = os.path.join(img_dir, 'class{}'.format(class_id))
+           for filename in os.listdir(class_dir):
+               if filename.endswith('.jpg'):
+                   # 写入图片的文件名和类别
+                   f.write('{} {}\n'.format(filename, class_id))
+   ```
+
+   在上述代码中，首先定义了图片所在的文件夹路径`img_dir`和标注文件的路径`ann_file`
+
+   然后，使用`with open(ann_file, 'w') as f:`语句打开标注文件，使用`for`循环遍历每个类别文件夹中的图片，并将标注信息写入到标注文件中
+
+   其中，`os.path.join`函数用于拼接路径字符串，`f.write`函数用于将图片的文件名和类别写入到标注文件中，且每个标注信息占据一行，文件名和类别之间使用空格分隔。需要注意的是，上述代码假设每个类别文件夹的名称为`class1`、`class2`、...、`class10`，图片文件名的后缀为`.jpg`，且标注文件中每行仅包含一个文件名和一个标签，且它们之间使用空格分隔。如果文件夹名称、文件名后缀或标注文件格式不同，需要对代码进行相应的修改
+
+   生成的标注文件是一个文本文件，每行包含一个图片的文件名和类别标签，两者之间使用空格分隔。举个例子，如果第一个文件夹中有三张图片，它们的文件名分别为`img_001.jpg`、`img_002.jpg`和`img_003.jpg`，类别标签为1，则生成的标注文件内容如下：
+
+   ```python
+   img_001.jpg 1
+   img_002.jpg 1
+   img_003.jpg 1
+   ```
+
+   这个标注文件可以被用作训练深度学习模型时的标签数据
+
+6. 图像读取示例
+
+   如果数据集已经按照类别分好了文件夹，我们可以使用`torchvision.datasets.ImageFolder`类来读取数据集。`ImageFolder`类会自动将每个文件夹中的图像按照类别进行标记，并且支持数据增强和数据预处理等操作。以下是一个示例，展示如何使用`ImageFolder`类读取数据集，并使用`DataLoader`批量加载数据集：
+
+   ```python
+   import torch
+   import torchvision
+   from torchvision import transforms
+   # 数据增强和预处理
+   transform = transforms.Compose([
+       transforms.RandomResizedCrop(224),
+       transforms.RandomHorizontalFlip(),
+       transforms.ToTensor(),
+       transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+   ])
+   # 读取数据集
+   dataset = torchvision.datasets.ImageFolder('path/to/data', transform=transform)
+   # 创建数据加载器
+   dataloader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True, num_workers=4)
+   # 使用数据加载器迭代数据集
+   for batch_data, batch_labels in dataloader:
+       print(batch_data.shape)
+       print(batch_labels.shape)
+   ```
+
+   在上述代码中，我们首先定义了数据增强和预处理的操作，然后使用`ImageFolder`类读取数据集，将数据增强和预处理操作传递给`transform`参数
+
+   `ImageFolder`类会自动将图像按照类别进行标记
+
+   然后，我们使用`DataLoader`将数据集打包成批量，每个批量大小为32，并且开启了shuffle功能和4个线程
+
+   最后，我们使用`for`循环迭代数据加载器，逐批加载数据，并输出每个批量的数据和标签
+
+   需要注意的是，使用`ImageFolder`类前需要将数据集的文件夹按照类别进行命名，例如两个文件夹的名字分别为`class1`和`class2`。另外，`transforms.Normalize`中的`mean`和`std`参数需要根据数据集进行调整
