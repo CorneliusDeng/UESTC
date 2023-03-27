@@ -554,9 +554,9 @@ Challenge in big data applications: Curse of dimensionality、Storage cost、Que
 
 <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Case%20Study%20Finding%20Similar%20Documents.png" style="zoom:50%;" />
 
-### Shingles
+## Shingles
 
-- A k -shingle (or k -gram) for a document is a sequence of k  characters that appears in the document.
+- A k -shingle (or k -gram) for a document is a sequence of k characters that appears in the document.
 
   Example: k=2; doc = abcab.  Set of 2-shingles = {ab, bc, ca}. Option: regard shingles as a bag, and count ab twice.
 
@@ -566,7 +566,7 @@ Challenge in big data applications: Curse of dimensionality、Storage cost、Que
   - Documents that have lots of shingles in common have similar text, even if the text appears in different order.
   - Careful: you must pick k  large enough, or most documents will have most shingles. k = 5 is OK for short documents; k = 10 is better for long documents.
 
-### Min-Hashing
+## Min-Hashing
 
 - Basic Data Model: Sets
 
@@ -647,7 +647,9 @@ Challenge in big data applications: Curse of dimensionality、Storage cost、Que
     Intent: $M(i,c)$ will become the smallest value of $h_i(r)$ for which column $c$  has 1 in row $r$.
 
     I.e., $h_i(r)$ gives order of rows for $i_{th}$ permuation.
-
+    
+    $i$ could denote permutation , $c$ could denote documents 
+  
   ```c
   Initialize M(i,c) to ∞ for all i and c
   for each row r
@@ -660,21 +662,63 @@ Challenge in big data applications: Curse of dimensionality、Storage cost、Que
 
   <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Example%20Minhashing%20Implementation.png" style="zoom:50%;" />
 
+  
+
   - Often, data is given by column, not row.
 
     E.g., columns = documents, rows = shingles.
-
+  
     If so, sort matrix once so it is by row.
-
+  
     And always  compute $h_i(r)$ only once for each row.
 
-### Locality-Sensitive Hashing, Find Similar Items
+## Locality-Sensitive Hashing, Find Similar Items
 
 - Many Web-mining problems can be expressed as finding “similar” sets:
   - Pages with similar words, e.g., for classification by topic.
   - NetFlix users with similar tastes in movies, for recommendation systems.
   - Movies with similar sets of fans.
   - Images of related things.
+
+- Suppose we have, in main memory, data representing a large number of objects.
+
+  May be the objects themselves. May be signatures as in minhashing.
+
+  We want to compare each to each, finding those pairs that are sufficiently similar.
+
+  Checking All Pairs is Hard: While the signatures of all columns may fit in main memory, comparing the signatures of all pairs of columns is quadratic in the number of columns.
+
+- **General idea:** Use a function $f(x,y)$ that tells whether or not x and y  is a **candidate pair**(a pair of elements whose similarity must be evaluated)
+
+  For minhash matrices: Hash columns to many buckets, and make elements of the same bucket candidate pairs.
+
+- Candidate Generation From Minhash Signatures
+
+  - Pick a similarity threshold $s$, a fraction < 1
+
+  - A pair of columns $c$ and $d$ is a candidate pair if their signatures agree in at least fraction $s$ of the rows
+
+    I.e. M(i,c) = M(i,d) for at least fraction $s$ values of $i$
+
+- LSH for Minhash Signatures
+
+  - Big idea: hash columns of signature matrix $M$ several times.
+  - Arrange that (only) similar columns are likely to hash to the same bucket.
+  - Candidate pairs are those that hash at least once to the same bucket.
+  - Trick: divide signature rows into bands. Each hash function based on one band.
+
+- Partition into Bands
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/partition%20into%20bands.png" style="zoom:33%;" />
+
+  - Divide matrix $M$ into $b$ bands of $r$ rows.
+  - For each band, hash its portion of each column to a hash table with $k$ buckets. Make $k$ as large as possible.
+  - Candidate column pairs are those that hash to the same bucket for ≥ 1 band.
+  - Tune $b$ and $r$ to catch most similar pairs, but few dissimilar pairs.
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Matrix%20and%20Buckets.png" style="zoom:33%;" />
+
+- Next
 
 
 
@@ -795,7 +839,21 @@ Challenge in big data applications: Curse of dimensionality、Storage cost、Que
 
       LRR: min$||Z||_*$, s.t. X=XZ
 
-- 
+- Why we need Hashing?
+
+- Finding similar items
+
+  - K-shingles (k-gram)
+
+  - Min-Hashing
+
+    - Definition: the first row of the column contains "1"
+
+    - Surprising properties: $Sim(C_1,C_2)=P(H(C_1)=H(C_2))=\frac{a}{a+b+c}$
+
+    - How to compute signature matrix 
+
+      trick:  using hashing function to implement permutation 
 
 - next time
 
