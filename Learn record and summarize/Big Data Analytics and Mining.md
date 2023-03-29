@@ -630,6 +630,8 @@ Challenge in big data applications: Curse of dimensionality、Storage cost、Que
 
   <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Example%20Min%20Hashing.png" style="zoom:50%;" />
 
+  Input Matrix: d $\times$ N, $\Longrightarrow$ Signature Matrix: d' $\times$ N
+
 - Implementation 
 
   - Suppose 1 billion rows. 
@@ -674,53 +676,120 @@ Challenge in big data applications: Curse of dimensionality、Storage cost、Que
 
 ## Locality-Sensitive Hashing, Find Similar Items
 
-- Many Web-mining problems can be expressed as finding “similar” sets:
-  - Pages with similar words, e.g., for classification by topic.
-  - NetFlix users with similar tastes in movies, for recommendation systems.
-  - Movies with similar sets of fans.
-  - Images of related things.
+Many Web-mining problems can be expressed as finding “similar” sets:
+- Pages with similar words, e.g., for classification by topic.
+- NetFlix users with similar tastes in movies, for recommendation systems.
+- Movies with similar sets of fans.
+- Images of related things.
 
-- Suppose we have, in main memory, data representing a large number of objects.
+Suppose we have, in main memory, data representing a large number of objects.
 
-  May be the objects themselves. May be signatures as in minhashing.
+May be the objects themselves. May be signatures as in minhashing.
 
-  We want to compare each to each, finding those pairs that are sufficiently similar.
+We want to compare each to each, finding those pairs that are sufficiently similar.
 
-  Checking All Pairs is Hard: While the signatures of all columns may fit in main memory, comparing the signatures of all pairs of columns is quadratic in the number of columns.
+Checking All Pairs is Hard: While the signatures of all columns may fit in main memory, comparing the signatures of all pairs of columns is quadratic in the number of columns.
 
-- **General idea:** Use a function $f(x,y)$ that tells whether or not x and y  is a **candidate pair**(a pair of elements whose similarity must be evaluated)
+**General idea:** Use a function $f(x,y)$ that tells whether or not x and y  is a **candidate pair**(a pair of elements whose similarity must be evaluated)
 
-  For minhash matrices: Hash columns to many buckets, and make elements of the same bucket candidate pairs.
+For minhash matrices: Hash columns to many buckets, and make elements of the same bucket candidate pairs.
 
-- Candidate Generation From Minhash Signatures
+Candidate Generation From Minhash Signatures
 
-  - Pick a similarity threshold $s$, a fraction < 1
+- Pick a similarity threshold $s$, a fraction < 1
 
-  - A pair of columns $c$ and $d$ is a candidate pair if their signatures agree in at least fraction $s$ of the rows
+- A pair of columns $c$ and $d$ is a candidate pair if their signatures agree in at least fraction $s$ of the rows
 
-    I.e. M(i,c) = M(i,d) for at least fraction $s$ values of $i$
+  I.e. M(i,c) = M(i,d) for at least fraction $s$ values of $i$
 
-- LSH for Minhash Signatures
+LSH for Minhash Signatures
 
-  - Big idea: hash columns of signature matrix $M$ several times.
-  - Arrange that (only) similar columns are likely to hash to the same bucket.
-  - Candidate pairs are those that hash at least once to the same bucket.
-  - Trick: divide signature rows into bands. Each hash function based on one band.
+- Big idea: hash columns of signature matrix $M$ several times.
+- Arrange that (only) similar columns are likely to hash to the same bucket.
+- Candidate pairs are those that hash at least once to the same bucket.
+- Trick: divide signature rows into bands. Each hash function based on one band.
 
-- Partition into Bands
+Partition into Bands
 
-  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/partition%20into%20bands.png" style="zoom:33%;" />
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/partition%20into%20bands.png" style="zoom:33%;" />
 
-  - Divide matrix $M$ into $b$ bands of $r$ rows.
-  - For each band, hash its portion of each column to a hash table with $k$ buckets. Make $k$ as large as possible.
-  - Candidate column pairs are those that hash to the same bucket for ≥ 1 band.
-  - Tune $b$ and $r$ to catch most similar pairs, but few dissimilar pairs.
+- Divide matrix $M$ into $b$ bands of $r$ rows.
+- For each band, hash its portion of each column to a hash table with $k$ buckets. Make $k$ as large as possible.
+- Candidate column pairs are those that hash to the same bucket for ≥ 1 band.
+- Tune $b$ and $r$ to catch most similar pairs, but few dissimilar pairs.
 
-  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Matrix%20and%20Buckets.png" style="zoom:33%;" />
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Matrix%20and%20Buckets.png" style="zoom:33%;" />
 
-- Next
+- LSH involves a Tradeoff
 
+  Pick the number of minhashes, the number of bands, and the number of rows per band to balance false positives/negatives.
 
+  Example: if we had only 15 bands of 5 rows, the number of false positives would go down, but the number of false negatives would go up.
+
+  if $b$ Brands of $r$ Rows are given 
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/LSH%20tradeoff.png" style="zoom: 50%;" /> 
+
+## Learn to Hash
+
+- Radom Projection
+
+  The hashing function of LSH to produce Hash Code
+  $$
+  h_r(x)=
+  \begin{cases}
+  1, & r^Tx \geq 0 \\
+  0, & otherwise
+  \end{cases}
+  $$
+  $r^Tx \geq 0$ is a hyperplane separating the space
+
+  Assume we have already learned a distance metric A from domain knowledge. $X^TAX$ has better quantity than simple metrics such as Euclidean distance.
+
+  Take random projections of data. Quantize each projection with few bits
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Hash-Radom%20Projection.png" style="zoom:50%;" />
+
+- PCA Hashing
+
+  1. Projection Stage: 
+
+     Get Transform matrix $W$, we can project $X$ on new feature space.
+
+     $Y=W^TX$
+
+  2. Quantization Stage
+
+     $h(x)=sign(W^Tx)$
+
+     The strategy is too simple, The biggest problem is that assigning same bits to directions along which the data has a greater range. 
+
+  Minimize the quantization loss: $Q(B,Y)=||B-Y^TR||_F^2$, $R$ is orthogonal matrix , $B=sign(Y^TR)$
+
+  The basic idea is rotating the data to minimize quantization loss.
+
+  Solution: Beginning with the random initialization of R, and adopt a k-means-like procedure. In each iteration, each data point is first assigned to the nearest vertex of the binary hypercube, and then R is updated to minimize the quantization loss given this assignment.
+
+- Spectral Hashing
+  $$
+  \underset{\{y_i\}}{min}\sum_{ij}W_{ij}||y_i-y_j||^2 \\
+  subject\;to. 
+  \begin{align}
+  & y_i \in \{-1,1\}^k \\
+  & \sum_iy_i=0 \\
+  & \frac{1}{n}\sum_iy_iy_i^T= 1
+  \end{align}
+  $$
+  
+  where $W_{ij}$ is the similarity between $x_i$ and $x_j$, the constraint $\sum_iy_i=0$ requires each bit to be fire 50% of the time, and the constraint $\frac{1}{n}\sum_iy_iy_i^T= 1$ requires the bits to be uncorrelated
+
+- General  Approach to Learning-Based Hashing 
+
+  Decomposing the hashing learning problem into two steps:
+
+  1.  hash bit learning
+  2. and hash function learning based on the learned bits. 
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/General%20%20Approach%20to%20Learning-Based%20Hashing.png" style="zoom:50%;" />
 
 # Sampling
 
@@ -843,9 +912,9 @@ Challenge in big data applications: Curse of dimensionality、Storage cost、Que
 
 - Finding similar items
 
-  - K-shingles (k-gram)
+  - K-shingles (k-gram) convert documents into sets
 
-  - Min-Hashing
+  - Min-Hashing convert input matrix into signature matrix 
 
     - Definition: the first row of the column contains "1"
 
@@ -854,6 +923,25 @@ Challenge in big data applications: Curse of dimensionality、Storage cost、Que
     - How to compute signature matrix 
 
       trick:  using hashing function to implement permutation 
+
+- Locality-Sensitive Hashing (LSH)
+
+  Basic idea: divide the input matrix (signature matrix) into same bands, and hash them into different buckets.
+
+- Learn to Hash
+
+  - Radom Projection
+    $$
+    h(x)=
+    \begin{cases}
+    1, & r^Tx \geq 0 \\
+    0, & else
+    \end{cases}
+    $$
+
+  - PCA Hashing
+
+    h(x) = sign(wx), w is determined by PCA
 
 - next time
 
