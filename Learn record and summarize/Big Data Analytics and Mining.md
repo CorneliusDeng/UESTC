@@ -795,8 +795,27 @@ Partition into Bands
 
 ## Inverse Transform Sampling
 
+Sampling based on the inverse of Cumulative Distribution Function (CDF)
+
+- CDF Sampling
+  - $Y_i\sim Uniform(0,1)$
+  - $X_i=CDF^{-1}(Y_i)$
+
+Drawbacks：Usually, it’s hard to get the inverse function
+
+## Rejection Sampling
+
+Idea: Accept the samples in the region under the graph of its density function and reject others
+
+图
+
+Proposal distribution $q(x)$ should always covers the target distribution $p(x)$
+
+Acceptance ratio = $\frac{p(x)}{Mq(x)}$, $M$ is a big positive number
+
 ## Importance Sampling
 
+Basic Idea: Not reject but assign weight to each instance so that the correct distribution is targeted.
 $$
 \begin{align}
 E(f(x)) 
@@ -810,11 +829,26 @@ E(f(x))
 \end{align}
 $$
 
-## Rejection Sampling
+- Importance Sampling (IS) V.S. Rejection Sampling(RS)
+  - Instances from RS share the same “weight”, only some of instances are reserved
+  - Instances from IS have different weight, all instances are reserved
+  - IS is less sensitive to proposal distribution 
 
 ## Markov chain Monte Carlo (MCMC)
 
+MCMC methods are a class of algorithms for sampling from a probability distribution based on constructing a Markov chain that has the desired distribution as its equilibrium distribution. The state of the chain after a number of steps is then used as a sample of the desired distribution. 
 
+图
+
+A Markov chain is a sequence of random variab $x_1,x_2,x_3,\cdots$ with Markov property, namely that, given the present state, the future and past states are independent. 
+
+$Pr(X_{n+1}=x|X_1=x_1,X_2=x_2,\cdots,X_n=x_n)=Pr(X_{n+1}=x|X_n=x_n)$
+
+Utilize MCMC to generate a Markov chain, such that we have a Markov chain $\{X_1,X_2,\cdots,X_i,X_{i+1},\cdots,X_n\}$
+
+if $n$ is large enough, $X_n\sim p(X)$
+
+Example: $X=\{e,t,w\},\; \widehat{p}(X)=\widehat{p}(e,t,w)=\displaystyle\sum_{i=n-1000}^n\frac{X_i}{1000}$
 
 # Data Stream Mining
 
