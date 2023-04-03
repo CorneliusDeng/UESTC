@@ -793,7 +793,26 @@ Partition into Bands
 
 # Sampling
 
+## Inverse Transform Sampling
 
+## Importance Sampling
+
+$$
+\begin{align}
+E(f(x)) 
+& = \sum_{All \; x}f(x)\cdot p(x) = \int^{+\infty}_{-\infty}{f(x)p(x)dx} \\
+& = \int^{+\infty}_{-\infty}{f(x)\frac{p(x)}{q(x)}\cdot q(x)dx}, \; let \; R(x)=f(x)\frac{p(x)}{q(x)} \\
+& = \int^{+\infty}_{-\infty}{R(x)\cdot q(x)dx} = E(R(x)) \\
+& = \sum_{All\;x}R(x)\cdot q(x)  \\
+& \approx \frac{1}{n}\sum_{All\;x}R(x) \\
+& \text{n is very large, 大数定理} E(x)\approx \overline{X}=\frac{1}{n}\sum x_i \\
+& = \frac{1}{n}\sum_{All\;x}f(x)\cdot w(x), \text{where $w(x)$ is} \frac{p(x)}{q(x)}
+\end{align}
+$$
+
+## Rejection Sampling
+
+## Markov chain Monte Carlo (MCMC)
 
 
 
@@ -939,9 +958,25 @@ Partition into Bands
     \end{cases}
     $$
 
-  - PCA Hashing
+  - Unsupervised Hash
 
-    h(x) = sign(wx), w is determined by PCA
+    - PCA Hashing
+
+      h(x) = sign(wx), w is determined by PCA
+
+    - Spectral Hash
+
+  - Supervised Hash
+
+- Sampling 
+
+  - Inverse Transform Sampling 
+
+    $a=u(0,1),\;x=CDF^{-1}(a)$
+
+  - Rejection Sampling 
+
+    Basic idea: draw samples from a simple proposed distribution, and the reject some samples to fit target distribution 
 
 - next time
 
