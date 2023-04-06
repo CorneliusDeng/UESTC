@@ -26,6 +26,8 @@ Inspired by [Yi Zhu](https://bryanyzhu.github.io/)
 
 # Efficient(PEFT) 
 
+https://huggingface.co/blog/peft
+
 ## PEFT 方法一：adapter
 
 最早来自于这篇论文：

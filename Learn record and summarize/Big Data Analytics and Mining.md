@@ -807,7 +807,7 @@ Drawbacks：Usually, it’s hard to get the inverse function
 
 Idea: Accept the samples in the region under the graph of its density function and reject others
 
-图
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Rejection%20Sampling.png)
 
 Proposal distribution $q(x)$ should always covers the target distribution $p(x)$
 
@@ -838,7 +838,7 @@ $$
 
 MCMC methods are a class of algorithms for sampling from a probability distribution based on constructing a Markov chain that has the desired distribution as its equilibrium distribution. The state of the chain after a number of steps is then used as a sample of the desired distribution. 
 
-图
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Markov%20chain%20Monte%20Carlo.png)
 
 A Markov chain is a sequence of random variab $x_1,x_2,x_3,\cdots$ with Markov property, namely that, given the present state, the future and past states are independent. 
 
