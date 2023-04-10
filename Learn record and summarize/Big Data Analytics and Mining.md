@@ -880,7 +880,45 @@ Then, using rejection sampling, the mcmc samlping algorithm is:
 
 ## Metropolis–Hastings (MH) Sampling
 
+Equivalence：
 
+$p(X_i)q(X_j|X_i)*0.1=p(X_j)q(X_i|X_j)*0.2$
+
+$p(X_i)q(X_j|X_i)*0.5=p(X_j)q(X_i|X_j)*1.0$
+
+Idea: Magnify acceptance ratio by $\alpha(X_j|X_i)=min(1,\frac{p(X_j)q(X_i|X_j)}{p(X_i)q(X_j|X_i)})$
+
+Note that it wouldn’t violate the detailed balance condition
+$$
+\begin{align}
+p(X_i)q(X_j|X_i)\alpha(X_j|X_i)
+& = p(X_i)q(X_j|X_i)\cdot min(1,\frac{p(X_j)q(X_i|X_j)}{p(X_i)q(X_j|X_i)}) \\ 
+& = min(p(X_i)q(X_j|X_i),p(X_j)q(X_i|X_j)) \\
+& = p(X_j)q(X_i|X_j)\cdot min(\frac{p(X_i)q(X_j|X_i)}{p(X_j)q(X_i|X_j)}) \\
+& = p(X_j)q(X_i|X_j)\alpha(X_i|X_j)
+\end{align}
+$$
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/MH%20Sampling.png" style="zoom:50%;" />
+
+## Gibbs Sampling
+
+Idea: MH has large acceptance ratio, Gibbs sampling further make acceptance ratio being 100% 
+
+Two-dimension example: Given a joint distribution $p(x,y)$, corresponding to the point in the figure below, $A(x_1,y_1)$ and $B(x_1,y_2)$
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Gibbs%20Sampling%20Example.png" style="zoom: 50%;" />
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Gibbs%20Sampling.png" style="zoom:50%;" />
+
+Like every other MCMC style algorithm, Gibbs sampling still have the burn-in period
+
+- Example: $X=\{e,t,w\}$
+  - Step 1: Initialize $e,t,w$, such that we have $X_0=(e_0,t_0,w_0)$
+  - Step 2: generate $e_1$ based on $p(e|t=t_0,w=w_0)$
+  - Step 3: generate $t_1$ based on $p(t|e=e_1,w=w_0)$
+  - Step 4: generate $w_1$ based on $p(w|e=e_1,t=t_1)$
+  - Step 5: repeat steps 2-4 n times, and we obtain a Markov chain
+
+## Latent Dirichlet allocation
 
 
 
