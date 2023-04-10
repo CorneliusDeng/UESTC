@@ -795,7 +795,7 @@ Partition into Bands
 
 ## Inverse Transform Sampling
 
-Sampling based on the inverse of Cumulative Distribution Function (CDF)
+Sampling based on the inverse of Cumulative Distribution Function (CDF，累积分布函数) 
 
 - CDF Sampling
   - $Y_i\sim Uniform(0,1)$
@@ -824,8 +824,8 @@ E(f(x))
 & = \int^{+\infty}_{-\infty}{R(x)\cdot q(x)dx} = E(R(x)) \\
 & = \sum_{All\;x}R(x)\cdot q(x)  \\
 & \approx \frac{1}{n}\sum_{All\;x}R(x) \\
-& \text{n is very large, 大数定理} E(x)\approx \overline{X}=\frac{1}{n}\sum x_i \\
-& = \frac{1}{n}\sum_{All\;x}f(x)\cdot w(x), \text{where $w(x)$ is} \frac{p(x)}{q(x)}
+& \text{n is very large, 大数定理} \; E(x)\approx \overline{X}=\frac{1}{n}\sum x_i \\
+& = \frac{1}{n}\sum_{All\;x}f(x)\cdot w(x), \text{where $w(x)$ is}\; \frac{p(x)}{q(x)}
 \end{align}
 $$
 
@@ -846,9 +846,43 @@ $Pr(X_{n+1}=x|X_1=x_1,X_2=x_2,\cdots,X_n=x_n)=Pr(X_{n+1}=x|X_n=x_n)$
 
 Utilize MCMC to generate a Markov chain, such that we have a Markov chain $\{X_1,X_2,\cdots,X_i,X_{i+1},\cdots,X_n\}$
 
-if $n$ is large enough, $X_n\sim p(X)$
+$X_1,X_2,\cdots,X_i$ is the burn in period, $X_{i+1},\cdots,X_n$ is sampling. if $n$ is large enough, $X_n\sim p(X)$
 
 Example: $X=\{e,t,w\},\; \widehat{p}(X)=\widehat{p}(e,t,w)=\displaystyle\sum_{i=n-1000}^n\frac{X_i}{1000}$
+
+**Detailed Balance Condition(细致平衡条件)**
+
+**Theorem:** If the transition matrix P of non-periodic Markov chain and the distribution of π(x) satisfy $\pi(i)P_{ij}=\pi_jP_{ji},\; for\; all\;i,j$
+The $\pi(x)$ is the equilibrium distribution, where $P_{ij}$ means the probability of transiting from state $i$ to state $j$, and $\pi(i)$ is the probability of been state $i$
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Detailed%20Balance%20Condition.png)
+
+Given p(X), we target to find a transition matrix Q(X), such that: $p(X_i)Q(X_j|X_i)=P(X_j)Q(X_i|X_j),\; for\; all\;i,j$
+
+But, find distribution $Q()$ is very difficult. There is a solution, for example, we don't know whether $a=b$, but we can confirm $ab=ba$
+
+Then loosen the condition by introducing the acceptance ratio $\alpha$, so that
+$$
+p(X_i)Q(X_j|X_i)\alpha(X_j|X_i)=P(X_j)Q(X_i|X_j)\alpha(X_i|X_j) \\
+where\;
+\begin{cases}
+\alpha(X_j|X_i) = P(X_j)Q(X_i|X_j) \\
+\alpha(X_i|X_j) = p(X_i)Q(X_j|X_i)
+\end{cases} 
+\\
+p(X_i)\underset{Q'(X_j|X_i)}{\underbrace{Q(X_j|X_i)\alpha(X_j|X_i)}}=P(X_j)\underset{Q'(X_i|X_j)}{\underbrace{Q(X_i|X_j)\alpha(X_i|X_j)}}
+$$
+Therefore, $Q'(X_j|X_i)=Q(X_j|X_i)P(X_j)Q(X_i|X_j)$, because $P(X_j)Q(X_i|X_j) \in[0,1]$, so $Q'(X_j|X_i)<Q(X_j|X_i)$
+
+Then, using rejection sampling, the mcmc samlping algorithm is:
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/MCMC%20Sampling%20Algorithm.png" style="zoom:50%;" />
+
+## Metropolis–Hastings (MH) Sampling
+
+
+
+
 
 # Data Stream Mining
 
@@ -1011,6 +1045,16 @@ Example: $X=\{e,t,w\},\; \widehat{p}(X)=\widehat{p}(e,t,w)=\displaystyle\sum_{i=
   - Rejection Sampling 
 
     Basic idea: draw samples from a simple proposed distribution, and the reject some samples to fit target distribution 
+
+  - Importance Sampling 
+
+  - MCMC Sampling 
+
+    Basic idea: To construct a markov chain, where its equilibrium distribution converges to target distribution p(x)
+
+    Markov properties: $Pr(X_{n+1}=x|X_1=x_1,X_2=x_2,\cdots,X_n=x_n)=Pr(X_{n+1}=x|X_n=x_n)$
+
+    Detailed Balance Condition(细致平衡条件):  $P(X_i)\cdot Pr(X_j|X_i)=P(X_j)\cdot Pr(X_i|X_j)$
 
 - next time
 

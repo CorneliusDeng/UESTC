@@ -490,5 +490,3 @@
 
   所以总体来说,这段代码实现了一个BERT-based的VQA模型,支持分布式训练,具有恢复Checkpoint、学习率 Warmup 等Feature,可用来进行VQA任务上的训练和评估。
 
-
-
