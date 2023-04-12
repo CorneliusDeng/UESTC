@@ -859,22 +859,22 @@ The $\pi(x)$ is the equilibrium distribution, where $P_{ij}$ means the probabili
 
 Given p(X), we target to find a transition matrix Q(X), such that: $p(X_i)Q(X_j|X_i)=P(X_j)Q(X_i|X_j),\; for\; all\;i,j$
 
-But, find distribution $Q()$ is very difficult. There is a solution, for example, we don't know whether $a=b$, but we can confirm $ab=ba$
+But, find distribution $Q(x|y)$ is very difficult. There is a solution, for example, we don't know whether $a=b$, but we can confirm $ab=ba$
 
 Then loosen the condition by introducing the acceptance ratio $\alpha$, so that
 $$
-p(X_i)Q(X_j|X_i)\alpha(X_j|X_i)=P(X_j)Q(X_i|X_j)\alpha(X_i|X_j) \\
+P(X_i)Q(X_j|X_i)\alpha(X_j|X_i)=P(X_j)Q(X_i|X_j)\alpha(X_i|X_j) \\
 where\;
 \begin{cases}
 \alpha(X_j|X_i) = P(X_j)Q(X_i|X_j) \\
-\alpha(X_i|X_j) = p(X_i)Q(X_j|X_i)
+\alpha(X_i|X_j) = P(X_i)Q(X_j|X_i)
 \end{cases} 
 \\
-p(X_i)\underset{Q'(X_j|X_i)}{\underbrace{Q(X_j|X_i)\alpha(X_j|X_i)}}=P(X_j)\underset{Q'(X_i|X_j)}{\underbrace{Q(X_i|X_j)\alpha(X_i|X_j)}}
+P(X_i)\underset{Q'(X_j|X_i)}{\underbrace{Q(X_j|X_i)\alpha(X_j|X_i)}}=P(X_j)\underset{Q'(X_i|X_j)}{\underbrace{Q(X_i|X_j)\alpha(X_i|X_j)}}
 $$
-Therefore, $Q'(X_j|X_i)=Q(X_j|X_i)P(X_j)Q(X_i|X_j)$, because $P(X_j)Q(X_i|X_j) \in[0,1]$, so $Q'(X_j|X_i)<Q(X_j|X_i)$
+Therefore, $Q'(X_j|X_i)=Q(X_j|X_i)P(X_j)Q(X_i|X_j)$, because $P(X_j)Q(X_i|X_j) \in[0,1]$, so $Q'(X_j|X_i)<Q(X_j|X_i)$, then using rejection sampling for $Q'$
 
-Then, using rejection sampling, the mcmc samlping algorithm is:
+Above all, the mcmc samlping algorithm is:
 
 <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/MCMC%20Sampling%20Algorithm.png" style="zoom:50%;" />
 
@@ -902,7 +902,7 @@ $$
 
 ## Gibbs Sampling
 
-Idea: MH has large acceptance ratio, Gibbs sampling further make acceptance ratio being 100% 
+Idea: MH has large acceptance ratio, Gibbs sampling further make acceptance ratio being 100%. Using conditional distribution and marginal distribution to satisfy detailed balance condition which is necessary for markov chain.
 
 Two-dimension example: Given a joint distribution $p(x,y)$, corresponding to the point in the figure below, $A(x_1,y_1)$ and $B(x_1,y_2)$
 <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Gibbs%20Sampling%20Example.png" style="zoom: 50%;" />
@@ -918,9 +918,17 @@ Like every other MCMC style algorithm, Gibbs sampling still have the burn-in per
   - Step 4: generate $w_1$ based on $p(w|e=e_1,t=t_1)$
   - Step 5: repeat steps 2-4 n times, and we obtain a Markov chain
 
-## Latent Dirichlet allocation
+## Latent Dirichlet Allocation
 
+Please refer to: https://zhuanlan.zhihu.com/p/172021192
 
+Documents are represented as random mixtures over latent topics, where each topic is characterized by a distribution over all the words.
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Latent%20Dirichlet%20allocation%201.png" style="zoom: 67%;" />
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Latent%20Dirichlet%20allocation%202.png" style="zoom: 50%;" />
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Latent%20Dirichlet%20allocation%203.png" style="zoom:67%;" />
 
 # Data Stream Mining
 
@@ -1074,25 +1082,43 @@ Like every other MCMC style algorithm, Gibbs sampling still have the burn-in per
 
   - Supervised Hash
 
-- Sampling 
+- Inverse Transform Sampling 
 
-  - Inverse Transform Sampling 
+  $a=u(0,1),\;x=CDF^{-1}(a)$
 
-    $a=u(0,1),\;x=CDF^{-1}(a)$
+- Rejection Sampling 
 
-  - Rejection Sampling 
+  Basic idea: draw samples from a simple proposed distribution, and the reject some samples to fit target distribution 
 
-    Basic idea: draw samples from a simple proposed distribution, and the reject some samples to fit target distribution 
+- Importance Sampling 
 
-  - Importance Sampling 
+- MCMC Sampling 
 
-  - MCMC Sampling 
+  Basic idea: To construct a markov chain, where its equilibrium distribution converges to target distribution p(x)
 
-    Basic idea: To construct a markov chain, where its equilibrium distribution converges to target distribution p(x)
+  Markov properties: $Pr(X_{n+1}=x|X_1=x_1,X_2=x_2,\cdots,X_n=x_n)=Pr(X_{n+1}=x|X_n=x_n)$
 
-    Markov properties: $Pr(X_{n+1}=x|X_1=x_1,X_2=x_2,\cdots,X_n=x_n)=Pr(X_{n+1}=x|X_n=x_n)$
+  Detailed Balance Condition(细致平衡条件):  $P(X_i)\cdot Q(X_j|X_i)=P(X_j)\cdot Q(X_i|X_j)$
 
-    Detailed Balance Condition(细致平衡条件):  $P(X_i)\cdot Pr(X_j|X_i)=P(X_j)\cdot Pr(X_i|X_j)$
+  Trick: It's difficult to find $Q(x|y)$. Thereby, change it as $P(X_i)Q(X_j|X_i)\alpha(X_j|X_i)=P(X_j)Q(X_i|X_j)\alpha(X_i|X_j)$
+
+  But how to draw samples from $Q'(X_j|X_i)$ and $Q'(X_i|X_j)$ ?
+
+  Solution: Rejection Sampling for $Q'$
+
+- MH Sampling
+
+  Basic idea: MAMC Sampling is not efficient, increasing acceptance ratio 
+
+  $P(X_i)\cdot Q'(X_j|X_i)=P(X_j)\cdot Q'(X_i|X_j)$, both sides times a constant M 
+
+  Magnify acceptance ratio by $\alpha(X_j|X_i)=min(1,\frac{p(X_j)q(X_i|X_j)}{p(X_i)q(X_j|X_i)})$
+
+- Gibbs Sampling
+
+  Basic idea: draw samples from conditional distribution to construct markov chain
+
+  $p(x_1,y_1)p(y_2|x_1)=p(x_1,y_2)p(y_1|x_1)$
 
 - next time
 
