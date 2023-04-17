@@ -930,7 +930,79 @@ Documents are represented as random mixtures over latent topics, where each topi
 
 <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Latent%20Dirichlet%20allocation%203.png" style="zoom:67%;" />
 
+## Sampling on Data Stream: Reservoir Sampling
+
+- Fixed $k$ uniform sample from arbitrary size $N$ stream in one pass
+
+  - No need to know stream size in advance
+  - Include first $k$ items with probability 1
+  - Include item $n > k$  with probability $p(n) = k/n, n > k $
+    - Pick $j$ uniformly from $\{1,2,…,n\}$
+    - If $j\leq k$, swap item $n$ into location $j$ in reservoir, discard replaced item
+
+- Proof 
+
+  - n-item selection probability $k/n$
+
+  - n-item reservation
+
+    - n+1: $1 -\frac{k}{n+1}\cdot\frac{1}{k}=\frac{n}{n+1}$ 
+    - n+1: $1 -\frac{k}{n+2}\cdot\frac{1}{k}=\frac{n+1}{n+2}$ 
+    - N: $1 -\frac{k}{N}\cdot\frac{1}{k}=\frac{N-1}{N}$ 
+
+    $\frac{n}{n+1}\cdot \frac{n+1}{n+2} \cdots \frac{N-1}{N}=\frac{n}{N}$
+
+    $\frac{k}{n}\cdot\frac{n}{N}=\frac{k}{N}$
+
+  
+
 # Data Stream Mining
+
+## Concept & Features 
+
+- A data stream is a massive sequence of data objects which have some unique features:
+
+  - One by One
+  - Potentially Unbounded 
+  - Concept Drift 
+
+- Data Stream: Infinite Length, Evolving Nature.
+
+  Challenges :
+
+  - Single Pass Handling
+
+  - Memory Limitation
+
+  - Low Time Complexity
+
+  - Concept Drift: In predictive analytics and machine learning, the concept drift means that the statistical properties of the target variable, which the model is trying to predict, change over time in unforeseen ways. **In a word, the probability distribution changes.**
+
+    - Change in $P(C)$, $C$ donates class
+    - Change in $P(X)$, $X$ donates features 
+    - Change in $P(C|X)$, Concept Drift, remain features, but class has changed 
+
+    $P(C_i|X)=\frac{P(C_i)P(X|C_i)}{p(X)}$
+
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Rea-Virtuall%20Concept%20Drift.png)
+    
+    <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Example%20Concept-Drift.png" style="zoom: 50%;" />
+
+## Concept Drift Detection
+
+- Adaptive Windowing（ADWIN）
+
+  The idea is simple: whenever two “large enough” subwindows of W exhibit “distinct enough” averages, one can conclude that the corresponding expected values are different,and the older portion of the window is dropped.
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/ADWIN.png" style="zoom:67%;" />
+  
+  
+
+
+
+## Data Stream Classification
+
+## Data Stream Clustering
 
 
 
@@ -1116,9 +1188,27 @@ Documents are represented as random mixtures over latent topics, where each topi
 
 - Gibbs Sampling
 
-  Basic idea: draw samples from conditional distribution to construct markov chain
+  Basic idea: draw samples from conditional distribution to construct markov chain (100% acceptance ratio)
 
   $p(x_1,y_1)p(y_2|x_1)=p(x_1,y_2)p(y_1|x_1)$
+
+  Trick: Sampling along with one direction
+
+- Latent Dirichlet Allocation
+
+  LDA is a tpoic modeling with probabilistic graph model
+
+  However, $P(w|\theta,\phi,z,\alpha,\beta)$ is intractable 
+
+  $\underset{z,\theta,\phi,\alpha,\beta}{max}\sum_{i=1}^nlog\,P(w_i|\theta,\phi,\alpha,\beta)$ 
+
+  Solution: $P(z|w)$
+
+  Draw samples from $P(z|w)$
+
+  Using Gibbs Sampling, $P(z_i|z_{\lnot i},w)$
+
+  Get $\theta, \phi$, get word-topic and document-topic
 
 - next time
 
