@@ -1,70 +1,84 @@
-import time
+import pulp
 
-# 读取端口文件和流文件
-def get_ports(ports_file):
-    ports = []
-    with open(ports_file) as f:
-        next(f)
-        for line in f:
-            port_id, bandwidth = line.strip().split(',')
-            ports.append({'id': int(port_id), 'bandwidth': int(bandwidth), 'queue': [], 'using': 0})
-    return ports  
+# 读取端口文件，将端口的id和带宽存储在字典ports中，并返回ports字典
+def read_port_file(filename):
+    ports = {}
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+        for line in lines[1:]:
+            port_id, bandwidth = map(int, line.strip().split(','))
+            ports[port_id] = bandwidth
+    return ports
 
-def read_flows(flows_file):
-    flows = []
-    with open(flows_file) as f:
-        next(f)
-        for line in f:
-            flow_id, bandwidth, entry_time, transmission_time = line.strip().split(',')
-            flows.append({'id': int(flow_id), 'bandwidth': int(bandwidth), 'entry_time': int(entry_time), 'transmission_time': int(transmission_time), 'port_id': -1})
+# 读取流文件，将流的id、带宽、进入时间和发送时间存储在字典flows中，并返回flows字典
+def read_flow_file(filename):
+    flows = {}
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+        for line in lines[1:]:
+            flow_id, bandwidth, enter_time, send_time = map(int, line.strip().split(','))
+            flows[flow_id] = {
+                'bandwidth': bandwidth,
+                'enter_time': enter_time,
+                'send_time': send_time
+            }
     return flows
 
-# 处理流并输出结果
-def schedule_flows(ports, flows):
+def linear_programming(ports, flows):
+    # 创建线性规划模型
+    model = pulp.LpProblem('Flow_Scheduling', pulp.LpMinimize)
+    # 每个端口的带宽使用量，整数变量
+    ports_vars = {}
+    # 每个流分配到的端口，二进制变量
+    flows_vars = {}
+    for port_id in ports:
+        ports_vars[port_id] = pulp.LpVariable(f'port_{port_id}', lowBound=0, cat='Integer')
+    for flow_id in flows:
+        flows_vars[flow_id] = {}
+        for port_id in ports:
+            flows_vars[flow_id][port_id] = pulp.LpVariable(f'flow_{flow_id}_port_{port_id}', lowBound=0, cat='Binary')
+
+    # 约束条件1：每个端口的带宽使用量不得超过其总带宽
+    for port_id in ports:
+        # ports[port_id]表示端口port_id的总带宽，ports_vars[port_id]表示端口port_id的带宽使用量
+        model += sum(flows_vars[flow_id][port_id] * flows[flow_id]['bandwidth'] for flow_id in flows) <= ports[port_id] * ports_vars[port_id]
+    
+    # 约束条件2：每个流只能分配到一个端口，并且流进入时间不得早于分配到的端口的发送时间
+    for flow_id in flows:
+        # 每个流只能分配到一个端口
+        model += sum(flows_vars[flow_id][port_id] for port_id in ports) == 1
+        for port_id in ports:
+            # 流进入时间不得早于分配到的端口的发送时间
+            model += flows_vars[flow_id][port_id] * flows[flow_id]['send_time'] + ports_vars[port_id] >= flows[flow_id]['enter_time']
+
+    # 将所有端口的带宽使用量相加，作为目标函数
+    model += sum(ports_vars.values())
+
+    # 求解线性规划模型
+    model.solve()
+
+    # 获取每个流分配到的端口、开始发送时间和剩余可用带宽，并将结果存储在result列表中
     result = []
-    time = 0
-    for flow in flows:
-        min_port_id = None
-        flow_id, bandwidth, arrive_time, duration = flow 
-        # 找到第一个可用带宽满足flow的端口
-        for port, port_bandwidth in ports:
-            if port_bandwidth >= bandwidth:
-                # 检查端口当前是否有空余带宽和是否有等待流
-                avail_bandwidth = port_bandwidth  # 当前可用带宽
-                queue = []  # 等待流队列
-                for sent_flow in result:
-                    if sent_flow[1] == port:
-                        avail_bandwidth -= sent_flow[2]  # 减去已发送流带宽
-                        if sent_flow[3] > arrive_time:  # 如果发送未完成,加入等待队列
-                            queue.append(sent_flow)
-                # 如果当前可用带宽满足并无等待流,开始发送
-                if avail_bandwidth >= bandwidth and not queue:
-                    send_time = max(arrive_time, result[-1][3] if result else 0)  # 开始发送时间
-                    result.append((flow_id, port, bandwidth, send_time, send_time + duration))
-                    break
-                # 否则加入等待队列等待
-                else:
-                    queue.append(flow) 
-        else:
-            # 如果所有端口带宽都不满足,流无法发送
-            pass
+    for flow_id in flows:
+        for port_id in ports:
+            if flows_vars[flow_id][port_id].value() == 1:
+                result.append((flow_id, port_id, int(pulp.value(ports_vars[port_id]) - flows[flow_id]['send_time'])))
+                break
+    # 按流id对结果进行排序
+    result = sorted(result, key=lambda x: x[0])
     return result
 
-# 写入输出文件 
-def write_result(result_file, result):
-    with open('result.txt', 'w') as f:
-        f.write('流id,端口id,开始发送时间\n')
-        for flow in result:
-            f.write(','.join(str(x) for x in flow[:3]) + '\n')
-    
-
 def main():
-    port_file = '../data/port.txt'  # 端口文件
-    flow_file = '../data/flow.txt'   # 流文件
-    ports = read_ports(port_file)
-    flows = read_flows(flow_file)
-    result = schedule_flows(ports, flows)
-    write_result('../data/result.txt', result)
+    for i in range(0,3):
+        ports = read_port_file(f'../data/{i}/port.txt')
+        flows = read_flow_file(f'../data//{i}/flow.txt')
 
-if __name__ == "__main__":
+        result = linear_programming(ports, flows)
+
+        with open(f'../data/{i}/result.txt', 'w') as f:
+            f.write('流id,端口id,开始发送时间\n')
+            for r in result:
+                f.write(f'{r[0]},{r[1]},{r[2]}\n')
+
+if __name__ == '__main__':
     main()
