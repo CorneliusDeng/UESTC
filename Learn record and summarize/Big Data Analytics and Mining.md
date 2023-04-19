@@ -990,17 +990,44 @@ Documents are represented as random mixtures over latent topics, where each topi
 
 ## Concept Drift Detection
 
+###  Distribution-based detector
+
+Monitoring the change of data distributions between two  fixed or adaptive windows of data. (e.g. ADWIN)
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Distribution-based%20detector.png" style="zoom: 50%;" />
+Drawbacks: Hard to determine window size、Learn concept drift slower、Virtual concept drift
+
 - Adaptive Windowing（ADWIN）
 
   The idea is simple: whenever two “large enough” subwindows of W exhibit “distinct enough” averages, one can conclude that the corresponding expected values are different,and the older portion of the window is dropped.
 
   <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/ADWIN.png" style="zoom:67%;" />
-  
-  
 
+### Error-rate based detector
 
+Capture concept drift based on the change of the classification performance. (i.e. comparing the current classification performance to the average historical error rate with statistical analysis.) (e.g. PHT)
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Error-rate%20based%20detector.png" style="zoom:67%;" />
+Drawbacks: Sensitive to noise、Hard to deal with gradual concept drift、Depend on learning model itself heavily
+
+- Drift  detection method: DDM
+
+  A significant increase in the error of the algorithm, suggest a change in the class distribution, and whether is a significant increase  is based on following formula.
+
+  $p_i+s_i \geq p_{min}+3*s_{min}$
+
+  the error-rate is the probability of observed False $p_i$, with standard deviation given by $s_i=sqrt(p_i(1-p_i)/i)$
 
 ## Data Stream Classification
+
+- Classification: Model construction based on training sets
+
+- Typical classification methods
+  - K-Nearest neighbor approach
+  - Decision tree
+  - Bayesian classification
+  - Neural network approach
+  - Support Vector Machines  
+  - Other methods
+- 
 
 ## Data Stream Clustering
 
@@ -1209,6 +1236,18 @@ Documents are represented as random mixtures over latent topics, where each topi
   Using Gibbs Sampling, $P(z_i|z_{\lnot i},w)$
 
   Get $\theta, \phi$, get word-topic and document-topic
+
+- Sampling on Data Stream
+
+  Reservoir Sampling: draw samples with uniform distribution
+
+- Data Stream Mining
+
+  - Challenge of Data Stream MIning
+
+  - Concept Drift
+
+  - Concept Drifting Detection 
 
 - next time
 

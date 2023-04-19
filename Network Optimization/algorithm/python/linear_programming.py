@@ -1,4 +1,5 @@
 import pulp
+import os
 
 # 读取端口文件，将端口的id和带宽存储在字典ports中，并返回ports字典
 def read_port_file(filename):
@@ -69,16 +70,28 @@ def linear_programming(ports, flows):
     return result
 
 def main():
-    for i in range(0,3):
+     # 指定目录路径
+    dir_path = '../data'
+
+    # 使用os.listdir()列出所有文件和文件夹
+    files_and_folders = os.listdir(dir_path)
+
+    # 遍历每一个文件或文件夹，统计文件夹数量
+    num_folders = 0
+    for item in files_and_folders:
+        item_path = os.path.join(dir_path, item)  # 构建文件或文件夹的完整路径
+        if os.path.isdir(item_path):  # 判断是否是文件夹
+            num_folders += 1
+
+    for i in range(0,num_folders):
         ports = read_port_file(f'../data/{i}/port.txt')
         flows = read_flow_file(f'../data//{i}/flow.txt')
 
         result = linear_programming(ports, flows)
 
-        with open(f'../data/{i}/result.txt', 'w') as f:
-            f.write('流id,端口id,开始发送时间\n')
+        with open(f'../data/{i}/result.txt', 'w', encoding='utf-8') as f:
             for r in result:
-                f.write(f'{r[0]},{r[1]},{r[2]}\n')
+                f.write(f'{r[0]},{r[1]},{r[2]}\r\n')
 
 if __name__ == '__main__':
     main()
