@@ -74,27 +74,25 @@ def greedy_algorithm(ports, flows):
     
     return result
 
+
 def main():
     # 指定目录路径
     dir_path = '../data'
-
     # 使用os.listdir()列出所有文件和文件夹
     files_and_folders = os.listdir(dir_path)
-
-    # 遍历每一个文件或文件夹，统计文件夹数量
-    num_folders = 0
+    # 遍历每一个文件或文件夹，筛选出所有文件夹并返回它们的文件名
+    folder_names = []
     for item in files_and_folders:
         item_path = os.path.join(dir_path, item)  # 构建文件或文件夹的完整路径
         if os.path.isdir(item_path):  # 判断是否是文件夹
-            num_folders += 1
+            folder_names.append(item)
 
-    for i in range(0,num_folders):
-        ports = read_port_file(f'../data/{i}/port.txt')
-        flows = read_flow_file(f'../data//{i}/flow.txt')
-
+    for folder in folder_names:
+        ports = read_port_file(f'{dir_path}/{folder}/port.txt')
+        flows = read_flow_file(f'{dir_path}/{folder}/flow.txt')
         result = greedy_algorithm(ports, flows)
 
-        with open(f'../data/{i}/result.txt', 'w', encoding='utf-8') as f:
+        with open(f'{dir_path}/{folder}/result.txt', 'w', encoding='utf-8') as f:
             for r in result:
                 f.write(f'{r[0]},{r[1]},{r[2]}\r\n')
 

@@ -1027,7 +1027,93 @@ Drawbacks: Sensitive to noise、Hard to deal with gradual concept drift、Depend
   - Neural network approach
   - Support Vector Machines  
   - Other methods
-- 
+
+- Data stream classification Circle
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Data%20stream%20classification%20Circle.png" style="zoom: 50%;" />
+  Process an example at a time, and inspect it only once 
+  Be ready to predict at any point
+  Use a limited amount of memory 
+  Work in a limited amount of time
+
+  Procedure:
+
+  The algorithm is passed the next available example from the stream (requirement 1) 
+  The algorithm processes the example, updating its data structures. It does so without exceeding the memory bounds set on it (requirement 2), and as quickly as possible (requirement 3).
+  The algorithm is ready to accept the next example. (requirement 4) 
+
+- Typical algorithms
+
+  - VFDT (Very Fast Decision Tree)
+  - CVFDT
+  - SyncStream
+
+- Decision Tree Learning: One of the most effective and widely-used classification methods
+
+  - Induce models in the form of decision trees: Each node contains a test on the attribute; Each branch from a node corresponds to a possible outcome of the test; Each leaf contains a class prediction
+  - Challenges
+    - Classic decision tree learners assume all training data can be simultaneously stored in main memory
+    - Disk-based decision tree learners repeatedly read training data from disk sequentially. Prohibitively expensive when learning complex trees
+    - Goal: design decision tree learners that read each example at most once, and use a small constant time to process it
+
+  ### VFDT (Very Fast Decision Tree)
+
+- A decision-tree learning system based on the Hoeffding tree algorithm.
+
+- In order to find the best attribute at a node, it may be sufficient to consider only a small subset of the training examples that pass through that node.
+
+  - Given a stream of examples, use the first ones to choose the root attribute.
+  - Once the root attribute is chosen, the successive examples are passed down to the corresponding leaves, and used to choose the attribute there, and so on recursively.
+
+- Use Hoeffding bound to decide how many examples are enough at each node 
+
+  
+
+- How many examples are enough?
+  - $G(X_i):$ the heuristic measure used to choose test attributes (e.g. Information Gain, Gini Index)
+  - $X_a:$ the attribute with the highest attribute evaluation value after seeing n examples
+  - $X_b:$ the attribute with the second highest split evaluation function value after seeing n examples
+  - Given a desired, if $\Delta \overline{G}=\overline{G}(X_a)-\overline{G}(X_b)>\epsilon$,  after seeing n examples at a node 
+    - Hoeffding bound guarantees the true $\Delta \overline{G}-\epsilon>0$
+    - This node can be split using $X_a$, the succeeding examples will be passed to the new leaves
+
+- Hoeffding Bound
+
+  - Hoeffding's inequality:  A result in probability theory that gives an upper bound on the probability for the sum of random variables to deviate from its expected value
+
+  - Based on Hoeffding Bound principle, classifying different samples leads to the same model with high probability —can use a small set of samples
+
+  - Hoeffding Bound (Additive Chernoff Bound)
+
+    - Given: $r$ denotes random variable, $R$ denotes range of r, $N$ denotes independent observations
+
+    - True mean of $r$ is at least $r_{avg}-\epsilon$, with the probaility $1-\epsilon$(where $\epsilon$ is user-specified)
+
+      $\epsilon=\sqrt{\frac{R^2ln(1/\epsilon)}{2N}}$
+
+
+
+- Algorithm
+  - Calculate the information gain for the attributes and determines the best two attributes
+  - At each node, check for the condition: $\Delta \overline{G}=\overline{G}(X_a)-\overline{G}(X_b)>\epsilon$
+  - If condition satisfied, create child nodes based on the test at the node
+  - If not, stream in more examples and perform calculations till condition satisfied
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/VFDT.png" style="zoom: 33%;" />
+
+- VFDT Strengths 
+  - Scales better than traditional methods (Sublinear with sampling, Very small memory utilization)
+  - Incremental (Make class predictions in parallel, New examples are added as they come)
+- VFDT Weaknesses
+  - Could spend a lot of time with ties
+  - Memory used with tree expansion
+  - Number of candidate attributes
+
+### CVFDT (Concept-adapting Very Fast Decision Tree learner)
+
+
+
+
 
 ## Data Stream Clustering
 
