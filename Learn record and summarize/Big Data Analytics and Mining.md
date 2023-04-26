@@ -1215,9 +1215,75 @@ Detect and respond to changes in the example-generating process
 
 ### Open-set Data
 
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Learning%20in%20Open-set%20Data%20Stream.png" style="zoom: 50%;" />
 
+Part 1. Open-set detection；Part 2. Incremental Learning
 
+- Open set detection
 
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Open%20set%20detection.png" style="zoom:67%;" />
+
+  - Scenario: Incomplete knowledge of the world exists at training time, and unknown classes can be submitted to test set.
+  - Task: Not only accurately classify the seen classes, but also effectively deal with unseen ones.
+
+- Extreme Value Theory
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Extreme%20Value%20Theory%201.png" style="zoom: 33%;" />
+
+  In classical statistics: focus on AVERAGE behavior of stochastic process, Central Limit Theorem
+
+  In extreme value theory:focus on extreme and rare events, Fisher-Tippett Theorem(Extreme Value Theory)
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Extreme%20Value%20Theory%202.png" style="zoom:50%;" />
+
+- OpenMax
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/OpenMax.png" style="zoom: 50%;" />
+
+- Continual learning
+
+  Humans learn throughout their lives and retain/use the previously learned knowledge when learning for a new task. Humans become increasingly smarter over time. Couldn’t we build a similar system that basically learns forever?
+
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Continual%20learning.png)
+
+- Catastrophic Forgetting
+
+  The tendency of an artificial neural network to completely and abruptly forget previously learned information upon learning new information.
+
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Catastrophic%20Forgetting.png)
+
+- Elastic Weight Consolidation (EWC)
+
+  Basic Idea: Some parameters in the model are important to the previous tasks. Only change the unimportant parameters.
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Elastic%20Weight%20Consolidation%20(EWC).png" style="zoom:50%;" />
+
+  $\theta^b$ is the model learned from the previous tasks. Each parameter $θ_i^b$ has a “guard” $b_i$  
+
+  if $b_i=0$, there is no constraint on $\theta_i$
+
+  if $b_i=\infty$, $\theta_i$ would always be equal to $\theta_i^b$
+
+- Gradient Episodic Memory (GEM)
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Gradient%20Episodic%20Memory%20(GEM).png" style="zoom:50%;" />
+
+- Class incremental learning
+
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Class%20incremental%20learning%0D%20Example.png)
+
+  Issues: How to balance old/new class? How to maintain old knowledges? How to extract exemplars? How to maintain old knowledges? 
+
+- Knowledge Distillation
+
+  Knowledge distillation is a popular CIL technique
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Knowledge%20Distillation.png" style="zoom:67%;" />
+
+- How to Extract the Exemplars，Existing methods:
+
+  - Herding(Nearest class mean)
+  - Random sampling
+  - Learnable pseudo exemplars
 
 ## Data Stream Clustering
 
