@@ -1287,9 +1287,55 @@ Part 1. Open-set detection；Part 2. Incremental Learning
 
 ## Data Stream Clustering
 
+Framework
+图
 
+Online Phase: Summarize the data into memory-efficient data structures
 
+Offline Phase: Use a clustering algorithm to find the data partition
 
+- Micro-Clusters
+
+  A Micro-Cluster is a set of individual data points that are close to each other and will be treated as a single unit in further offline Macro-clustering.
+
+  图
+
+- Cluster Feature:  $CF=(N,\vec{LS},\vec{SS})$
+
+  where $N:$ data points, $LS=\displaystyle\sum_{i=1}^N\vec{X_i}$, $SS=\displaystyle\sum_{i=1}^N\vec{X_i^2}$
+
+- The CluStream Framework
+
+  - Micro-cluster
+    - Statistical information about data locality
+    - Temporal extension of the cluster-feature vector
+      - Multi-dimensional points $\vec{X_1}\cdots\vec{X_k}\cdots$ with time stamps $T_1\cdots T_k$
+      - Each point contains $d$ dimensions, i.e., $\vec{X_i}=(x_i^1\cdots x_i^d)$
+      - A micro-cluster for $n$ points is defined as a $(2*d+3)$ tuple: $(\overline{CF2^x},\overline{CF1^x},CF2^t,CF1^t,n)$          
+  - Pyramidal time frame
+    - Decide at what moments the snapshots of the statistical information are stored away on disk 
+    - Snapshots of a set of micro-clusters are stored following the pyramidal pattern. They are stored at differing levels of granularity depending on the recency
+    - Snapshots are classified into different orders varying from 1 to log(T)           
+      - The $i-th$ order snapshots occur at intervals of $\alpha^i$ where $\alpha\geq1$
+      - Only the last $(\alpha+1)$ snapshots are stored 
+
+- Online micro-cluster maintenance
+
+  - Initial creation of $q$ micro-clusters, $q$ is usually significantly larger than the number of natural clusters
+  - Online incremental update of micro-clusters
+    - If new point is within max-boundary, insert into the micro-cluster
+    - otherwise, create a new cluster
+    - May delete obsolete micro-cluster or merge two closest ones
+
+- Offline Phase: Query-based macro-clustering
+
+  - Based on a user-specified time-horizon h and the number of macro-clusters k, compute macroclusters using the k-means algorithm 
+
+- DenStream
+
+  - Microclusters are associated with weights (Decay function) based on recency
+  - Outliers detected by creating separate micro-cluster.
+  - The “dense” micro-cluster (named core-micro-cluster) is introduced to summarize the clusters with arbitrary shape, while the potential core-micro-cluster and outlier micro-cluster structures are proposed to maintain and distinguish the potential clusters and outliers. 
 
 # Graph Mining
 
