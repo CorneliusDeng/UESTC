@@ -1018,98 +1018,202 @@ Drawbacks: Sensitive to noise、Hard to deal with gradual concept drift、Depend
 
 ## Data Stream Classification
 
-- Classification: Model construction based on training sets
+Classification: Model construction based on training sets
 
-- Typical classification methods
-  - K-Nearest neighbor approach
-  - Decision tree
-  - Bayesian classification
-  - Neural network approach
-  - Support Vector Machines  
-  - Other methods
+Typical classification methods
+- K-Nearest neighbor approach
+- Decision tree
+- Bayesian classification
+- Neural network approach
+- Support Vector Machines  
+- Other methods
 
-- Data stream classification Circle
+Data stream classification Circle
 
-  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Data%20stream%20classification%20Circle.png" style="zoom: 50%;" />
-  Process an example at a time, and inspect it only once 
-  Be ready to predict at any point
-  Use a limited amount of memory 
-  Work in a limited amount of time
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Data%20stream%20classification%20Circle.png" style="zoom: 50%;" />
+Process an example at a time, and inspect it only once 
+Be ready to predict at any point
+Use a limited amount of memory 
+Work in a limited amount of time
 
-  Procedure:
+Procedure:
 
-  The algorithm is passed the next available example from the stream (requirement 1) 
-  The algorithm processes the example, updating its data structures. It does so without exceeding the memory bounds set on it (requirement 2), and as quickly as possible (requirement 3).
-  The algorithm is ready to accept the next example. (requirement 4) 
+1. The algorithm is passed the next available example from the stream (requirement 1) 
+2. The algorithm processes the example, updating its data structures. It does so without exceeding the memory bounds set on it (requirement 2), and as quickly as possible (requirement 3).
+3. The algorithm is ready to accept the next example. (requirement 4) 
 
-- Typical algorithms
+Typical algorithms
 
-  - VFDT (Very Fast Decision Tree)
-  - CVFDT
-  - SyncStream
+- VFDT (Very Fast Decision Tree)
+- CVFDT
+- SyncStream
 
-- Decision Tree Learning: One of the most effective and widely-used classification methods
+Decision Tree Learning: One of the most effective and widely-used classification methods
 
-  - Induce models in the form of decision trees: Each node contains a test on the attribute; Each branch from a node corresponds to a possible outcome of the test; Each leaf contains a class prediction
-  - Challenges
-    - Classic decision tree learners assume all training data can be simultaneously stored in main memory
-    - Disk-based decision tree learners repeatedly read training data from disk sequentially. Prohibitively expensive when learning complex trees
-    - Goal: design decision tree learners that read each example at most once, and use a small constant time to process it
+- Induce models in the form of decision trees: Each node contains a test on the attribute; Each branch from a node corresponds to a possible outcome of the test; Each leaf contains a class prediction
+- Challenges
+  - Classic decision tree learners assume all training data can be simultaneously stored in main memory
+  - Disk-based decision tree learners repeatedly read training data from disk sequentially. Prohibitively expensive when learning complex trees
+  - Goal: design decision tree learners that read each example at most once, and use a small constant time to process it
 
-  ### VFDT (Very Fast Decision Tree)
+### VFDT (Very Fast Decision Tree)
 
-- A decision-tree learning system based on the Hoeffding tree algorithm.
+A decision-tree learning system based on the Hoeffding tree algorithm.
 
-- In order to find the best attribute at a node, it may be sufficient to consider only a small subset of the training examples that pass through that node.
+In order to find the best attribute at a node, it may be sufficient to consider only a small subset of the training examples that pass through that node.
 
-  - Given a stream of examples, use the first ones to choose the root attribute.
-  - Once the root attribute is chosen, the successive examples are passed down to the corresponding leaves, and used to choose the attribute there, and so on recursively.
-
-- Use Hoeffding bound to decide how many examples are enough at each node 
-
-  
-
-- How many examples are enough?
-  - $G(X_i):$ the heuristic measure used to choose test attributes (e.g. Information Gain, Gini Index)
-  - $X_a:$ the attribute with the highest attribute evaluation value after seeing n examples
-  - $X_b:$ the attribute with the second highest split evaluation function value after seeing n examples
-  - Given a desired, if $\Delta \overline{G}=\overline{G}(X_a)-\overline{G}(X_b)>\epsilon$,  after seeing n examples at a node 
-    - Hoeffding bound guarantees the true $\Delta \overline{G}-\epsilon>0$
-    - This node can be split using $X_a$, the succeeding examples will be passed to the new leaves
-
-- Hoeffding Bound
-
-  - Hoeffding's inequality:  A result in probability theory that gives an upper bound on the probability for the sum of random variables to deviate from its expected value
-
-  - Based on Hoeffding Bound principle, classifying different samples leads to the same model with high probability —can use a small set of samples
-
-  - Hoeffding Bound (Additive Chernoff Bound)
-
-    - Given: $r$ denotes random variable, $R$ denotes range of r, $N$ denotes independent observations
-
-    - True mean of $r$ is at least $r_{avg}-\epsilon$, with the probaility $1-\epsilon$(where $\epsilon$ is user-specified)
-
-      $\epsilon=\sqrt{\frac{R^2ln(1/\epsilon)}{2N}}$
+- Given a stream of examples, use the first ones to choose the root attribute.
+- Once the root attribute is chosen, the successive examples are passed down to the corresponding leaves, and used to choose the attribute there, and so on recursively.
 
 
+Use Hoeffding bound to decide how many examples are enough at each node 
 
-- Algorithm
-  - Calculate the information gain for the attributes and determines the best two attributes
-  - At each node, check for the condition: $\Delta \overline{G}=\overline{G}(X_a)-\overline{G}(X_b)>\epsilon$
-  - If condition satisfied, create child nodes based on the test at the node
-  - If not, stream in more examples and perform calculations till condition satisfied
+
+How many examples are enough?
+- $G(X_i):$ the heuristic measure used to choose test attributes (e.g. Information Gain, Gini Index)
+- $X_a:$ the attribute with the highest attribute evaluation value after seeing n examples
+- $X_b:$ the attribute with the second highest split evaluation function value after seeing n examples
+- Given a desired, if $\Delta \overline{G}=\overline{G}(X_a)-\overline{G}(X_b)>\epsilon$,  after seeing n examples at a node 
+  - Hoeffding bound guarantees the true $\Delta \overline{G}-\epsilon>0$
+  - This node can be split using $X_a$, the succeeding examples will be passed to the new leaves
+
+Hoeffding Bound
+
+- Hoeffding's inequality:  A result in probability theory that gives an upper bound on the probability for the sum of random variables to deviate from its expected value
+
+- Based on Hoeffding Bound principle, classifying different samples leads to the same model with high probability —can use a small set of samples
+
+- Hoeffding Bound (Additive Chernoff Bound)
+
+  - Given: $r$ denotes random variable, $R$ denotes range of r, $N$ denotes independent observations
+
+  - True mean of $r$ is at least $r_{avg}-\epsilon$, with the probaility $1-\epsilon$(where $\epsilon$ is user-specified)
+
+    $\epsilon=\sqrt{\frac{R^2ln(1/\epsilon)}{2N}}$
+
+Algorithm
+- Calculate the information gain for the attributes and determines the best two attributes
+- At each node, check for the condition: $\Delta \overline{G}=\overline{G}(X_a)-\overline{G}(X_b)>\epsilon$
+- If condition satisfied, create child nodes based on the test at the node
+- If not, stream in more examples and perform calculations till condition satisfied
 
 <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/VFDT.png" style="zoom: 33%;" />
 
-- VFDT Strengths 
-  - Scales better than traditional methods (Sublinear with sampling, Very small memory utilization)
-  - Incremental (Make class predictions in parallel, New examples are added as they come)
-- VFDT Weaknesses
-  - Could spend a lot of time with ties
-  - Memory used with tree expansion
-  - Number of candidate attributes
+VFDT Strengths 
+- Scales better than traditional methods (Sublinear with sampling, Very small memory utilization)
+- Incremental (Make class predictions in parallel, New examples are added as they come)
+
+VFDT Weaknesses
+- Could spend a lot of time with ties
+- Memory used with tree expansion
+- Number of candidate attributes
 
 ### CVFDT (Concept-adapting Very Fast Decision Tree learner)
+
+Extend VFDT
+
+Maintain VFDT’s speed and accuracy
+
+Detect and respond to changes in the example-generating process
+
+- Observations
+  - With a time-changing concept, the current splitting attribute of some nodes may not be the best any more.
+  - An outdated subtree may still be better than the best single leaf, particularly if it is near the root. Grow an alternative subtree with the new best attribute at its root, when the old attribute seems out-of-date.
+  - Periodically use a bunch of samples to evaluate qualities of trees.  Replace the old subtree when the alternate one becomes more accurate.
+- CVFDT Algorithm
+  - Alternate trees for each node in HT start as empty.
+  - Process examples from the stream indefinitely. For each example (x, y),
+    - Pass (x, y) down to a set of leaves using HT and all alternate trees of the nodes (x, y) passes through.
+    - Add (x, y) to the sliding window of examples.
+    - Remove and forget the effect of the oldest examples, if the sliding window overflows.
+    - CVFDTGrow
+    - CheckSplitValidity if f examples seen since last checking of alternate trees.
+  - Return HT.
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/CVFDT%20Algorithm.png" style="zoom:50%;" />
+
+- CVFDTGrow
+  - For each node reached by the example in HT,
+    - Increment the corresponding statistics at the node.
+    - For each alternate tree $T_{alt}$ of the node, CVFDTGrow
+  - If enough examples seen at the leaf in HT which the example reaches,
+    - Choose the attribute that has the highest average value of the attribute evaluation measure (information gain or gini index).
+    - If the best attribute is not the “null” attribute, create a node for each possible value of this attribute.
+- Forget old example
+  - Maintain the sufficient statistics at every node in HT to monitor the validity of its previous decisions. VFDT only maintain such statistics at leaves.
+  - HT might have grown or changed since the example was initially incorporated.  Assigned each node a unique, monotonically increasing ID as they are created.
+- CheckSplitValidtiy
+  - Periodically scans the internal nodes of HT.
+  - Start a new alternate tree when a new winning attribute is found.
+    - Tighter criteria to avoid excessive alternate tree creation.
+    - Limit the total number of alternate trees.
+- Smoothly adjust to concept drift
+  - Alternate trees are grown the same way HT is.
+  - Periodically each node with non-empty alternate trees enter a testing mode.
+    - M training examples to compare accuracy.
+    - Prune alternate trees with non-increasing accuracy over time.
+    - Replace if an alternate tree is more accurate.
+- Adjust to concept drift
+  - Dynamically change the window size
+    - Shrink the window when many nodes gets questionable or data rate changes rapidly.
+    - Increase the window size when few nodes are questionable.
+
+### SyncStream (Prototype-based Learning)
+
+- Motivation
+
+  - Single model learning: Learn and update a classification model by training on a fixed or adaptive window of recent incoming examples, suffers in the presence of concept drift. 
+  - Ensemble learning: Train a number of base classifiers to capture evolving concepts.
+
+- Basic Idea- Prototype-based Learning: An intuitive way is to dynamically select the short-term and/or long-term representative examples to capture the trend of time-changing concepts.
+
+  - Online Data Maintenance: P-Tree
+  - Prototypes Selection: Error-driven representativeness learning and synchronization-inspired constrained clustering
+  - Sudden Concept Drift:  PCA and Statistics
+  - Lazy Learning: KNN
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/SyncStream.png" style="zoom: 50%;" />
+
+- Online Data Maintenance: P-TREE
+
+  - <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Online%20Data%20Maintenance%20P-TREE.png" style="zoom: 50%;" />
+  - P-Tree is additionally updated:
+    - Maximum boundary  (Synchronization-based data representation)            
+    - Sudden concept drift (Rebuild the Prototype Level) 
+
+- Error-driven Representativeness Learning
+
+  - How to dynamically select the short-term and/or long-term representative examples? 
+
+  - Basic idea: Leverage the prediction performance of test examples to infer the representativeness of examples by lazy learning: nearest neighbor classifier.
+
+    $Rep(y)=Rep(y)+Sign(x_{pl},x_l)$
+
+    Where $Sign(x,y)$ is the sign function, and 1 if x equals y, -1 otherwise.
+
+  - High representativeness —— Keep 
+
+    Low representativeness  —— Delete 
+
+    Unchanged representativeness? —— Summarization
+
+- Data Summarization by synchronization
+
+  Summarization: Constrained Clustering by Synchronization
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Data%20Summarization%20by%20synchronization.png" style="zoom:50%;" />
+
+- Abrupt Concept Drift Detection
+
+  Principle Component Analysis (PCA): Analyze the change of each class data distribution by principle component of two sets of examples.
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Abrupt%20Concept%20Drift%20Detection(PCA).png" style="zoom:50%;" />
+
+  Statistical Analysis: Compute a suitable statistic, which is sensitive to data class distribution changes between the two sets of examples.
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Abrupt%20Concept%20Drift%20Detection(SA).png" style="zoom:50%;" />
+
+### Open-set Data
 
 
 
@@ -1334,6 +1438,44 @@ Drawbacks: Sensitive to noise、Hard to deal with gradual concept drift、Depend
   - Concept Drift
 
   - Concept Drifting Detection 
+    - Distribution-based method
+    - Error-rate based method
+
+- Data Stream Classification
+
+  - VFDT (Hoeffding Tree)
+  - CVFDT (Concept-adaption VFDT)
+  - SyncStream (Prototype-based Learning)
+  - Open-set (new class) Data
+
+- Open-Set Detection (Novel Class Detection)
+
+  Extreme-Value Theory (EVT)
+
+- Continual learning
+
+  - Basic idea: to constrain the parameter
+
+  - eg. EWC: Determin which parameters are important or not important for previous task
+
+    $L(\theta)=L_{current}(\theta)+\sum_ib_i(\theta_i-\theta_i^b)^2$
+
+    $b_i$ indicate the importance for a given parameter 
+
+    $b_i$ is determined by the 2-nd derivative
+
+- Class incremental learning
+
+  Basic idea: to learn both old and new engaging classes 
+
+- Data Stream Clustering
+
+  Two phases: online data abstraction; off clustering
+
+- Online data abstraction: Micro-Clusters
+
+  Data structure: cluster feature(CF)
+  $CF=(N,\vec{LS},\vec{SS})$
 
 - next time
 
