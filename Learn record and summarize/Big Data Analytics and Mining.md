@@ -1288,7 +1288,7 @@ Part 1. Open-set detection；Part 2. Incremental Learning
 ## Data Stream Clustering
 
 Framework
-图
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Data%20stream%20clustering%20Framework.png)
 
 Online Phase: Summarize the data into memory-efficient data structures
 
@@ -1298,7 +1298,7 @@ Offline Phase: Use a clustering algorithm to find the data partition
 
   A Micro-Cluster is a set of individual data points that are close to each other and will be treated as a single unit in further offline Macro-clustering.
 
-  图
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Micro-Clusters.png" style="zoom:67%;" />
 
 - Cluster Feature:  $CF=(N,\vec{LS},\vec{SS})$
 
