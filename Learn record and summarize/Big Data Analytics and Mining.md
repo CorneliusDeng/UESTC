@@ -1337,9 +1337,186 @@ Offline Phase: Use a clustering algorithm to find the data partition
   - Outliers detected by creating separate micro-cluster.
   - The “dense” micro-cluster (named core-micro-cluster) is introduced to summarize the clusters with arbitrary shape, while the potential core-micro-cluster and outlier micro-cluster structures are proposed to maintain and distinguish the potential clusters and outliers. 
 
+
+
 # Graph Mining
 
+## Key Node identification
 
+### Strategy ONE: Cntrality 
+
+- Degree Centrality
+
+  The size of connections is used to measure node importance(the node’s direct influence).
+
+  $DC(i)=\frac{K_i}{N-1}$
+
+- Betweenness Centrality
+
+  The betweenness centrality for each vertex is the number of these shortest paths that pass through the vertex.
+
+  $BC(i)=\sum_{i≠s≠t}\frac{g^i_{st}}{g_{st}}$
+
+- Closeness Centrality
+
+  To calculate as the sum of the length of the  shortest paths  between the node and all other nodes in the graph.
+
+  $CC(i)=\sum_{j=1}^n\frac{1}{d_{ij}}$
+
+### Strategy TWO: K-shell Decomposition
+
+Layer or shell.
+
+More central, more influential.
+
+Advantage: Low computational complexity. Reveal the hierarchy structure clearly.
+
+Disadvantage: Can’t be used in quite a lot networks, such as the star network, tree and so on. Too coarse, some times is inferior to degree measure.
+
+### Strategy THREE: Eigenvector eg. PageRank
+
+The core of Google’s early search engine.
+
+Sergey Brin and Larry Page’s paper “The PageRank citation ranking: Bringing order to the Web” at WWW98(World Wide Web conference98) made small ripples in the information science community that quickly turned into waves.
+
+Basic Idea: If a page is linked with many high-cited pages, then  it will gain high PageRank score!
+
+## Community Detection
+
+### Minimum Cut
+
+Most interactions are within group whereas interactions between groups are few
+
+community detection $\rightarrow$ minimum cut problem
+
+Cut: A partition of vertices of a graph into two disjoint sets
+
+Minimum cut problem: find a graph partition such that the number of edges between the two sets is minimized
+
+### Ratio Cut & Normalized Cut
+
+Minimum cut often returns an imbalanced partition, with one set being a singleton.
+
+Change the objective function to consider community size
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Ratio%20Cut%20%26%20Normalized%20Cut.png" style="zoom:50%;" />
+
+- Cut-problem to Spectral Clustering
+
+  Both ratio cut and normalized cut can be reformulated as  
+  $$
+  \underset{s\in\{0,1\}^{n\times k}}{min}Tr(S^T\widetilde{L}S), \quad where \; \widetilde{L} =
+  \begin{cases}
+  D - A , \; \text{graph Laplacian for ratio cut}\\
+  I-D^{-1/2}AD^{-1/2}, \; \text{normalized graph Laplacian} \\
+  \end{cases} \\
+  
+  D =diag(d_1,d_2,\cdots,d_n) \; \text{represents a diagonal matrix of degrees}
+  $$
+  Spectral relaxation: $\underset{s\in\{0,1\}^{n\times k}}{min}Tr(S^T\widetilde{L}S) \quad s.t.\; S^TS=I_k$
+
+  Optimal solution:  top eigenvectors with the smallest eigenvalues
+
+### Modularity Maximization 
+
+Modularity measures the strength of a community partition by taking into account the degree distribution
+
+Given a network with $m$ edges, the expected number of edges between two nodes with degrees $d_i$ and $d_j$ is $\frac{d_id_j}{2m}$
+
+Strength of a community: $\displaystyle\sum_{i\in C, j\in C}A_{ij}-\frac{d_id_j}{2m}$
+
+Modularity: $Q=\frac{1}{2m}\displaystyle\sum_{l=1}^k\sum_{i\in C_l, j\in C_l}(A_{ij}-\frac{d_id_j}{2m})$
+
+A larger value indicates a good community structure 
+
+Modularity matrix: $B=A-\frac{dd^T}{2m} \quad (B_{ij}=A_{ij}-\frac{d_id_j}{2m})$
+
+Similar to spectral clustering, Modularity maximization can be reformulated as $max\;Q=\frac{1}{2m}Tr(S^TBS) \quad s.t.\; S^TS=I_k$
+
+Optimal solution: top eigenvectors of the modularity matrix 
+
+Apply k-means to S as a post-processing step to obtain community partition
+
+### Distance Dynamics - A New Viewpoint For Community Detection
+
+Basic Idea: Simulate the change of edge distances
+
+View network as dynamical system (Dynamic vs. Static)
+
+Simulate the distance dynamics based on different interaction patterns (Distance dynamics vs. Node dynamics) 
+
+All edge distances will converge, and the community structure is intuitively identified.  
+
+- How to define the interaction patterns?
+
+  - Assumption: If two nodes are linked, each node attracts the other and makes the opposite node move to itself.
+
+  -  Edge Distance: Influenced by three different types of nodes:
+
+    -  (a) Direct linked nodes;
+    -  (b) Common neighbors;
+    -  (c) Exclusive neighbors 
+
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/three%20different%20types%20of%20nodes.png)
+
+  - Three Interaction Patterns
+
+    ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Three%20Interaction%20Patterns.png)
+
+    - Influence from Direct Linked Nodes: makes u and v 
+    - Influence from Common neighbors: make u and v closer
+    -  Influence from Exclusive neighbors: make u and v closer OR farther		
+
+### Community Detection：Simulating Distance Dynamics
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Simulating%20Distance%20Dynamics.png)
+
+## Graph Embedding
+
+- Motivation
+  - Networks contain billions of nodes and edges, which is intractable to perform complex inference on the entire network
+  - Machine learning algorithms need vector representation
+  - How to preserve community structure during graph embedding?
+  - How to process large-scale networks efficiently?
+- The goal of graph embeddings is to map each node into a low-dimensional space. 
+- Graph (non-Euclidean) properties
+  - Node numbering is arbitrary
+  - Graphs has arbitrary size
+  - More complex structure
+- Challenges
+  - Measure the similarity between nodes
+  - Encode network information and generate node representation
+
+![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Graph%20Embedding.png)
+
+- Deep Learning Method
+
+  - Deep Walk: Basically it is a combination of sampling on the graph by random walk + word2vec
+
+    Random walk <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Random%20walk.png" style="zoom:50%;" />
+
+    word2vec  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/word2vec.png" style="zoom:33%;" />
+
+  - CBOW <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/CBOW.png" style="zoom:33%;" />
+  - SKipGram <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/SKipGram.png" style="zoom:33%;" />
+
+- Node2vec: unsupervised features learning
+
+  - Intuition: Find embedding of nodes to d-dimensions that preserves similarity. 
+
+  - Idea: Learn node embedding such that nearby nodes are close together.
+
+  - Given a node $u$, how do we define nearby nodes?  ($N_s(u)$:neighbourhood of $𝑢$ obtained by some strategy $S$)
+
+  - Problem Define 
+
+    Given $G=(V,E)$
+
+    Goal is to learn $f:u\rightarrow R^d$
+
+    Given node $u$, we want to learn feature representation $f(u)$ that is predictive of nodes in $u’s$ neighborhood $N_s(u)$.
+
+    $\underset{f}{max} \; \displaystyle\sum_{v\in V}logPr(N_s(u)|f(u))$
 
 
 
@@ -1588,6 +1765,22 @@ Offline Phase: Use a clustering algorithm to find the data partition
 
   Data structure: cluster feature(CF)
   $CF=(N,\vec{LS},\vec{SS})$
+
+  Additionality: $CF_1+CF_2=(N_1+N_2,\vec{LS_1}+\vec{LS_2},\vec{SS_1}+\vec{SS_2})$
+
+- Graph Mining
+
+  - Key Node identification
+    - Centrality (degree, betweenness, closeness)
+
+    - K-shell decomposition 
+
+    - PageRank
+
+  - Community Detection
+    - Minimum Cut
+    - Ratio Cut
+    - Normalized Cut
 
 - next time
 
