@@ -1779,8 +1779,12 @@ All edge distances will converge, and the community structure is intuitively ide
 
   - Community Detection
     - Minimum Cut
-    - Ratio Cut
-    - Normalized Cut
+    - Ratio/Normalized Cut
+    - Modularity
+    - Attractor (distance dynamic)
+  - Graph Embedding
+    - DeepWalk vs. word2vec
+    - Node2vec
 
 - next time
 

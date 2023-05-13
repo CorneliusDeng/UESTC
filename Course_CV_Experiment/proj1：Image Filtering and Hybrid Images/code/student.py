@@ -22,12 +22,33 @@ def my_imfilter(image, filter):
 #####################################################################################################
 #                                            Your Code                                              #
 #####################################################################################################
-  filtered_image = None
-  assert filtered_image != None
+  # Check if filter dimensions are odd
+  if filter.shape[0] % 2 == 0 or filter.shape[1] % 2 == 0:
+      raise Exception("Filter dimensions must be odd")
+  # Get dimensions of image and filter
+  m, n, c = image.shape
+  k, l = filter.shape
+  # Compute padding required for convolution
+  pad_height = (k-1) //2   
+  pad_width = (l-1) //2
+  # Pad image
+  padded_image = np.pad(image,((pad_height,pad_height),(pad_width,pad_width),(0,0)),'constant')  
+  # Create output image
+  filtered_image = np.zeros((m, n, c))
+  # Loop over each pixel in the image
+  for i in range(m):
+      for j in range(n):
+          # Loop over each channel
+          for ch in range(c):
+              # Extract the patch of the image centered at (i, j)
+              patch = padded_image[i:i+k, j:j+l, ch]
+              # Apply the filter
+              filtered_patch = np.multiply(patch, filter).sum()
+              # Assign the filtered value to the output image
+              filtered_image[i, j, ch] = filtered_patch
 #####################################################################################################
 #                                               End                                                 #
 #####################################################################################################
-  
   return filtered_image
 
 
@@ -60,18 +81,19 @@ def gen_hybrid_image(image1, image2, cutoff_frequency):
   #                                            Your Code                                              #
   #####################################################################################################
   # Your code here:
-  low_frequencies = None # Replace with your implementation
+  low_frequencies = my_imfilter(image1, kernel) # Replace with your implementation
 
   # (2) Remove the low frequencies from image2. The easiest way to do this is to
   #     subtract a blurred version of image2 from the original version of image2.
   #     This will give you an image centered at zero with negative values.
   # Your code here #
-  high_frequencies = None # Replace with your implementation
+  blurred_image2 = my_imfilter(image2, kernel)
+  high_frequencies = image2 - blurred_image2 
 
 
   # (3) Combine the high frequencies and low frequencies
   # Your code here #
-  hybrid_image = None
+  hybrid_image = low_frequencies + high_frequencies
 
   # (4) At this point, you need to be aware that values larger than 1.0
   # or less than 0.0 may cause issues in the functions in Python for saving
@@ -79,6 +101,7 @@ def gen_hybrid_image(image1, image2, cutoff_frequency):
   # gen_hybrid_image().
   # One option is to clip (also called clamp) all values below 0.0 to 0.0, 
   # and all values larger than 1.0 to 1.0.
+  hybrid_image = np.clip(hybrid_image, 0, 1)
   #####################################################################################################
   #                                               End                                                 #
   #####################################################################################################

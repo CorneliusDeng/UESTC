@@ -934,3 +934,11 @@ PyTorch的dataloader是用于读取训练数据的工具，它可以自动将数
    最后，我们使用`for`循环迭代数据加载器，逐批加载数据，并输出每个批量的数据和标签
 
    需要注意的是，使用`ImageFolder`类前需要将数据集的文件夹按照类别进行命名，例如两个文件夹的名字分别为`class1`和`class2`。另外，`transforms.Normalize`中的`mean`和`std`参数需要根据数据集进行调整
+
+   
+
+# ubuntu clash
+
+1. 导出 config.yml 文件
+2. 替换 /etc/clash/config.yml 文件，具体可参考 temp.yml
+3. systemctl status/stop/start/restart clashd.service
