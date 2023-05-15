@@ -1522,7 +1522,122 @@ All edge distances will converge, and the community structure is intuitively ide
 
 # Hadoop-Spark
 
+## Concept & Features 
 
+- What is Hadoop
+
+  - Hadoop is a software framework for distributed processing of large datasets across large clusters of computers
+
+    Large datasets $\rightarrow$ Terabytes or petabytes of data
+
+    Large clusters $\rightarrow$ hundreds or thousands of nodes 
+
+  - Hadoop is open-source implementation for Google MapReduce
+
+  - Hadoop is based on a simple programming model called MapReduce
+
+  - Hadoop is based on a simple data model, any data will fit
+
+- Motivation: Need to process big data, Need to parallelize computation across thousands of nodes
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Divide%20and%20Conquer.png" style="zoom:50%;" />
+
+- Design Principles of Hadoop
+
+  - Automatic parallelization & distribution
+
+    Hidden from the end-user
+
+  - Fault tolerance and automatic recovery
+
+    Nodes/tasks will fail and will recover automatically
+
+  - Clean and simple programming abstraction
+
+    Users only provide two functions “map” and “reduce”
+
+## Hadoop: How it Works
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Hadoop%20Structure.png" alt="图：Hadoop Structure" style="zoom:50%;" />
+
+- Core: Filesystems and I/O 
+  - Abstraction APIs
+  - RPC / Persistence
+- Avro: Cross-language serialization
+  - RPC / persistence
+  - ~ Google ProtoBuf / FB Thrift
+- MapReduce: Distributed execution (batch)
+  - Programming model
+  - Scalability / fault-tolerance
+- HDFS: Distributed storage (read-opt.)
+  - Replication / scalability
+  - ~ Google filesystem (GFS)
+- ZooKeeper: Coordination service
+  - Locking / configuration
+  - ~ Google Chubby
+- HBase: Column-oriented, sparse store
+  - Batch & random access
+  - ~ Google BigTable
+- Pig: Data flow language
+  - Procedural SQL-inspired lang
+  - Execution environment
+- Hive: Distributed data warehouse
+  - SQL-like query language
+  - Data mgmt / query execution
+
+------
+
+- Hadoop Architecture
+  - Distributed file system (HDFS)
+  - Execution engine (MapReduce)
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Hadoop%20Architecture.png" style="zoom:67%;" />
+
+### Hadoop Distributed File System (HDFS)
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Hadoop%20Distributed%20File%20System%20(HDFS).png" style="zoom:50%;" />
+
+- Main Properties of HDFS
+
+  - Large: A HDFS instance may consist of thousands of server machines, each storing part of the file system’s data
+
+  - Replication: Each data block is replicated many times (default is 3)
+
+  - Failure: Failure is the norm rather than exception
+
+  - Fault Tolerance: Detection of faults and quick, automatic recovery from them is a core architectural goal of HDFS
+
+    Namenode is consistently checking Datanodes
+
+- NameNode
+
+  - Managing FsImage file and EditLog file to manager meta information 
+    - FsImage: Namespace, system properties,  block mapping information…
+    - EditLog: Record every change to file system metadata
+  - EditLog is used to update FsImage (Checkpoint).
+
+- DataNode
+
+  - Store data
+  - Block operation
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/HeartBeat%20%26%20BlockReport.png" style="zoom:50%;" />
+
+- Fault Tolerance
+  - HeartBeat is received
+    - If fail to reach the minimum number of replicas, Safe Mode is on. 
+    - You wait. OR “ hdfs dfsadmin –safemode leave ”
+  - HeartBeat is NOT received (over 10 mins by default)
+    - DataNode is dead
+    - Re-replica
+    - Assign no more job to any dead DataNode
+- Data block
+  - Supports write-once-read-many semantics on files
+  - An HDFS file is chopped up into 128/64 MB (default) blocks with multiple replicas (3 by default).
+  - Read file in parallel V.S. Disk I/ O 
+  - The number of maps is usually driven by the total size of the inputs, that is, the total number of blocks of the input files
+
+### MapReduce
 
 
 
@@ -1786,7 +1901,26 @@ All edge distances will converge, and the community structure is intuitively ide
     - DeepWalk vs. word2vec
     - Node2vec
 
-- next time
+- What's Hadoop
+
+  Design principles of Hadoop
+
+  Ecosystem of Hadoop
+
+- HDFS(Storing)
+
+  - Name Node
+
+  - Data Node
+
+  - Fault Tolerance
+
+- MapReduce
+
+  - Map function
+  - Reduce function
+  - How to write Mae/reduce function?
+
 
 
 
