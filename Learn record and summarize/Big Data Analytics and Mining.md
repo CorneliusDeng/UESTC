@@ -1639,6 +1639,60 @@ All edge distances will converge, and the community structure is intuitively ide
 
 ### MapReduce
 
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/MapReduce%20Details.png" style="zoom:67%;" />
+
+- Properties of MapReduce Engine
+  - Job Tracker is the master node (runs with the namenode)
+    - Receives the user’s job
+    - Decides on how many tasks will run (number of mappers)
+    - Decides on where to run each mapper (concept of locality)
+  - Task Tracker is the slave node (runs on each datanode)
+    - Receives the task from Job Tracker
+    - Runs the task until completion (either map or reduce task)
+    - Always in communication with the Job Tracker reporting progress
+- Key-Value Pairs 
+  - Mappers and Reducers are users’ code (provided functions)
+  - Just need to obey the Key-Value pairs interface 
+  - Mappers:
+    - Consume <key, value> pairs
+    - Produce <key, value> pairs
+  - Reducers:
+    - Consume <key, <list of values>>
+    - Produce <key, value>
+  - Shuffling and Sorting:
+    - Hidden phase between mappers and reducers
+    - Groups all similar keys from all mappers, sorts and passes them to a certain reducer in the form of <key, <list of values>>
+
+## SPARK
+
+MapReduce is great at one-pass computation,but inefficient for multi-pass algorithms
+
+Unlike the various specialized systems, Spark’s goal was to generalize MapReduce to support new apps within same engine. This allows for an approach which is more efficient for the engine, and much simpler for the end users
+
+Apache Spark is a fast and general-purpose cluster computing system. It also supports a rich set of higher-level tools including Spark SQL for SQL and structured data processing, MLlib for machine learning, GraphX for graph processing, and Spark Streaming for streaming processing.
+
+<img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Spark.png" style="zoom:67%;" />
+
+At a high level, every Spark application consists of a driver program that runs the user’s main function and executes various parallel operationson a cluster.  
+
+The main abstraction in Spark is that of a resilient distributed dataset (RDD), which represents a read-only collection of objects partitioned across a set of machines that can be rebuilt if a partition is lost. 
+
+## Conclusion
+
+- MapReduce
+
+  - Great at one-pass computation, but inefficient for multi-pass algorithms.
+  - No efficient primitives for data sharing.
+
+- Spark
+
+  - Extends a programming language with a distributed collection data-structure（RDD）. 
+  - Clean APIs in Java, Scala, Python, R.
+
+- Same engine performs data extraction, model training and interactive queries 
+
+  <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/MapReduce%20%26%20Spark.png" style="zoom:67%;" />
+
 
 
 # Review
@@ -1936,4 +1990,5 @@ All edge distances will converge, and the community structure is intuitively ide
   - Conclusion 
 - Deadline: Next Sunday of the end of this course 
 - Topic: AI-field 
-- Requirement: English & 3000 words
+- Requirement: English & 3000 word
+  
