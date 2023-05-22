@@ -47,12 +47,26 @@ def get_interest_points(image, feature_width):
 
     # TODO: Your implementation here!
 
-    # These are placeholders - replace with the coordinates of your interest points!
-    xs = np.asarray([0])
-    ys = np.asarray([0])
-
+    # Convert the image to grayscale if it is color
+    if image.ndim == 3:
+        image = img_as_int(image)
+    
+    # Compute the Harris response map
+    harris_response = feature.corner_harris(image)
+    
+    # Find local maxima in the response map as interest points
+    coordinates = feature.peak_local_max(harris_response, min_distance=feature_width//2,
+                                         exclude_border=False)
+    xs = coordinates[:, 1]
+    ys = coordinates[:, 0]
+    
+    # Suppress interest points near the image boundaries
+    mask = (xs >= feature_width//2) & (xs < image.shape[1] - feature_width//2) & \
+           (ys >= feature_width//2) & (ys < image.shape[0] - feature_width//2)
+    xs = xs[mask]
+    ys = ys[mask]
+    
     return xs, ys
-
 
 def get_features(image, x, y, feature_width):
     '''
@@ -119,13 +133,48 @@ def get_features(image, x, y, feature_width):
 
     '''
 
-    # TODO: Your implementation here! 
-
-    # This is a placeholder - replace this with your features!
-    features = np.asarray([0])
-
+    # Calculate the number of cells in the feature grid
+    num_cells = feature_width // 4
+    
+    # Calculate the size of each cell
+    cell_size = feature_width // num_cells
+    
+    # Initialize an empty array to store the computed features
+    features = np.zeros((len(x), num_cells * num_cells * 8))
+    
+    for i in range(len(x)):
+        # Extract the patch around the interest point
+        patch = image[y[i]-feature_width//2:y[i]+feature_width//2,
+                      x[i]-feature_width//2:x[i]+feature_width//2]
+        
+        # Compute gradients in x and y directions
+        gradients_y = filters.sobel_v(patch)
+        gradients_x = filters.sobel_h(patch)
+        
+        # Compute gradient magnitudes and orientations
+        magnitudes = np.sqrt(gradients_x**2 + gradients_y**2)
+        orientations = np.arctan2(gradients_y, gradients_x)
+        orientations = np.degrees(orientations) % 360
+        
+        # Split the patch into cells and compute histograms
+        for row in range(num_cells):
+            for col in range(num_cells):
+                cell = magnitudes[row*cell_size:(row+1)*cell_size,
+                                  col*cell_size:(col+1)*cell_size]
+                cell_orientations = orientations[row*cell_size:(row+1)*cell_size,
+                                                 col*cell_size:(col+1)*cell_size]
+                histogram, _ = np.histogram(cell_orientations, bins=8,
+                                            range=(0, 360), weights=cell)
+                
+                # Append the histogram to the feature vector
+                features[i, (row*num_cells+col)*8:(row*num_cells+col+1)*8] = histogram
+        
+        # Check if the feature vector is not a zero vector
+        if np.linalg.norm(features[i]) != 0:
+            # Normalize the feature vector
+            features[i] /= np.linalg.norm(features[i])
+    
     return features
-
 
 def match_features(im1_features, im2_features):
     '''
@@ -167,9 +216,31 @@ def match_features(im1_features, im2_features):
 
     # TODO: Your implementation here!
 
-    # These are placeholders - replace with your matches and confidences!
-
-    matches = np.asarray([0,0])
-    confidences = np.asarray([0])
-
+    # Initialize empty lists to store matches and confidences
+    matches = []
+    confidences = []
+    
+    # Iterate over features in im1_features
+    for i in range(len(im1_features)):
+        feature1 = im1_features[i]
+        
+        # Compute Euclidean distances between feature1 and all features in im2_features
+        distances = np.linalg.norm(im2_features - feature1, axis=1)
+        
+        # Sort the distances and find the two closest matches
+        sorted_indices = np.argsort(distances)
+        closest_index = sorted_indices[0]
+        second_closest_index = sorted_indices[1]
+        
+        # Apply the Nearest Neighbor Distance Ratio (NNDR) Test
+        nndr = distances[closest_index] / distances[second_closest_index]
+        
+        if nndr < 0.8:  # NNDR threshold (can be adjusted)
+            matches.append([i, closest_index])
+            confidences.append(1.0 - nndr)
+    
+    # Convert matches and confidences to NumPy arrays
+    matches = np.asarray(matches)
+    confidences = np.asarray(confidences)
+    
     return matches, confidences

@@ -5,7 +5,7 @@ from skimage.color import rgb2gray
 
 import student
 import visualize
-from main import load_data
+from utils import load_data
 from helpers import evaluate_correspondence
 
 

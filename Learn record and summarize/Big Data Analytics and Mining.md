@@ -1695,7 +1695,9 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
 
 
-# Review
+# Final-term Review
+
+## Chapter 1. Introduction
 
 - What is big data?
 
@@ -1703,37 +1705,78 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
 - What is  data mining?
 
+- The KDD process
+
 - The main tasks of data mining?
 
-- Main tasks in machine learning
+- The relationship between data mining and other subjects
+
+- The challenge of Big Data Mining
+
+
+## Chapter 2. Foundation of Data Mining
+
+- Main tasks in machine learning 
+
+- supervised/unsupervised semi-supervised learning
 
 - Loss function 
 
 - Generalization: $L(M)=\sum_{i=1}^n(Y_i-Y_i^*)^2+\lambda \Phi(M)$
 
-- How to avoid overfitting?
+- Overfitting/underfitting problem
 
-  - Increasing samples
-  - Remove outlines
-  - Train-Validation-Test
-  - Decreasing the model complexity 
-  - Regulization ($l_1$ norm, $l_2$ norm)
+  - Reason
+  - How to avoid overfitting?
+    - Increasing samples
+    - Remove outlines
+    - Train-Validation-Test
+    - Decreasing the model complexity 
+    - Regulization ($l_1$ norm, $l_2$ norm)
 
-- Classical Algorithm (KNN、Naive Bases)
+- Classical Algorithm 
 
-- Decision Tree
+  - Decision Tree
 
-  - How to find the best split?
+    - How to construct DT
 
-    Information Gain: $IG(x) = H(Y) -H(Y|X)$
+    - Attribute selection Criteria
 
-  - Advantages 
+      - Information Gain
 
-- Support Vector Machine
+      - Information Gain Ratio
 
-  - Basic idea: class margin maximum 
+      - Gini index
 
-  - Define **any** three parallel hyperplane   
+    - How to find the best split?
+
+      Information Gain: $IG(x) = H(Y) -H(Y|X)$
+
+
+    - Advantages 
+
+  - KNN
+
+    - Lazy learning
+    - Advantages: Local Data Distribution, incremental/online Learning, Large number of class
+    - Disadvantages: parameter k, inbalanced data, slow inference
+
+  - Naive Bayes
+
+    - Basic idea: Pr(c|x)
+    - Advantage: probabilitic output
+
+  - Support Vector Machine
+
+    - Basic idea: class margin maximum 
+
+    - Linear Separation Problem
+      - Why SVM works well on small size of samples: support vectors
+
+      - Good  generalization: structured risk minimization 
+
+    - Define **any** three parallel hyperplane   
+
     $$
     \begin{cases}
     wx+b=1 \\
@@ -1748,21 +1791,27 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
     \end{cases}
     $$
 
-- Kernel trick: $k(x,z)=\Phi(x)\cdot \Phi(z)$
+    - NonLinear problem
+      - Solution: map data into High-dimensional space
+      - Trick: Kernel trick: $k(x,z)=\Phi(x)\cdot \Phi(z)$, map data into High-dimensional space with simple computation
+      - Kernel functions: Gaussian kernel, polynomial kernel
 
 - Ensemble Learning
 
-  - Bagging -> Random Forest
+  - Two criteria: good base learner, diversity
 
-  - Booting -> Adaboost / XGBoost
+  - Three Strategies
+    - Bagging -> Random Forest
 
-  - Stacking
+    - Booting -> Adaboost / XGBoost
+
+    - Stacking
 
 - Clustering
 
-  - K-Means
+  - K-Means and its drawbacks
 
-  - DBSCAN
+  - DBSCAN (advantages and drawbacks)
 
 - Subspace Learning
 
@@ -1788,7 +1837,9 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
       LRR: min$||Z||_*$, s.t. X=XZ
 
-- Why we need Hashing?
+## Chapter 3. Hashing
+
+- Why we need Hashing? The role of Hashing.
 
 - Finding similar items
 
@@ -1804,22 +1855,24 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
       trick:  using hashing function to implement permutation 
 
-- Locality-Sensitive Hashing (LSH)
+  - Locality-Sensitive Hashing (LSH)
 
-  Basic idea: divide the input matrix (signature matrix) into same bands, and hash them into different buckets.
+    - Basic idea: divide the input matrix (signature matrix) into same bands, and hash them into different buckets.
 
 - Learn to Hash
 
-  - Radom Projection
-    $$
-    h(x)=
-    \begin{cases}
-    1, & r^Tx \geq 0 \\
-    0, & else
-    \end{cases}
-    $$
+  - Radom Projection (Data independent)
 
-  - Unsupervised Hash
+
+$$
+  h(x)=
+  \begin{cases}
+  1, & r^Tx \geq 0 \\
+  0, & else
+  \end{cases}
+$$
+
+  - Unsupervised Hash (Data dependent)
 
     - PCA Hashing
 
@@ -1829,9 +1882,14 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
   - Supervised Hash
 
+
+## Chapter 4. Sampling
+
 - Inverse Transform Sampling 
 
-  $a=u(0,1),\;x=CDF^{-1}(a)$
+  - $a=u(0,1),\;x=CDF^{-1}(a)$
+  - Advantages: intuitive, simple
+  - Disadvantages: diffucylt to determine $CDF^{-1}(a)$
 
 - Rejection Sampling 
 
@@ -1839,37 +1897,49 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
 - Importance Sampling 
 
+  - Basic idea
+  - the difference between Rejection Sampling  and Importance Sampling 
+
 - MCMC Sampling 
 
-  Basic idea: To construct a markov chain, where its equilibrium distribution converges to target distribution p(x)
+  - Basic idea: To construct a markov chain, where its equilibrium distribution converges to target distribution p(x)
 
-  Markov properties: $Pr(X_{n+1}=x|X_1=x_1,X_2=x_2,\cdots,X_n=x_n)=Pr(X_{n+1}=x|X_n=x_n)$
+    Markov properties: $Pr(X_{n+1}=x|X_1=x_1,X_2=x_2,\cdots,X_n=x_n)=Pr(X_{n+1}=x|X_n=x_n)$
 
-  Detailed Balance Condition(细致平衡条件):  $P(X_i)\cdot Q(X_j|X_i)=P(X_j)\cdot Q(X_i|X_j)$
+  - Detailed Balance Condition(细致平衡条件):  $P(X_i)\cdot Q(X_j|X_i)=P(X_j)\cdot Q(X_i|X_j)$
 
-  Trick: It's difficult to find $Q(x|y)$. Thereby, change it as $P(X_i)Q(X_j|X_i)\alpha(X_j|X_i)=P(X_j)Q(X_i|X_j)\alpha(X_i|X_j)$
+    Trick: It's difficult to find $Q(x|y)$. Thereby, change it as $P(X_i)Q(X_j|X_i)\alpha(X_j|X_i)=P(X_j)Q(X_i|X_j)\alpha(X_i|X_j)$
 
-  But how to draw samples from $Q'(X_j|X_i)$ and $Q'(X_i|X_j)$ ?
+    But how to draw samples from $Q'(X_j|X_i)$ and $Q'(X_i|X_j)$ ?
 
-  Solution: Rejection Sampling for $Q'$
+    Solution: Rejection Sampling for $Q'$
+
+  - The procedure of MCMC Sampling 
 
 - MH Sampling
 
-  Basic idea: MAMC Sampling is not efficient, increasing acceptance ratio 
+  - Basic idea: MAMC Sampling is not efficient, increasing acceptance ratio 
 
-  $P(X_i)\cdot Q'(X_j|X_i)=P(X_j)\cdot Q'(X_i|X_j)$, both sides times a constant M 
+    $P(X_i)\cdot Q'(X_j|X_i)=P(X_j)\cdot Q'(X_i|X_j)$, both sides times a constant M 
 
-  Magnify acceptance ratio by $\alpha(X_j|X_i)=min(1,\frac{p(X_j)q(X_i|X_j)}{p(X_i)q(X_j|X_i)})$
+  - Magnify acceptance ratio by $\alpha(X_j|X_i)=min(1,\frac{p(X_j)q(X_i|X_j)}{p(X_i)q(X_j|X_i)})$
+  - The procedure 
 
 - Gibbs Sampling
 
-  Basic idea: draw samples from conditional distribution to construct markov chain (100% acceptance ratio)
+  - Basic idea: draw samples from conditional distribution to construct markov chain (100% acceptance ratio)
 
-  $p(x_1,y_1)p(y_2|x_1)=p(x_1,y_2)p(y_1|x_1)$
+    Trick: Sampling along with one direction
 
-  Trick: Sampling along with one direction
+    $p(x_1,y_1)p(y_2|x_1)=p(x_1,y_2)p(y_1|x_1)$
 
-- Latent Dirichlet Allocation
+  - The procedure
+  - MH Sampling vs. Gibbs Sampling 
+    - Both Mh and Gibbs are MCMC
+    - Acceptance Ratio: MH < 100%, Gibbs = 100%
+    - MH $\rightarrow$ joint distribution, Gibbs $\rightarrow$ Full conditional distribution
+
+- Latent Dirichlet Allocation (不考)
 
   LDA is a tpoic modeling with probabilistic graph model
 
@@ -1885,95 +1955,114 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
   Get $\theta, \phi$, get word-topic and document-topic
 
+## Chapter 5. Data Stream Mining
+
 - Sampling on Data Stream
 
   Reservoir Sampling: draw samples with uniform distribution
 
-- Data Stream Mining
+  - Data Stream Mining
 
   - Challenge of Data Stream MIning
 
   - Concept Drift
 
-  - Concept Drifting Detection 
-    - Distribution-based method
-    - Error-rate based method
+- Concept Drifting Detection 
+  - Distribution-based method
+
+    - drawbacks
+
+    - Admin 
+  - Error-rate based method
+
+    - drawbacks
+    - DDM
 
 - Data Stream Classification
 
   - VFDT (Hoeffding Tree)
   - CVFDT (Concept-adaption VFDT)
   - SyncStream (Prototype-based Learning)
-  - Open-set (new class) Data
-
-- Open-Set Detection (Novel Class Detection)
-
-  Extreme-Value Theory (EVT)
-
-- Continual learning
-
-  - Basic idea: to constrain the parameter
-
-  - eg. EWC: Determin which parameters are important or not important for previous task
-
-    $L(\theta)=L_{current}(\theta)+\sum_ib_i(\theta_i-\theta_i^b)^2$
-
-    $b_i$ indicate the importance for a given parameter 
-
-    $b_i$ is determined by the 2-nd derivative
-
-- Class incremental learning
-
-  Basic idea: to learn both old and new engaging classes 
 
 - Data Stream Clustering
 
-  Two phases: online data abstraction; off clustering
+  - Two phases: online data abstraction; off clustering
 
-- Online data abstraction: Micro-Clusters
+  - Online data abstraction
 
-  Data structure: cluster feature(CF)
-  $CF=(N,\vec{LS},\vec{SS})$
+    - Micro-Clusters
 
-  Additionality: $CF_1+CF_2=(N_1+N_2,\vec{LS_1}+\vec{LS_2},\vec{SS_1}+\vec{SS_2})$
+    - Data structure: cluster feature(CF)
 
-- Graph Mining
+      $CF=(N,\vec{LS},\vec{SS})$
 
-  - Key Node identification
-    - Centrality (degree, betweenness, closeness)
+    - Additionality: $CF_1+CF_2=(N_1+N_2,\vec{LS_1}+\vec{LS_2},\vec{SS_1}+\vec{SS_2})$
 
-    - K-shell decomposition 
+  - Open-set (new class) Data (Open-Set Detection (Novel Class Detection))
 
-    - PageRank
+    - Extreme-Value Theory (EVT)
 
-  - Community Detection
-    - Minimum Cut
-    - Ratio/Normalized Cut
-    - Modularity
-    - Attractor (distance dynamic)
-  - Graph Embedding
-    - DeepWalk vs. word2vec
-    - Node2vec
+    - Continual learning
+
+      - Basic idea: to constrain the parameter
+
+      - eg. EWC: Determin which parameters are important or not important for previous task
+
+        $L(\theta)=L_{current}(\theta)+\sum_ib_i(\theta_i-\theta_i^b)^2$
+
+        $b_i$ indicate the importance for a given parameter 
+
+        $b_i$ is determined by the 2-nd derivative
+
+    - Class incremental learning
+
+      Basic idea: to learn both old and new engaging classes 
+
+## Chapter 6. Graph Mining
+
+- Key Node identification
+  - Centrality (degree, betweenness, closeness)
+
+  - K-shell decomposition 
+
+  - PageRank
+- Community Detection
+  - Minimum Cut
+  - Ratio/Normalized Cut $\rightarrow$ balanced partition; if relaxization $\rightarrow$ spectral clustering 
+  - Modularity
+  - Attractor (distance dynamic)
+- Graph Embedding
+  - Basic idea: low-dimensional vectors 
+  - DeepWalk vs. word2vec
+  - Node2vec: try to generate a better path by considering the community structure 
+
+## Chapter 7. Hadoop / Spark
 
 - What's Hadoop
+- Design principles of Hadoop
 
-  Design principles of Hadoop
-
-  Ecosystem of Hadoop
-
+- Ecosystem of Hadoop
 - HDFS(Storing)
+  - Name Node (meta information)
 
-  - Name Node
+  - Data Node (actual data)
 
-  - Data Node
-
-  - Fault Tolerance
+  - Fault Tolerance 
+    - Replication (3)
+    - Heartbeat
+    - Standby name node
 
 - MapReduce
-
-  - Map function
-  - Reduce function
+  - Map function (what will do in each split block)
+  - Reduce function ((Aggregate data))
   - How to write Mae/reduce function?
+- Spark
+  - What's sprak
+  - Memory-based computation
+    - RDD
+    - Transform/Action
+  - Fault Tolerance (DAG)
+- What's difference between Mapreduce and Spark
 
 
 
@@ -1991,4 +2080,3 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 - Deadline: Next Sunday of the end of this course 
 - Topic: AI-field 
 - Requirement: English & 3000 word
-  
