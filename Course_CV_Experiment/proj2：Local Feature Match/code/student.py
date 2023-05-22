@@ -45,28 +45,26 @@ def get_interest_points(image, feature_width):
 
     '''
 
-    # TODO: Your implementation here!
-
     # Convert the image to grayscale if it is color
     if image.ndim == 3:
         image = img_as_int(image)
-    
+
     # Compute the Harris response map
     harris_response = feature.corner_harris(image)
-    
+
     # Find local maxima in the response map as interest points
     coordinates = feature.peak_local_max(harris_response, min_distance=feature_width//2,
-                                         exclude_border=False)
-    xs = coordinates[:, 1]
-    ys = coordinates[:, 0]
-    
-    # Suppress interest points near the image boundaries
-    mask = (xs >= feature_width//2) & (xs < image.shape[1] - feature_width//2) & \
-           (ys >= feature_width//2) & (ys < image.shape[0] - feature_width//2)
-    xs = xs[mask]
-    ys = ys[mask]
-    
+                                         exclude_border=True)
+
+    # Filter out interest points with low response values and those near the image boundary
+    mask = (coordinates[:, 0] >= feature_width//2) & (coordinates[:, 0] < image.shape[0] - feature_width//2) \
+           & (coordinates[:, 1] >= feature_width//2) & (coordinates[:, 1] < image.shape[1] - feature_width//2) \
+           & (harris_response[coordinates[:, 0], coordinates[:, 1]] > 0.01)
+    xs = coordinates[mask, 1]
+    ys = coordinates[mask, 0]
+
     return xs, ys
+    
 
 def get_features(image, x, y, feature_width):
     '''
@@ -147,6 +145,15 @@ def get_features(image, x, y, feature_width):
         patch = image[y[i]-feature_width//2:y[i]+feature_width//2,
                       x[i]-feature_width//2:x[i]+feature_width//2]
         
+        # Normalize the patch
+        patch = (patch - np.mean(patch)) / np.std(patch)
+
+        # Apply a threshold to remove low values
+        patch[patch < 0.2*np.max(patch)] = 0
+
+        # Normalize the patch again
+        patch = (patch - np.mean(patch)) / np.std(patch)
+        
         # Compute gradients in x and y directions
         gradients_y = filters.sobel_v(patch)
         gradients_x = filters.sobel_h(patch)
@@ -213,8 +220,6 @@ def match_features(im1_features, im2_features):
             column is an index into im1_features and the second column is an index into im2_features
     :confidences: an np array with a real valued confidence for each match
     '''
-
-    # TODO: Your implementation here!
 
     # Initialize empty lists to store matches and confidences
     matches = []
