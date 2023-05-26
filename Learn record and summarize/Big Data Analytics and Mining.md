@@ -9,7 +9,11 @@
   - Velocity: analysis of streaming data
   - Veracity: uncertainty of data
 
-- Data mining consists of applying data analysis and discovery algorithms that, under acceptable computational efficiency limitations, produce a particular  enumeration of patterns over the data
+- Data mining consists of applying data analysis and discovery algorithms that, under acceptable computational efficiency limitations, produce a particular  enumeration of patterns over the data. 
+
+- Knowledge Discovery in Databases (KDD)
+
+  ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Knowledge%20Discovery%20in%20Databases%20(KDD).png)
 
 - Main Data Mining Tasks
 
@@ -20,7 +24,7 @@
 
 - Main Directions of Big Data Mining
 
-  - Scalable Data Mining Algorithms 
+  - Scalable Data Mining Algorithms (Volume)
 
     Basic idea: propose new data mining algorithms to handle big data using differernt strategies, mainly focus on: 
 
@@ -28,7 +32,7 @@
     - Map-reduce oriented Parallell platforms (Hadoop, Spark, GraphLab)
     - Speed-up Hardwares (GPUs/Clouds/Clusters)
 
-  - Data Stream Mining
+  - Data Stream Mining (Velocity)
 
     Basic idea: propose new data mining algorithms to handle evloving data streams using differernt strategies, mainly focus on:
 
@@ -38,7 +42,7 @@
     - Semi-supervised Learning
     - Irregular nodes/patterns mining on data streams
 
-  - Multi-source or multi-type data mining
+  - Multi-source or multi-type data mining (Variety)
 
     Basic idea: propose new algorithms for structure or unstructure data, or different types of data, different sources, etc,  mainly focus on:
 
@@ -47,7 +51,7 @@
     - Learning on different sources of data (Multi-view learning, Transfer learning, Multi-task learning, etc)
     - Data fusion or data integration (Multiple-kernel learning）
 
-  - Uncertainty Analysis, Link/Missing value prediction
+  - Uncertainty Analysis, Link/Missing value prediction (Veracity )
 
     - Link Prediction (Clustering-based, Structure-based, Multi-view based)
 
@@ -63,8 +67,8 @@
 
 ## Main tasks in machine learning
 
-- Supervised learning: targets to learn the mapping function or relationship between the features and the labels based on the labeled data.
-- Unsupervised learning: aims at learning the intrinsic structure from unlabeled data.
+- Supervised learning: targets to learn the mapping function or relationship between the features and the labels based on the labeled data. (e.g. Classification, Prediction)
+- Unsupervised learning: aims at learning the intrinsic structure from unlabeled data. (e.g. Clustering, Latent Factor Learning and Frequent Items Mining)
 - Semi-supervised learning: can be regarded as the unsupervised learning with some constraints on labels, or the supervised learning with additional information on the distribution of data. 
 
 Supervised Learning
@@ -94,10 +98,12 @@ Training loss: loss on training data
 
 Test loss: loss on test data
 
-Generalization 
+- Generalization 
 
-- Empirical  risk: $R(F)=\frac{1}{N}\displaystyle\sum_{i=1}^NL(y_i,F(x_i))$
-- Note: A good model cannot only take training loss into account and minimize the empirical risk. Instead, improve the model generalization.
+  - Empirical  risk: $R(F)=\frac{1}{N}\displaystyle\sum_{i=1}^NL(y_i,F(x_i))$
+
+  - Note: A good model cannot only take training loss into account and minimize the empirical risk. Instead, improve the model generalization.
+
 
 Model Selection: To avoid Underfitting and Overfitting 
 
@@ -1716,9 +1722,7 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
 ## Chapter 2. Foundation of Data Mining
 
-- Main tasks in machine learning 
-
-- supervised/unsupervised semi-supervised learning
+- Main tasks in machine learning : supervised/unsupervised semi-supervised learning
 
 - Loss function 
 
@@ -1751,51 +1755,52 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
     - How to find the best split?
 
       Information Gain: $IG(x) = H(Y) -H(Y|X)$
-
-
+    
     - Advantages 
-
-  - KNN
-
-    - Lazy learning
-    - Advantages: Local Data Distribution, incremental/online Learning, Large number of class
-    - Disadvantages: parameter k, inbalanced data, slow inference
-
-  - Naive Bayes
-
-    - Basic idea: Pr(c|x)
-    - Advantage: probabilitic output
-
-  - Support Vector Machine
-
-    - Basic idea: class margin maximum 
-
-    - Linear Separation Problem
-      - Why SVM works well on small size of samples: support vectors
-
-      - Good  generalization: structured risk minimization 
-
-    - Define **any** three parallel hyperplane   
-
-    $$
-    \begin{cases}
-    wx+b=1 \\
-    wx+b=0 \\
-    wx+b=-1
-    \end{cases}
-    \Longrightarrow
-    \begin{cases}
-    y_i(wx_i+b) \geq 1, & \text {empirical risk} \\
-    max\frac{1}{||w||}, & \text {margin maximum} \\
-    min\frac{1}{2}||w||^2
-    \end{cases}
-    $$
-
-    - NonLinear problem
-      - Solution: map data into High-dimensional space
-      - Trick: Kernel trick: $k(x,z)=\Phi(x)\cdot \Phi(z)$, map data into High-dimensional space with simple computation
-      - Kernel functions: Gaussian kernel, polynomial kernel
-
+  
+    - KNN
+  
+      - Lazy learning
+      - Advantages: Local Data Distribution, incremental/online Learning, Large number of class
+      - Disadvantages: parameter k, inbalanced data, slow inference
+  
+  
+    - Naive Bayes
+  
+      - Basic idea: Pr(c|x)
+      - Advantage: probabilitic output
+  
+  
+    - Support Vector Machine
+  
+      - Basic idea: class margin maximum 
+  
+      - Linear Separation Problem
+        - Why SVM works well on small size of samples: support vectors
+  
+        - Good  generalization: structured risk minimization 
+  
+      - Define **any** three parallel hyperplane   
+  
+      $$
+      \begin{cases}
+      wx+b=1 \\
+      wx+b=0 \\
+      wx+b=-1
+      \end{cases}
+      \Longrightarrow
+      \begin{cases}
+      y_i(wx_i+b) \geq 1, & \text {empirical risk} \\
+      max\frac{1}{||w||}, & \text {margin maximum} \\
+      min\frac{1}{2}||w||^2
+      \end{cases}
+      $$
+  
+      - NonLinear problem
+        - Solution: map data into High-dimensional space
+        - Trick: Kernel trick: $k(x,z)=\Phi(x)\cdot \Phi(z)$, map data into High-dimensional space with simple computation
+        - Kernel functions: Gaussian kernel, polynomial kernel
+  
 - Ensemble Learning
 
   - Two criteria: good base learner, diversity
