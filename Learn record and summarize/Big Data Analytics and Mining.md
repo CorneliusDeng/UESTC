@@ -173,9 +173,9 @@ $$
 
 ### Decision Tree
 
-$Information\;Gain(A) =Entropy(S)-\displaystyle\sum_{v\in Values(A)}\frac{|S_v|}{|S|}·Entropy(S_v) $
+$\text{Information Gain(A)} =Entropy(S)-\displaystyle\sum_{v\in Values(A)}\frac{|S_v|}{|S|}·Entropy(S_v) $
 
-$Entropy=-\displaystyle\sum_{d\in Decisions}p(d)log((p(d)))$
+$Entropy=\displaystyle\sum_{d\in Decisions}-p(d)log((p(d)))$
 
 ### Support Vector Machine
 
@@ -183,7 +183,7 @@ There are infinite lines (hyperplanes) separating the two classes but we want to
 
 SVM searches for the hyperplane with the largest margin, i.e., maximum marginal hyperplane (MMH)
 
-The data point closest to the separation hyperplane in the sample points of the training data set is called the support vector. Only the support vector plays a role in determining the optimal hyperplane, while the other data points do not.Moving or even deleting the non-support vectors does not have any effect on the optimal hyperplane. In other words, the support vector plays a decisive role in the model
+The data point closest to the separation hyperplane in the sample points of the training data set is called the support vector. Only the support vector plays a role in determining the optimal hyperplane, while the other data points do not. Moving or even deleting the non-support vectors does not have any effect on the optimal hyperplane. In other words, the support vector plays a decisive role in the model.
 
 - SVM—Linearly Separable
 
@@ -1707,15 +1707,43 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
 - What is big data?
 
+  Big data is a buzzword, or catch-phrase, used to **describe a massive volume of both structured and unstructured data that is so large that it's difficult to process using traditional database and software techniques**. 
+
 - The 4V features in big data.
 
+  **Volume**: scale of data
+
+  **Variety**: different forms of data
+
+  **Velocity**: analysis of streaming data
+
+  **Veracity**: uncertainty of data
+
 - What is  data mining?
+
+  Data mining consists of **applying data analysis and discovery algorithms** that, under acceptable computational efficiency limitations, **produce a particular  enumeration of patterns over the data.** 
 
 - The KDD process
 
 - The main tasks of data mining?
 
+  Association Rule Mining
+
+  Cluster Analysis
+
+  Classification/Prediction
+
+  Outlier Detection
+
 - The relationship between data mining and other subjects
+
+  Scalable Data Mining Algorithms (Volume)
+
+  Data Stream Mining (Velocity)
+
+  Multi-source or multi-type data mining (Variety)
+
+  Uncertainty Analysis, Link/Missing value prediction (Veracity )
 
 - The challenge of Big Data Mining
 
@@ -1724,6 +1752,12 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
 - Main tasks in machine learning : supervised/unsupervised semi-supervised learning
 
+  Supervised learning: targets to learn the **mapping function or relationship between the features and the labels based on the labeled data**. (e.g. Classification, Prediction)
+
+  Unsupervised learning: aims at learning the **intrinsic structure from unlabeled data**. (e.g. Clustering, Latent Factor Learning and Frequent Items Mining)
+
+  Semi-supervised learning: can be regarded as the **unsupervised learning with some constraints on labels**, or the supervised learning with additional information on the distribution of data. 
+
 - Loss function 
 
 - Generalization: $L(M)=\sum_{i=1}^n(Y_i-Y_i^*)^2+\lambda \Phi(M)$
@@ -1731,7 +1765,7 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 - Overfitting/underfitting problem
 
   - Reason
-  - How to avoid overfitting?
+  - **How to avoid overfitting?**
     - Increasing samples
     - Remove outlines
     - Train-Validation-Test
@@ -1739,6 +1773,12 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
     - Regulization ($l_1$ norm, $l_2$ norm)
 
 - Classical Algorithm 
+
+  - K-Nearest Neighbor Classifiers
+
+    - Lazy learning
+    - Advantages: Local Data Distribution, incremental/online Learning, Large number of class
+    - Disadvantages: parameter k, inbalanced data, slow inference
 
   - Decision Tree
 
@@ -1749,39 +1789,39 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
       - Information Gain
 
       - Information Gain Ratio
-
+  
       - Gini index
-
+  
     - How to find the best split?
-
+  
       Information Gain: $IG(x) = H(Y) -H(Y|X)$
-    
+  
     - Advantages 
   
-    - KNN
-  
-      - Lazy learning
-      - Advantages: Local Data Distribution, incremental/online Learning, Large number of class
-      - Disadvantages: parameter k, inbalanced data, slow inference
   
   
-    - Naive Bayes
+    - **Naive Bayes**
   
-      - Basic idea: Pr(c|x)
+      - Basic idea
+      
+        $P(C_i|X)=\frac{P(X|C_i)P(C_i)}{P(X)}=\frac{P(C_i) \displaystyle \prod_{k=1}^n P(x_k|C_i) }{P(X)}$
+      
       - Advantage: probabilitic output
   
   
-    - Support Vector Machine
+    - **Support Vector Machine**
   
-      - Basic idea: class margin maximum 
+      - **Basic idea: class margin maximum (maximum marginal hyperplane)**
   
       - Linear Separation Problem
-        - Why SVM works well on small size of samples: support vectors
+        - **Why SVM works well on small size of samples: support vectors**
+  
+          The data point closest to the separation hyperplane in the sample points of the training data set is called the support vector
   
         - Good  generalization: structured risk minimization 
-  
+        
       - Define **any** three parallel hyperplane   
-  
+      
       $$
       \begin{cases}
       wx+b=1 \\
@@ -1795,52 +1835,80 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
       min\frac{1}{2}||w||^2
       \end{cases}
       $$
-  
-      - NonLinear problem
-        - Solution: map data into High-dimensional space
-        - Trick: Kernel trick: $k(x,z)=\Phi(x)\cdot \Phi(z)$, map data into High-dimensional space with simple computation
+      
+      - **NonLinear problem**
+        - **Solution: map data into High-dimensional space**
+        - **Trick: Kernel trick: $k(x,z)=\Phi(x)\cdot \Phi(z)$, map data into High-dimensional space with simple computation**
         - Kernel functions: Gaussian kernel, polynomial kernel
   
-- Ensemble Learning
+- **Ensemble Learning**
 
-  - Two criteria: good base learner, diversity
+  - Two criteria: Good performance + Diversity
 
-  - Three Strategies
-    - Bagging -> Random Forest
-
-    - Booting -> Adaboost / XGBoost
-
-    - Stacking
+  - **Three Strategies**
+    
+    - **Bagging -> Random Forest**
+    
+      combines multiple models by training them independently o**n different subsets of the training data**, and then a**ggregating their predictions through majority voting or averaging**.
+    
+    - **Booting -> Adaboost / XGBoost**
+    
+      sequentially trains weak models on different subsets of the training data, with **each subsequent model focusing on the instances that were misclassified by the previous models**, thereby creating a strong final model.
+    
+    - **Stacking**
+    
+      combines multiple models by training a meta-model to learn from the predictions of individual models, using them as additional features, and making the final prediction based on the meta-model's output.
 
 - Clustering
 
-  - K-Means and its drawbacks
+  - **K-Means and its drawbacks**
 
-  - DBSCAN (advantages and drawbacks)
+    The core idea of K-means is to partition data points into K clusters by minimizing the within-cluster sum of squared distances to their respective cluster centroids.
 
-- Subspace Learning
+    A good clustering with smaller K can have a lower SSE than a poor clustering with higher K
 
-  - Dimension Reduction
+    Drawbacks of K-means include sensitivity to the initial cluster centers, the need to specify the number of clusters in advance, sensitivity to outliers, restriction to convex clusters, inability to handle nonlinear data, and assumption of equal feature weights.
 
-    - Linear: PCA, MDS
+  - Hierarchical Clustering 
 
-    - Non-Linear: LLE, LEM, Isomap, NSE
+  - **Density-based Clustering: DBSCAN (advantages and disadvantages)**
 
-  - Feature Selection 
+    Advantages: Robust to Noise. Can handle clusters of different shapes and sizes
+
+    Disadvantages: sensitive to varying densities and high-dimensional data
+
+- **Subspace Learning**
+
+  - **Motivation** 
+
+    Similarity Calculation is a difficult thing for high-dimensional data.
+
+    The required number of samples (to achieve the same accuracy) grows exponentially with the number of variables
+
+  - **Dimension Reduction**
+
+    - Linear: Principal component analysis (PCA), Multidimensional scaling (MDS)
+  
+    - Non-Linear: Locally linear embedding (LLE), Laplacian eigenmaps (LEM), Isomap, NSE
+
+  - **Feature Selection**: Find the optimal feature subset
 
     - Filter: Information Gain
     - Wrappers: 
     - Embedded: LASSO
 
-  - Subspace Clustering
+  - **Subspace Clustering**
 
+    - Challenge: Traditional clustering algorithms are inappropriate to handle high-dimensional data, due to the “curse of dimensionality”.
+  
     - Local PCA-based method: 4C
-
+  
     - Self-expressive Representation
-
+  
       SSC: min$||Z||_1$, s.t. X=XZ, diag(Z)=0
-
+  
       LRR: min$||Z||_*$, s.t. X=XZ
+  
 
 ## Chapter 3. Hashing
 
