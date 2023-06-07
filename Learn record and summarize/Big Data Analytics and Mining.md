@@ -5,7 +5,7 @@
 - The four V's of big data
 
   - Volume: scale of data
-  - Variety: different forms of data
+  - Variety: different forms of **data**
   - Velocity: analysis of streaming data
   - Veracity: uncertainty of data
 
@@ -555,7 +555,7 @@ Challenge in big data applications: Curse of dimensionality、Storage cost、Que
   - Similar news articles at many news sites. Application: Cluster articles by “same story.”
 - Three Essential Techniques for Similar Documents
   - Shingling : convert documents, emails, etc., to sets.
-  - Minhashing : convert large sets to short . signatures, while preserving similarity.
+  - Minhashing : convert large sets to short signatures, while preserving similarity.
   - Locality-sensitive hashing : focus on pairs of signatures likely to be similar.
 
 <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Case%20Study%20Finding%20Similar%20Documents.png" style="zoom:50%;" />
@@ -637,6 +637,8 @@ Challenge in big data applications: Curse of dimensionality、Storage cost、Que
   <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Example%20Min%20Hashing.png" style="zoom:50%;" />
 
   Input Matrix: d $\times$ N, $\Longrightarrow$ Signature Matrix: d' $\times$ N
+
+  because each column represents a document's shingles
 
 - Implementation 
 
@@ -1912,48 +1914,83 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
 ## Chapter 3. Hashing
 
-- Why we need Hashing? The role of Hashing.
+- **Why we need Hashing? The role of Hashing.**
 
-- Finding similar items
+  Challenge in big data applications: Curse of dimensionality、Storage cost、Query speed
 
-  - K-shingles (k-gram) convert documents into sets
+  The purpose of hashing is to efficiently map data of arbitrary size to fixed-size values, known as hash codes or hash values.
 
-  - Min-Hashing convert input matrix into signature matrix 
+- **Finding similar items**
 
-    - Definition: the first row of the column contains "1"
+  - **K-shingles (k-gram) convert documents into sets**
 
-    - Surprising properties: $Sim(C_1,C_2)=P(H(C_1)=H(C_2))=\frac{a}{a+b+c}$
+    A k -shingle (or k -gram) for a document is a sequence of k characters that appears in the document.
+
+  - **Min-Hashing convert input matrix into signature matrix, while preserving similarity.**
+
+    - The Jaccard similarity  of two sets is the size of their intersection divided by the size of their union.
+
+      $Sim(C_1,C_2)=\frac{C_1\cap C_2}{C_1\cup C_2}$
+
+      Column similarity is the Jaccard similarity of the sets of their rows with 1. 
+
+      (Rows = elements of the universal set. Columns = sets.)
+
+    - Outline of Min-Hashing 
+
+      Compute signatures of columns = small summaries of columns.
+
+      Examine pairs of signatures to find similar signatures. (Essential: similarities of signatures and columns are related.)
+
+      Optional: check that columns with similar signatures are really similar.
+
+    - Key idea: “hash” each column C  to a small signature Sig (C)
+
+      Define “hash” function $h (C )$ = the number of the first (in the permuted order) row in which column C  has 1.
+
+    - Surprising properties: The probability of $h(C_1)=h(C_2)$ is the same as $Sim(C_1,C_2)$
 
     - How to compute signature matrix 
 
       trick:  using hashing function to implement permutation 
 
-  - Locality-Sensitive Hashing (LSH)
+  - **Locality-Sensitive Hashing (LSH) focus on pairs of signatures likely to be similar.**
 
-    - Basic idea: divide the input matrix (signature matrix) into same bands, and hash them into different buckets.
+    - Basic idea: hash columns of signature matrix M  several times, only similar columns are likely to hash to the same bucket, candidate pairs are those that hash at least once to the same bucket.
+
+    - Trick: divide signature rows into bands. Each hash function based on one band.
+
+    - At least one band identical: $1-(1-s^r)^b$,
+
+      Because $s^r$ means all rows of a band are equal
+
+      $1-s^r$ means some row of a band is unequal
+
+      $(1-s^r)^b$ means no bands are identical
+
+      The Probability of sharing a bucket of turning points：$t～(1/b)^{1/r}$
 
 - Learn to Hash
 
   - Radom Projection (Data independent)
-
-
-$$
-  h(x)=
-  \begin{cases}
-  1, & r^Tx \geq 0 \\
-  0, & else
-  \end{cases}
-$$
-
-  - Unsupervised Hash (Data dependent)
-
-    - PCA Hashing
-
-      h(x) = sign(wx), w is determined by PCA
-
-    - Spectral Hash
-
-  - Supervised Hash
+    $$
+    h(x)=
+      \begin{cases}
+      1, & r^Tx \geq 0 \\
+      0, & else
+      \end{cases}
+    $$
+    
+  
+  - Data-Dependent Methods
+  
+    - Unsupervised Hashing
+  
+      PCA Hashing
+  
+      Spectral Hashing
+  
+    - Supervised Hashing
 
 
 ## Chapter 4. Sampling
