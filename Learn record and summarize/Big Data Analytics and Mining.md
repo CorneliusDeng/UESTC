@@ -1981,7 +1981,6 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
       \end{cases}
     $$
     
-  
   - Data-Dependent Methods
   
     - Unsupervised Hashing
@@ -1995,75 +1994,87 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
 ## Chapter 4. Sampling
 
-- Inverse Transform Sampling 
+- **Inverse Transform Sampling: Sampling based on the inverse of Cumulative Distribution Function (CDF)**
 
-  - $a=u(0,1),\;x=CDF^{-1}(a)$
+  - $Y_i～Uniform(0,1),\;X_i=CDF^{-1}(Y_i)$
   - Advantages: intuitive, simple
   - Disadvantages: diffucylt to determine $CDF^{-1}(a)$
 
-- Rejection Sampling 
+- **Rejection Sampling** 
 
-  Basic idea: draw samples from a simple proposed distribution, and the reject some samples to fit target distribution 
+  **Basic idea: Accept the samples in the region under the graph of its density function and reject others** 
 
-- Importance Sampling 
+  Proposal distribution $q(x)$ should always covers the target distribution $p(x)$
 
-  - Basic idea
-  - the difference between Rejection Sampling  and Importance Sampling 
+  Acceptance ratio = $\frac{p(x)}{Mq(x)}$, $M$ is a big positive number
 
-- MCMC Sampling 
+- **Importance Sampling** 
 
-  - Basic idea: To construct a markov chain, where its equilibrium distribution converges to target distribution p(x)
+  **Basic idea: Not reject but assign weight to each instance so that the correct distribution is targeted**
+
+  - Importance Sampling (IS) V.S. Rejection Sampling(RS)
+
+    - Instances from RS share the same “weight”, only some of instances are reserved
+
+    - Instances from IS have different weight, all instances are reserved
+
+    - IS is less sensitive to proposal distribution
+
+- **Markov chain Monte Carlo (MCMC) Sampling** 
+
+  - **Basic idea: To construct a markov chain, where its equilibrium distribution converges to target distribution p(x)**
 
     Markov properties: $Pr(X_{n+1}=x|X_1=x_1,X_2=x_2,\cdots,X_n=x_n)=Pr(X_{n+1}=x|X_n=x_n)$
 
-  - Detailed Balance Condition(细致平衡条件):  $P(X_i)\cdot Q(X_j|X_i)=P(X_j)\cdot Q(X_i|X_j)$
+    That means given the present state, the future and past states are independent
 
-    Trick: It's difficult to find $Q(x|y)$. Thereby, change it as $P(X_i)Q(X_j|X_i)\alpha(X_j|X_i)=P(X_j)Q(X_i|X_j)\alpha(X_i|X_j)$
+  - **Detailed Balance Condition(细致平衡条件):  $P(X_i)\cdot Q(X_j|X_i)=P(X_j)\cdot Q(X_i|X_j)$**
 
-    But how to draw samples from $Q'(X_j|X_i)$ and $Q'(X_i|X_j)$ ?
+    Given p(X), we target to find a transition matrix Q(X), such that: $p(X_i)Q(X_j|X_i)=P(X_j)Q(X_i|X_j),\; for\; all\;i,j$
 
-    Solution: Rejection Sampling for $Q'$
+    Then loosen the condition by introducing the acceptance ratio $\alpha$, so that
+    $$
+    P(X_i)Q(X_j|X_i)\alpha(X_j|X_i)=P(X_j)Q(X_i|X_j)\alpha(X_i|X_j) \\
+    where\;
+    \begin{cases}
+    \alpha(X_j|X_i) = P(X_j)Q(X_i|X_j) \\
+    \alpha(X_i|X_j) = P(X_i)Q(X_j|X_i)
+    \end{cases} 
+    \\
+    P(X_i)\underset{Q'(X_j|X_i)}{\underbrace{Q(X_j|X_i)\alpha(X_j|X_i)}}=P(X_j)\underset{Q'(X_i|X_j)}{\underbrace{Q(X_i|X_j)\alpha(X_i|X_j)}}
+    $$
+    Therefore, $Q'(X_j|X_i)=Q(X_j|X_i)P(X_j)Q(X_i|X_j)$, because $P(X_j)Q(X_i|X_j) \in[0,1]$, so $Q'(X_j|X_i)<Q(X_j|X_i)$, then using rejection sampling for $Q'$
 
   - The procedure of MCMC Sampling 
 
-- MH Sampling
+    <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/MCMC%20Sampling%20Algorithm.png" style="zoom: 33%;" />
 
-  - Basic idea: MAMC Sampling is not efficient, increasing acceptance ratio 
+- **Metropolis–Hastings (MH) Sampling**
 
-    $P(X_i)\cdot Q'(X_j|X_i)=P(X_j)\cdot Q'(X_i|X_j)$, both sides times a constant M 
+  - **Basic idea: MCMC Sampling is not efficient, increasing acceptance ratio** 
 
   - Magnify acceptance ratio by $\alpha(X_j|X_i)=min(1,\frac{p(X_j)q(X_i|X_j)}{p(X_i)q(X_j|X_i)})$
+
   - The procedure 
 
-- Gibbs Sampling
+    <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/MH%20Sampling.png" style="zoom: 33%;" />
 
-  - Basic idea: draw samples from conditional distribution to construct markov chain (100% acceptance ratio)
+- **Gibbs Sampling**
 
-    Trick: Sampling along with one direction
+  - **Basic idea: draw samples from conditional distribution to construct markov chain (100% acceptance ratio)**
 
     $p(x_1,y_1)p(y_2|x_1)=p(x_1,y_2)p(y_1|x_1)$
 
-  - The procedure
-  - MH Sampling vs. Gibbs Sampling 
+  - The procedure: Sampling along with one direction
+
+  - MH Sampling V.S. Gibbs Sampling 
     - Both Mh and Gibbs are MCMC
+    
     - Acceptance Ratio: MH < 100%, Gibbs = 100%
-    - MH $\rightarrow$ joint distribution, Gibbs $\rightarrow$ Full conditional distribution
-
-- Latent Dirichlet Allocation (不考)
-
-  LDA is a tpoic modeling with probabilistic graph model
-
-  However, $P(w|\theta,\phi,z,\alpha,\beta)$ is intractable 
-
-  $\underset{z,\theta,\phi,\alpha,\beta}{max}\sum_{i=1}^nlog\,P(w_i|\theta,\phi,\alpha,\beta)$ 
-
-  Solution: $P(z|w)$
-
-  Draw samples from $P(z|w)$
-
-  Using Gibbs Sampling, $P(z_i|z_{\lnot i},w)$
-
-  Get $\theta, \phi$, get word-topic and document-topic
+    
+    - MH doesn’t require to know the full conditionals $p(x_i|x_1^{(t)},\cdots,x_{i-1}^{(t)},x_{t+1}^{(t)},\cdots,x_n^{(t)})$
+    
+      Gibbs need to know the full conditionals 
 
 ## Chapter 5. Data Stream Mining
 
