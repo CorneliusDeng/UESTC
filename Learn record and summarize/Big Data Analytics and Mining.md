@@ -1896,7 +1896,7 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
   - **Feature Selection**: Find the optimal feature subset
 
     - Filter: Information Gain
-    - Wrappers: 
+    - Wrappers
     - Embedded: LASSO
 
   - **Subspace Clustering**
@@ -2078,36 +2078,51 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
 ## Chapter 5. Data Stream Mining
 
-- Sampling on Data Stream
+- A data stream is a **massive sequence of data objects** which have some unique features: **One by One,  Potentially Unbounded, Concept Drift** 
 
-  Reservoir Sampling: draw samples with uniform distribution
+- **Challenge** of Data Stream MIning: Single Pass Handling, Memory Limitation, Low Time Complexity, Concept Drift
 
-  - Data Stream Mining
+- **Concept Drift**: In predictive analytics and machine learning, the concept drift means that **the statistical properties of the target variable**, which the model is trying to predict, **change over time in unforeseen ways**.
 
-  - Challenge of Data Stream MIning
+  **In a word, the probability distribution changes.**
 
-  - Concept Drift
+  Real concept drift: $p(y|x)$ changes
 
-- Concept Drifting Detection 
+  Virtual concept drift: $p(x)$ changes, but not $p(y|x)$
+
+- **Concept Drifting Detection** 
+
   - Distribution-based method
 
-    - drawbacks
+    Basic idea: Monitoring the change of data distributions between two fixed or adaptive windows of data.
 
-    - Admin 
+    **Drawbacks: Hard to determine window size、Learn concept drift slower、Virtual concept drift**
+
+    Adaptive Windowing（ADWIN）: whenever two “large enough” subwindows of W exhibit “distinct enough” averages, one can conclude that the corresponding expected values are different,and the older portion of the window is dropped.
+
   - Error-rate based method
 
-    - drawbacks
-    - DDM
+    Basic idea: Capture concept drift **based on the change of the classification performance**. (i.e. comparing the current classification performance to the average historical error rate with statistical analysis.)
+    
+    **Drawbacks: Sensitive to noise, Hard to deal with gradual concept drift, Depend on learning model itself heavily**
 
-- Data Stream Classification
+- **Data Stream Classification**
 
-  - VFDT (Hoeffding Tree)
+  - VFDT (Very Fast Decision Tree)
+
+    A decision-tree learning system based on the Hoeffding tree algorithm.
+
   - CVFDT (Concept-adaption VFDT)
+
   - SyncStream (Prototype-based Learning)
 
-- Data Stream Clustering
+- **Data Stream Clustering**
 
-  - Two phases: online data abstraction; off clustering
+  - **Two phases**
+
+    - Online Phase: Summarize the data into memory-efficient data structures
+
+    - Offline Phase: Use a clustering algorithm to find the data partition
 
   - Online data abstraction
 
@@ -2119,7 +2134,9 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
     - Additionality: $CF_1+CF_2=(N_1+N_2,\vec{LS_1}+\vec{LS_2},\vec{SS_1}+\vec{SS_2})$
 
-  - Open-set (new class) Data (Open-Set Detection (Novel Class Detection))
+- Learning on Open-set Data
+
+  - Open-set Detection
 
     - Extreme-Value Theory (EVT)
 
@@ -2129,61 +2146,124 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
       - eg. EWC: Determin which parameters are important or not important for previous task
 
-        $L(\theta)=L_{current}(\theta)+\sum_ib_i(\theta_i-\theta_i^b)^2$
 
-        $b_i$ indicate the importance for a given parameter 
+      $L(\theta)=L_{current}(\theta)+\sum_ib_i(\theta_i-\theta_i^b)^2$
 
-        $b_i$ is determined by the 2-nd derivative
+      $b_i$ indicate the importance for a given parameter 
 
-    - Class incremental learning
+      $b_i$ is determined by the 2-nd derivative
 
-      Basic idea: to learn both old and new engaging classes 
+  - Incremental Learning
+
+    Basic idea: to learn both old and new engaging classes 
+
 
 ## Chapter 6. Graph Mining
 
-- Key Node identification
-  - Centrality (degree, betweenness, closeness)
+- **Key Node Identification Strategy** 
+  
+  - **Centrality (degree, betweenness, closeness)**
+    - Degree Centrality: the size of connections is used to measure node importance.
+    - Betweenness Centrality: the betweenness centrality for each vertex is the number of these shortest paths that pass through the vertex.
+    - Closeness Centrality: to calculate as the sum of the length of the  shortest paths  between the node and all other nodes in the graph.
+  - **K-shell decomposition** 
+    - Advantage: Low computational complexity. Reveal the hierarchy structure clearly.
+    - Disadvantage: Can’t be used in quite a lot networks, such as the star network, tree and so on. Too coarse, some times is inferior to degree measure.
+  - **PageRank**
+    - If a page is linked with many high-cited pages, then it will gain high PageRank score!
+  
+- **Community Detection**
 
-  - K-shell decomposition 
+  How can we find intrinsic community structure in large-scale networks?
 
-  - PageRank
-- Community Detection
-  - Minimum Cut
-  - Ratio/Normalized Cut $\rightarrow$ balanced partition; if relaxization $\rightarrow$ spectral clustering 
-  - Modularity
-  - Attractor (distance dynamic)
-- Graph Embedding
-  - Basic idea: low-dimensional vectors 
+  - **Minimum Cut: find a graph partition such that the number of edges between the two sets is minimized**
+
+    Minimum cut often returns an imbalanced partition, with one set being a singleton
+
+  - **Ratio Cut & Normalized Cut** $\rightarrow$ balanced partition; if relaxization $\rightarrow$ spectral clustering 
+
+    <img src="https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Big%20Data%20Analytics%20and%20Mining/Ratio%20Cut%20%26%20Normalized%20Cut.png" style="zoom:50%;" />
+
+  - **Modularity Maximization**
+
+    Modularity measures the strength of a community partition by taking into account the degree distribution
+
+    Given a network with m edges, the expected number of edges between two nodes with degrees $d_i$ and $d_j$  is $\frac{d_id_j}{2m}$
+
+  - **Distance Dynamic**
+
+    Basic idea: Simulate the change of edge distances
+
+- **Graph Embedding**
+
+  - The goal of graph embeddings is to **map each node into a low-dimensional space.** 
   - DeepWalk vs. word2vec
   - Node2vec: try to generate a better path by considering the community structure 
 
 ## Chapter 7. Hadoop / Spark
 
 - What's Hadoop
-- Design principles of Hadoop
+
+  Hadoop is a **software framework for distributed processing of large datasets** across large clusters of computers
+
+- Design **principles** of Hadoop
+
+  - Automatic parallelization & distribution
+
+    Hidden from the end-user
+
+  - Fault tolerance and automatic recovery
+
+    Nodes/tasks will fail and will recover automatically
+
+  - Clean and simple programming abstraction
+
+    Users only provide two functions “map” and “reduce”
 
 - Ecosystem of Hadoop
-- HDFS(Storing)
-  - Name Node (meta information)
 
-  - Data Node (actual data)
+  - Distributed file system (HDFS)
+  - Execution engine (MapReduce)
+
+- **HDFS(Storing)**
+
+  - NameNode (Maintains metadata info about files)
+
+  - DataNodes (actual data)
 
   - Fault Tolerance 
     - Replication (3)
     - Heartbeat
-    - Standby name node
+    - Standby NameNode
 
-- MapReduce
+- **MapReduce**
+
   - Map function (what will do in each split block)
-  - Reduce function ((Aggregate data))
-  - How to write Mae/reduce function?
+  - Reduce function (Aggregate data)
+  - How to write map/reduce function?
+
 - Spark
   - What's sprak
+
+    Unlike the various specialized systems, Spark’s goal was to **generalize MapReduce** to support new apps within same engine. This allows for an approach which is more efficient for the engine, and much simpler for the end users.
+
+    **Spark is a fast and general-purpose cluster computing system**
+
   - Memory-based computation
-    - RDD
-    - Transform/Action
+    - resilient distributed dataset (RDD): represents a **read-only collection of objects** partitioned across a set of machines that can be rebuilt if a partition is lost. 
+    - Transform/Action: create a new dataset from an existing one
+    
   - Fault Tolerance (DAG)
-- What's difference between Mapreduce and Spark
+
+- **Mapreduce V.S. Spark**
+
+  - MapReduce
+    - Great at one-pass computation, but inefficient for multi-pass algorithms.
+    - No efficient primitives for data sharing
+  - Spark
+    - Extends a programming language with a distributed collection data-structure（RDD）
+    - Clean APIs in Java, Scala, Python, R
+  - Same engine performs data extraction, model training and interactive queries 
 
 
 
