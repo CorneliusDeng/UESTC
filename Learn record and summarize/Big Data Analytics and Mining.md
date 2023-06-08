@@ -5,7 +5,7 @@
 - The four V's of big data
 
   - Volume: scale of data
-  - Variety: different forms of **data**
+  - Variety: different forms of data
   - Velocity: analysis of streaming data
   - Veracity: uncertainty of data
 
@@ -1760,7 +1760,7 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
   Semi-supervised learning: can be regarded as the **unsupervised learning with some constraints on labels**, or the supervised learning with additional information on the distribution of data. 
 
-- Loss function 
+- Loss function: To measure the predicted results, we introduce the loss function $L(Y,F(X|θ))$, which a non-negative function
 
 - Generalization: $L(M)=\sum_{i=1}^n(Y_i-Y_i^*)^2+\lambda \Phi(M)$
 
@@ -1769,7 +1769,7 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
   - Reason
   - **How to avoid overfitting?**
     - Increasing samples
-    - Remove outlines
+    - Remove outliers
     - Train-Validation-Test
     - Decreasing the model complexity 
     - Regulization ($l_1$ norm, $l_2$ norm)
@@ -1796,11 +1796,13 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
   
     - How to find the best split?
   
-      Information Gain: $IG(x) = H(Y) -H(Y|X)$
+      $\text{Information Gain(A)} =Entropy(S)-\displaystyle\sum_{v\in Values(A)}\frac{|S_v|}{|S|}·Entropy(S_v) $
   
+      $Entropy=\displaystyle\sum_{d\in Decisions}-p(d)log((p(d)))$
+    
     - Advantages 
-  
-  
+    
+      Simplicity, Interpretable rules, Efficiency
   
     - **Naive Bayes**
   
@@ -1851,7 +1853,7 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
     
     - **Bagging -> Random Forest**
     
-      combines multiple models by training them independently o**n different subsets of the training data**, and then a**ggregating their predictions through majority voting or averaging**.
+      combines multiple models by training them independently o**n different subsets of the training data**, and then **aggregating their predictions through majority voting or averaging**.
     
     - **Booting -> Adaboost / XGBoost**
     
@@ -1865,19 +1867,21 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
   - **K-Means and its drawbacks**
 
-    The core idea of K-means is to partition data points into K clusters by minimizing the within-cluster sum of squared distances to their respective cluster centroids.
+    **The core idea of K-means is to partition data points into K clusters by minimizing the within-cluster sum of squared distances to their respective cluster centroids.**
 
-    A good clustering with smaller K can have a lower SSE than a poor clustering with higher K
+    A good clustering with smaller K can have a lower Sum of Squared Error (SSE) than a poor clustering with higher K
 
-    Drawbacks of K-means include sensitivity to the initial cluster centers, the need to specify the number of clusters in advance, sensitivity to outliers, restriction to convex clusters, inability to handle nonlinear data, and assumption of equal feature weights.
+    **Drawbacks** of K-means include **sensitivity to the initial cluster centers**, **the need to specify the number of clusters in advance**, **sensitivity to outliers**, restriction to convex clusters, **inability to handle nonlinear data**, and assumption of equal feature weights.
 
   - Hierarchical Clustering 
 
+    Produces a set of nested clusters organized as a hierarchical tree
+
   - **Density-based Clustering: DBSCAN (advantages and disadvantages)**
 
-    Advantages: Robust to Noise. Can handle clusters of different shapes and sizes
+    **Advantages: Robust to Noise. Can handle clusters of different shapes and sizes**
 
-    Disadvantages: sensitive to varying densities and high-dimensional data
+    **Disadvantages: sensitive to varying densities and high-dimensional data**
 
 - **Subspace Learning**
 
@@ -1891,9 +1895,9 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
     - Linear: Principal component analysis (PCA), Multidimensional scaling (MDS)
   
-    - Non-Linear: Locally linear embedding (LLE), Laplacian eigenmaps (LEM), Isomap, NSE
+    - Non-Linear: Locally linear embedding (LLE), Laplacian eigenmaps (LEM), Isomap, SNE
 
-  - **Feature Selection**: Find the optimal feature subset
+  - **Feature Selection**: Find the optimal feature subset. Feature Selection can significantly improve a learning algorithm’s performance
 
     - Filter: Information Gain
     - Wrappers
@@ -1907,18 +1911,18 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
   
     - Self-expressive Representation
   
-      SSC: min$||Z||_1$, s.t. X=XZ, diag(Z)=0
+      Sparse Subspace Slustering (SSC): min$||Z||_1$, s.t. X=XZ, diag(Z)=0
   
-      LRR: min$||Z||_*$, s.t. X=XZ
+      Low-Rank Representation (LRR): min$||Z||_*$, s.t. X=XZ
   
 
 ## Chapter 3. Hashing
 
 - **Why we need Hashing? The role of Hashing.**
 
-  Challenge in big data applications: Curse of dimensionality、Storage cost、Query speed
+  Challenge in big data applications: **Curse of dimensionality、Storage cost、Query speed**
 
-  The purpose of hashing is to efficiently map data of arbitrary size to fixed-size values, known as hash codes or hash values.
+  The purpose of hashing is to **efficiently map data of arbitrary size to fixed-size values**, known as hash codes or hash values.
 
 - **Finding similar items**
 
@@ -1944,7 +1948,7 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
       Optional: check that columns with similar signatures are really similar.
 
-    - Key idea: “hash” each column C  to a small signature Sig (C)
+    - **Key idea: “hash” each column C  to a small signature Sig (C)**
 
       Define “hash” function $h (C )$ = the number of the first (in the permuted order) row in which column C  has 1.
 
@@ -1956,7 +1960,7 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
   - **Locality-Sensitive Hashing (LSH) focus on pairs of signatures likely to be similar.**
 
-    - Basic idea: hash columns of signature matrix M  several times, only similar columns are likely to hash to the same bucket, candidate pairs are those that hash at least once to the same bucket.
+    - **Basic idea: hash columns of signature matrix M  several times, only similar columns are likely to hash to the same bucket, candidate pairs are those that hash at least once to the same bucket.**
 
     - Trick: divide signature rows into bands. Each hash function based on one band.
 
@@ -2026,7 +2030,7 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
     Markov properties: $Pr(X_{n+1}=x|X_1=x_1,X_2=x_2,\cdots,X_n=x_n)=Pr(X_{n+1}=x|X_n=x_n)$
 
-    That means given the present state, the future and past states are independent
+    That means **given the present state, the future and past states are independent**
 
   - **Detailed Balance Condition(细致平衡条件):  $P(X_i)\cdot Q(X_j|X_i)=P(X_j)\cdot Q(X_i|X_j)$**
 
@@ -2068,7 +2072,7 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
   - The procedure: Sampling along with one direction
 
   - MH Sampling V.S. Gibbs Sampling 
-    - Both Mh and Gibbs are MCMC
+    - Both MH and Gibbs are MCMC
     
     - Acceptance Ratio: MH < 100%, Gibbs = 100%
     
@@ -2132,6 +2136,8 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
 
       $CF=(N,\vec{LS},\vec{SS})$
 
+      $N$ is data points, $\vec{LS}=\sum_{i=1}^N\vec{X_i}$,  $\vec{SS}=\sum_{i=1}^N\vec{X_i}^2$ 
+    
     - Additionality: $CF_1+CF_2=(N_1+N_2,\vec{LS_1}+\vec{LS_2},\vec{SS_1}+\vec{SS_2})$
 
 - Learning on Open-set Data
@@ -2145,16 +2151,15 @@ The main abstraction in Spark is that of a resilient distributed dataset (RDD), 
       - Basic idea: to constrain the parameter
 
       - eg. EWC: Determin which parameters are important or not important for previous task
-
-
-      $L(\theta)=L_{current}(\theta)+\sum_ib_i(\theta_i-\theta_i^b)^2$
-
-      $b_i$ indicate the importance for a given parameter 
-
-      $b_i$ is determined by the 2-nd derivative
-
+  
+        $L(\theta)=L_{current}(\theta)+\lambda\sum_ib_i(\theta_i-\theta_i^b)^2$
+  
+          $b_i$ indicate the importance for a given parameter 
+  
+          $b_i$ is determined by the 2-nd derivative
+  
   - Incremental Learning
-
+  
     Basic idea: to learn both old and new engaging classes 
 
 
