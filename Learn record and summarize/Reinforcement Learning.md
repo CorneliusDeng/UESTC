@@ -724,6 +724,96 @@ DQN 算法最终更新的目标是让 $Q_w(s,a)$ 逼近 $r+ \gamma\;\underset{a'
 $$
 r+\gamma Q_{w^-}(s',\underset{a'}{arg\;max\;}Q_w(s',a'))
 $$
+显然，DQN 与 Double DQN 的差别只是在于计算状态 $s'$ 下 $Q$ 值时如何选取动作：
 
+- DQN 的优化目标可以写为 $r+\gamma Q_{w^-}(s',\underset{a'}{arg\;max\;}Q_{w^-}(s',a'))$，动作的选取依靠目标网络 $Q_{w^-}$
+- Double DQN 的优化目标为 $r+\gamma Q_{w^-}(s',\underset{a'}{arg\;max\;}Q_w(s',a'))$ ，动作的选取依靠训练网络 $Q_w$
+
+所以 Double DQN 的代码实现可以直接在 DQN 的基础上进行，无须做过多修改。
+
+**Code is available at [Double DQN](https://github.com/CorneliusDeng/UESTC/blob/main/Dive%20Into%20RL/Double%20Deep%20Q%20network.ipynb)**
+
+实验证明，与普通的 DQN 相比，Double DQN 比较少出现 $Q$ 值大于 0 的情况，说明 $Q$ 值过高估计的问题得到了很大缓解。
 
 ## Dueling DQN
+
+Dueling DQN 是 DQN 另一种的改进算法，它在传统 DQN 的基础上只进行了微小的改动，但却能大幅提升 DQN 的表现。在强化学习中，我们将状态动作价值函数 $Q$ 减去状态价值函数 $V$ 的结果定义为优势函数 $A$，即 $A(s,a)=Q(s,a)-V(s)$。
+
+在同一个状态下，所有动作的优势值之和为 0，因为所有动作的动作价值的期望就是这个状态的状态价值。据此，在 Dueling DQN 中，Q 网络被建模为：
+$$
+Q_{\eta,\alpha,\beta}(s,a)=V_{\eta,\alpha}(s)+A_{\eta,\beta}(s,a)
+$$
+其中，$V_{\eta,\alpha}(s)$ 为状态价值函数，而 $A_{\eta,\beta}(s,a)$ 则为该状态下采取不同动作的优势函数，表示采取不同动作的差异性；$\eta$ 是状态价值函数和优势函数共享的网络参数，一般用在神经网络中，用来提取特征的前几层；而 $\alpha,\beta$ 分别为状态价值函数和优势函数的参数。在这样的模型下，我们不再让神经网络直接输出 $Q$ 值，而是训练神经网络的最后几层的两个分支，分别输出状态价值函数和优势函数，再求和得到 $Q$ 值。Dueling DQN 的网络结构如下图所示：
+
+<img src="https://hrl.boyuai.com/static/640.455bc383.png" style="zoom: 67%;" />
+
+**将状态价值函数和优势函数分别建模的好处在于：某些情境下智能体只会关注状态的价值，而并不关心不同动作导致的差异，此时将二者分开建模能够使智能体更好地处理与动作关联较小的状态。**
+
+对于 Dueling DQN 中的公式 $Q_{\eta,\alpha,\beta}(s,a)=V_{\eta,\alpha}(s)+A_{\eta,\beta}(s,a)$ ，它存在对于 $V$ 值和 $A$ 值建模不唯一性的问题。例如，对于同样的 $Q$ 值，如果将 $V$ 值加上任意大小的常数 $C$ ，再将所有 $A$ 值减去 $C$，则得到的 $Q$ 值依然不变，这就导致了训练的不稳定性。为了解决这一问题，Dueling DQN 强制最优动作的优势函数的实际输出为 0，即：
+$$
+Q_{\eta,\alpha,\beta}(s,a)=V_{\eta,\alpha}(s)+A_{\eta,\beta}(s,a)-\underset{a'}{max}\;A_{\eta,\beta}(s,a')
+$$
+此时 $V(s)=\underset{a}{max}\;A_{\eta,\beta}(s,a)$ ，可以确保 $V$​ 值建模的唯一性。在实现过程中，我们还可以用平均代替最大化操作，即：
+$$
+Q_{\eta,\alpha,\beta}(s,a)=V_{\eta,\alpha}(s)+A_{\eta,\beta}(s,a)-\frac{1}{|A|}\sum_{a'}A_{\eta,\beta}(s,a')
+$$
+此时 $V(s)=\frac{1}{|A|}\sum_{a'}A_{\eta,\beta}(s,a')$ 
+
+Dueling DQN 会比 DQN 好的部分原因在于 Dueling DQN 能更高效学习状态价值函数。每一次更新时，函数 $V$ 都会被更新，这也会影响到其他动作的 $Q$ 值。而传统的 DQN 只会更新某个动作的 $Q$ 值，其他动作的 $Q$ 值就不会更新。因此，Dueling DQN 能够更加频繁、准确地学习状态价值函数。
+
+**Code is available at [Dueling DQN](https://github.com/CorneliusDeng/UESTC/blob/main/Dive%20Into%20RL/Double%20Deep%20Q%20network.ipynb)**
+
+实验证明，相比于传统的 DQN，Dueling DQN 在多个动作选择下的学习更加稳定，得到的回报最大值也更大。由 Dueling DQN 的原理可知，随着动作空间的增大，Dueling DQN 相比于 DQN 的优势更为明显。之前我们在环境中设置的离散动作数为 11，我们可以增加离散动作数（例如 15、25 等），继续进行对比实验。
+
+
+
+# 策略梯度算法
+
+Q-learning、DQN 及 DQN 改进算法都是**基于价值**（value-based）的方法，其中 Q-learning 是处理有限状态的算法，而 DQN 可以用来解决连续状态的问题。在强化学习中，除了基于值函数的方法，还有一支非常经典的方法，那就是**基于策略**（policy-based）的方法。对比两者，基于值函数的方法主要是学习值函数，然后根据值函数导出一个策略，学习过程中并不存在一个显式的策略；而基于策略的方法则是直接显式地学习一个目标策略。策略梯度是基于策略的方法的基础。
+
+## 策略梯度
+
+基于策略的方法首先需要将策略参数化。假设目标策略 $\pi_{\theta}$ 是一个随机性策略，并且处处可微，其中 $\theta$ 是对应的参数。我们可以用一个线性模型或者神经网络模型来为这样一个策略函数建模，输入某个状态，然后输出一个动作的概率分布。我们的目标是要寻找一个最优策略并最大化这个策略在环境中的期望回报。我们将策略学习的目标函数定义为
+$$
+J(\theta)=E_{s_0}[V^{\pi_{\theta}}(s_0)]
+$$
+其中，$s_0$ 表示初始状态。现在有了目标函数，我们将目标函数对策略 $\theta$ 求导，得到导数后，就可以用梯度上升方法来最大化这个目标函数，从而得到最优策略。
+
+$v^{\pi}$ 表示策略 $\pi$ 下的状态访问分布。然后我们对目标函数求梯度，可以得到如下式子，
+$$
+\begin{align}
+\nabla_{\theta} J(\theta) 
+& \propto \sum_{s\in S}v^{\pi_{\theta}}(s)\sum_{a\in A}Q^{\pi_{\theta}}(s,a)\nabla_{\theta}\pi_{\theta}(a|s) \\
+& = \sum_{s\in S}v^{\pi_{\theta}}(s)\sum_{a\in A}\pi_{\theta}(a|s)Q^{\pi_{\theta}}(s,a)\frac{\nabla_{\theta}\pi_{\theta}(a|s)}{\pi_{\theta}(a|s)} \\
+& = E_{\pi_{\theta}}[Q^{\pi_{\theta}}(s,a)\nabla_{\theta}log\;\pi_{\theta}(a|s)]
+\end{align}
+$$
+这个梯度可以用来更新策略。需要注意的是，因为上式中期望 $E$ 的下标是 $\pi_{\theta}$ ，所以策略梯度算法为在线策略（on-policy）算法，即必须使用当前策略 $\pi_{\theta}$ 采样得到的数据来计算梯度。直观理解一下策略梯度这个公式，可以发现在每一个状态下，梯度的修改是让策略更多地去采样到带来较高 $Q$ 值的动作，更少地去采样到带来较低值的动作。
+
+在计算策略梯度的公式中，我们需要用到 $Q^{\pi_{\theta}}(s,a)$ ，可以用多种方式对它进行估计。
+
+REINFORCE 算法便是采用了蒙特卡洛方法来估计 $Q^{\pi_{\theta}}(s,a)$ ，对于一个有限步数的环境来说，REINFORCE 算法中的策略梯度为：
+$$
+\nabla_{\theta} J(\theta) = 
+E_{\pi_{\theta}}
+[\sum_{t=0}^T(\sum_{t'=t}^T\gamma^{t'-t}r_{t'})
+\nabla_{\theta}log\;\pi_{\theta}(a_t|s_t)
+]
+$$
+其中，$T$ 是和环境交互的最大步数。
+
+## REINFORCE
+
+REINFORCE 算法的具体算法流程如下：
+
+- 初始化策略参数 $\theta$
+- for 序列 $e=1 \rightarrow E$ do :
+  -  用当前策略 $\pi_{\theta}$ 采样轨迹 $\{s_1,a_1,r_1,s_2,a_2,r_2,\cdots,s_T,a_T,r_T\}$
+  -  计算当前轨迹每个时刻 $t$ 往后的回报 $\sum_{t'=t}^T\gamma^{t'-t}r_{t'}$，记为 $\psi_{t}$
+  -  对 $\theta$ 进行更新，$\theta=\theta+\alpha\sum_{t=0}^T\psi_{t}
+    \nabla_{\theta}log\;\pi_{\theta}(a_t|s_t)$
+- end for
+
+**Code is available at [REINFORCE](https://github.com/CorneliusDeng/UESTC/blob/main/Dive%20Into%20RL/Double%20Deep%20Q%20network.ipynb)**
+
+实验证明，随着收集到的轨迹越来越多，REINFORCE 算法有效地学习到了最优策略。不过，相比于前面的 DQN 算法，REINFORCE 算法使用了更多的序列，这是因为 REINFORCE 算法是一个在线策略算法，之前收集到的轨迹数据不会被再次利用。此外，REINFORCE 算法的性能也有一定程度的波动，这主要是因为每条采样轨迹的回报值波动比较大，这也是 REINFORCE 算法主要的不足。
