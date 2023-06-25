@@ -874,3 +874,223 @@ Actor-Critic 算法的具体流程如下：
 **Code is available at [Actor-Critic](https://github.com/CorneliusDeng/UESTC/blob/main/Dive%20Into%20RL/Actor-Critic.ipynb)**
 
 实验证明，Actor-Critic 算法很快便能收敛到最优策略，并且训练过程非常稳定，抖动情况相比 REINFORCE 算法有了明显的改进，这说明价值函数的引入减小了方差。
+
+
+
+# TRPO 算法
+
+策略梯度算法和 Actor-Critic 算法这两种基于策略的方法虽然简单、直观，但在实际应用过程中会遇到训练不稳定的情况。这样的算法有一个明显的缺点：当策略网络是深度模型时，沿着策略梯度更新参数，很有可能由于步长太长，策略突然显著变差，进而影响训练效果。
+
+针对以上问题，我们考虑在更新时找到一块**信任区域**（trust region），在这个区域上更新策略时能够得到某种策略性能的安全性保证，这就是**信任区域策略优化**（trust region policy optimization，TRPO）算法的主要思想。
+
+## 策略目标
+
+假设当前策略为 $\pi_\theta$ ，参数为 $\theta$ 。我们考虑如何借助当前的 $\theta$ 找到一个更优的参数 $\theta'$，使得 $J(\theta')\geq J(\theta)$。具体来说，由于初始状态 $s_0$ 的分布和策略无关，因此上述策 $\pi_\theta$ 下的优化目标 $J(\theta)$ 可以写成在新策略 $\pi_{\theta'}$ 的期望形式：
+$$
+\begin{align}
+J(\theta) 
+& = E_{s_0}[V^{\pi_\theta}(s_0)] \\
+& = E_{\pi_{\theta'}} [\sum_{t=0}^{\infty}\gamma^tV^{\pi_\theta}(s_t)-\sum_{t=1}^{\infty}\gamma^tV^{\pi_\theta}(s_t)] \\
+& = -E_{\pi_{\theta'}} [\sum_{t=0}^{\infty}\gamma^t(\gamma V^{\pi_\theta}(s_{t+1})-V^{\pi_\theta}(s_t))]
+\end{align}
+$$
+（......）
+
+TRPO 算法属于在线策略学习方法，每次策略训练仅使用上一轮策略采样的数据，是基于策略的深度强化学习算法中十分有代表性的工作之一。直觉性地理解，TRPO 给出的观点是：由于策略的改变导致数据分布的改变，这大大影响深度模型实现的策略网络的学习效果，所以通过划定一个可信任的策略学习区域，保证策略学习的稳定性和有效性。
+
+# PPO 算法
+
+TRPO 算法在很多场景上的应用都很成功，但是我们也发现它的计算过程非常复杂，每一步更新的运算量非常大。于是，TRPO 算法的改进版——**近端策略优化（proximal policy optimization，PPO）**算法被提出，PPO 基于 TRPO 的思想，但是其算法实现更加简单。并且大量的实验结果表明，与 TRPO 相比，PPO 能学习得一样好（甚至更快），这使得 PPO 成为非常流行的强化学习算法。如果我们想要尝试在一个新的环境中使用强化学习算法，那么 PPO 就属于可以首先尝试的算法。
+
+TRPO 的优化目标：
+$$
+\underset{\theta}{max}\;E_{s\sim v^{\pi_{\theta_k}}} E_{a\sim \pi_{\theta_k}(\cdot|s)}[\frac{\pi_\theta(a|s)}{\pi_{\theta_k}(a|s)}A^{\pi_{\theta_k}}(s,a)] \\
+s.t. \quad E_{s\sim v^{\pi_{\theta_k}}}[D_{KL}(\pi_{\theta_k}(\cdot|s),\pi_{\theta}(\cdot|s))] \leq \delta
+$$
+TRPO 使用泰勒展开近似、共轭梯度、线性搜索等方法直接求解。PPO 的优化目标与 TRPO 相同，但 PPO 用了一些相对简单的方法来求解。具体来说，PPO 有两种形式，一是 PPO-惩罚，二是 PPO-截断。
+
+PPO 是 TRPO 的一种改进算法，它在实现上简化了 TRPO 中的复杂计算，并且它在实验中的性能大多数情况下会比 TRPO 更好，因此目前常被用作一种常用的基准算法。需要注意的是，TRPO 和 PPO 都属于在线策略学习算法，即使优化目标中包含重要性采样的过程，但其只是用到了上一轮策略的数据，而不是过去所有策略的数据。
+
+## PPO-惩罚
+
+PPO-惩罚（PPO-Penalty）用拉格朗日乘数法直接将 KL 散度的限制放进了目标函数中，这就变成了一个无约束的优化问题，在迭代的过程中不断更新 KL 散度前的系数。即：
+$$
+\underset{\theta}{arg\;max\;}E_{s\sim v^{\pi_{\theta_k}}} E_{a\sim \pi_{\theta_k}(\cdot|s)}
+[\frac{\pi_\theta(a|s)}{\pi_{\theta_k}(a|s)}A^{\pi_{\theta_k}}(s,a)
+-\beta D_{KL}[(\pi_{\theta_k}(\cdot|s),\pi_{\theta}(\cdot|s))]]
+$$
+令 $d_k=D^{v^{\pi_{\theta_k}}}_{KL}(\pi_{\theta_k},\pi_{\theta})$， $\beta$ 的更新规则如下：
+
+- 如果 $d_k < \frac{\delta}{1.5}$，那么 $\beta_{k+1}=\frac{\beta_k}{2}$
+- 如果 $d_k > \frac{\delta}{1.5}$，那么 $\beta_{k+1}=\beta_k \times 2$
+- 否则 $\beta_{k+1}=\beta_k$
+
+其中，$\delta$ 是事先设定的一个超参数，用于限制学习策略和之前一轮策略的差距
+
+## PPO-截断
+
+PPO 的另一种形式 PPO-截断（PPO-Clip）更加直接，它在目标函数中进行限制，以保证新的参数和旧的参数的差距不会太大，即：
+$$
+\underset{\theta}{arg\;max\;}E_{s\sim v^{\pi_{\theta_k}}} E_{a\sim \pi_{\theta_k}(\cdot|s)}
+[min(
+\frac{\pi_\theta(a|s)}{\pi_{\theta_k}(a|s)}A^{\pi_{\theta_k}}(s,a)
+,clip(\frac{\pi_\theta(a|s)}{\pi_{\theta_k}(a|s)},1-\epsilon,1+\epsilon
+)A^{\pi_{\theta_k}}(s,a)
+)]
+$$
+其中 $clip(x,l,r):=max(min(x,r),l)$，即把 $x$ 限制在 $[l,r]$内。上式中 $\epsilon$ 是一个超参数，表示进行截断（clip）的范围
+
+如果 $A^{\pi_{\theta_k}}(s,a) > 0$，说明这个动作的价值高于平均，最大化这个式子会增大 $\frac{\pi_\theta(a|s)}{\pi_{\theta_k}(a|s)}$，但不会让其超过 $1+\epsilon$。反之，如果 $A^{\pi_{\theta_k}}(s,a) < 0$ ，最大化这个式子会减小 $\frac{\pi_\theta(a|s)}{\pi_{\theta_k}(a|s)}$，但不会让其超过 $1-\epsilon$。如下所示。
+
+<img src="https://hrl.boyuai.com/static/640.1ddeb598.png" style="zoom:67%;" />
+
+**Code is available at [PPO](https://github.com/CorneliusDeng/UESTC/blob/main/Dive%20Into%20RL/PPO.ipynb)**
+
+大量实验表明，PPO-截断总是比 PPO-惩罚表现得更好。
+
+
+
+# DDPG 算法
+
+基于策略梯度的算法 REINFORCE、Actor-Critic 以及两个改进算法——TRPO 和 PPO，它们都是在线策略算法，这意味着它们的**样本效率**（sample efficiency）比较低。
+
+DQN 算法直接估计最优函数 Q，可以做到离线策略学习，但是它只能处理动作空间有限的环境，这是因为它需要从所有动作中挑选一个 $Q$ 值最大的动作。如果动作个数是无限的，虽然我们可以将动作空间离散化，但这比较粗糙，无法精细控制。
+
+**深度确定性策略梯度**（deep deterministic policy gradient，DDPG）算法就是处理动作空间无限的环境并且使用的是离线策略算法，它构造一个确定性策略，用梯度上升的方法来最大化 $Q$ 值。
+
+DDPG 也属于一种 Actor-Critic 算法。REINFORCE、TRPO 和 PPO 学习随机性策略，而 DDPG 则学习一个确定性策略。
+
+深度确定性策略梯度算法（DDPG），它是面向连续动作空间的深度确定性策略训练的典型算法。相比于它的先期工作，即确定性梯度算法（DPG），DDPG 加入了目标网络和软更新的方法，这对深度模型构建的价值网络和策略网络的稳定学习起到了关键的作用。DDPG 算法也被引入了多智能体强化学习领域，催生了 MADDPG 算法。
+
+随机性策略可以表示为 $a\sim \pi_\theta(\cdot|s)$；而如果策略是确定性的，则可以记为 $a=\mu_\theta(s)$​。与策略梯度定理类似，可以推导出**确定性策略梯度定理**（deterministic policy gradient theorem）：
+$$
+\nabla_\theta J(\pi_\theta)=E_{s\sim v^{\pi_\beta}}[\nabla_\theta \mu_\theta(s)\nabla_a Q_w^\mu(s,a)|_{a=\mu_{\theta}(s)}]
+$$
+其中，$\pi_\beta$ 是用来收集数据的行为策略。我们可以这样理解这个定理：假设现在已经有函数 $Q$ ，给定一个状态 $s$，但由于现在动作空间是无限的，无法通过遍历所有动作来得到 $Q$ 值最大的动作，因此我们想用策略 $\mu$ 找到使 $Q(s,a)$ 值最大的动作 $a$，即 $\mu(s)=\underset{a}{arg\;max\;}Q(s,a)$。此时，$Q$ 就是 Critic，$\mu$ 就是 Actor，这是一个 Actor-Critic 的框架
+
+![](https://hrl.boyuai.com/static/640.a3d586c4.png)
+
+要想得到 $\mu$，首先用 $Q$ 对 $\mu_\theta$ 求导 $\nabla_\theta Q(s,\mu_\theta(s))$，其中会用到梯度的链式法则，先对 $a$ 求导，再对 $\theta$ 求导。然后通过梯度上升的方法来最大化函数 $Q$，得到 $Q$ 值最大的动作
+
+DDPG 要用到4个神经网络，其中 Actor 和 Critic 各用一个网络，此外它们都各自有一个目标网络。DDPG 中 Actor 也需要目标网络因为目标网络也会被用来计算目标 $Q$  值。DDPG 中目标网络的更新与 DQN 中略有不同：在 DQN 中，每隔一段时间将 $Q$  网络直接复制给目标 $Q$  网络；而在 DDPG 中，目标 $Q$  网络的更新采取的是一种软更新的方式，即让目标 $Q$  网络缓慢更新，逐渐接近 $Q$  网络，其公式为：$w^- \leftarrow\tau w+(1-\tau)w^-$。通常 $\tau$ 是一个比较小的数，当 $\tau = 1$ 时，就和 DQN 的更新方式一致了。而目标 $\mu$ 网络也使用这种软更新的方式。
+
+另外，由于函数 $Q$ 存在 $Q$ 值过高估计的问题，DDPG 采用了 Double DQN 中的技术来更新 $Q$ 网络。但是，由于 DDPG 采用的是确定性策略，它本身的探索仍然十分有限。 DQN 算法的探索主要由 $\epsilon$-贪婪策略的行为策略产生。同样作为一种离线策略的算法，DDPG 在行为策略上引入一个随机噪声 $N$ 来进行探索。
+
+DDPG 的算法流程如下:
+
+- 随机噪声可以用 $N$ 来表示，用随机的网络参数 $w$ 和 $\theta$ 分别初始化 Critic 网络 $Q_w(s,a)$ 和 Actor 网络 $\mu_\theta(s)$
+- 复制相同的参数 $w^- \leftarrow w$ 和 $\theta^- \leftarrow \theta$，分别初始化目标网络 $Q_{w^-}$ 和 $\mu_{\theta^-}$
+- 初始化经验回放池 $R$
+- for 序列 $e=1 \to E$ do :
+  - 初始化随机过程 $N$ 用于动作探索
+  - 获取环境初始状态 $s_1$ 
+  - for 时间步 $t=1\to T$ do :
+    - 根据当前策略和噪声选择动作 $a_t=\mu_\theta(s_t)+N$
+    - 执行动作 $a_t$，获得奖励 $r_t$，环境状态变为 $s_{t+1}$
+    - 将 $(s_t,a_t,r_t,s_{t+1})$ 存储进回放池 $R$
+    - 从 $R$ 中采样 $N$ 个元组 $\{(s_i,a_i,r_i,s_{i+1})\}_{i=1,\cdots,N}$
+    - 对每个元组，用目标网络计算 $y_i=r_i+\gamma Q_{w^-}(s_{i+1},\mu_{\theta^-}(s_{i+1}))$
+    - 最小化目标损失 $L=\frac{1}{N}\sum_{i=1}^N(y_i-Q_w(s_i,a_i))^2$，以此更新当前 Critic 网络
+    - 计算采样的策略梯度，以此更新当前 Actor 网络：$\nabla_\theta J=\frac{1}{N}\sum_{i=1}^N[\nabla_\theta \mu_\theta(s_i)\nabla_a Q_w(s_i,a)|_{a=\mu_{\theta}(s_i)}]$
+    - 更新目标网络：$w^- \leftarrow \tau w+(1-\tau)w^- \leftarrow \tau \theta +(1-\tau)\theta^-$
+  - end for
+- end for
+
+在 DDPG 的原始论文中，添加的噪声符合奥恩斯坦-乌伦贝克（Ornstein-Uhlenbeck，OU）随机过程：
+$$
+\Delta x_t=\theta(\mu-x_{t-1})+\sigma W
+$$
+其中，$\mu$ 是均值，$W$ 是符合布朗运动的随机噪声，$\theta$ 和 $\sigma$ 是比例参数。可以看出，当 $x(t-1)$ 偏离均值时，$x_t$ 的值会向均值靠拢。OU 随机过程的特点是在均值附近做出线性负反馈，并有额外的干扰项。OU 随机过程是与时间相关的，适用于有惯性的系统。在 DDPG 的实践中，不少地方仅使用正态分布的噪声。
+
+**Code is available at [DDPG](https://github.com/CorneliusDeng/UESTC/blob/main/Dive%20Into%20RL/DDPG.ipynb)**
+
+# SAC 算法
+
+在线策略算法的采样效率比较低，我们通常更倾向于使用离线策略算法。然而，虽然 DDPG 是离线策略算法，但是它的训练非常不稳定，收敛性较差，对超参数比较敏感，也难以适应不同的复杂环境。2018 年，一个更加稳定的离线策略算法 **Soft Actor-Critic（SAC）**被提出。SAC 的前身是 Soft Q-learning，它们都属于**最大熵强化学习**的范畴。Soft Q-learning 不存在一个显式的策略函数，而是使用一个函数 $Q$ 的波尔兹曼分布，在连续空间下求解非常麻烦。于是 SAC 提出使用一个 Actor 表示策略函数，从而解决这个问题。目前，在无模型的强化学习算法中，SAC 是一个非常高效的算法，它学习一个随机性策略，在不少标准环境中取得了领先的成绩。
+
+## 最大熵强化学习
+
+**熵**（entropy）表示对一个随机变量的随机程度的度量。具体而言，如果 $X$ 是一个随机变量，且它的概率密度函数为 $p$，那么它的熵 $H$ 就被定义为：$H(X)=E_{x\sim p}[-log\; p(x)]$
+
+在强化学习中，我们可以使用 $H(\pi(\cdot|s))$ 来表示策略 $\pi$ 在状态 $s$ 下的随机程度
+
+**大熵强化学习**（maximum entropy RL）的思想就是除了要最大化累积奖励，还要使得策略更加随机。如此，强化学习的目标中就加入了一项熵的正则项，定义为
+$$
+\pi^*=\underset{\pi}{arg\;max\;}E_{\pi}[\sum_tr(s_t,a_t)+\alpha H(\pi(\cdot|s_t))]
+$$
+其中，$\alpha$ 是一个正则化的系数，用来控制熵的重要程度。熵正则化增加了强化学习算法的探索程度，$\alpha$ 越大，探索性就越强，有助于加速后续的策略学习，并减少策略陷入较差的局部最优的可能性。
+
+## Soft 策略迭代
+
+在最大熵强化学习框架中，由于目标函数发生了变化，其他的一些定义也有相应的变化。首先，我们看一下 Soft 贝尔曼方程：
+$$
+Q(s_t,a_t)=r(s_t,a_t)+\gamma E_{s_{t+1}}[V(s_{t+1})]
+$$
+其中，状态价值函数被写为
+$$
+V(s_t)=E_{a_t\sim \pi}[Q(s_t,a_t)-\alpha log \pi (a_t|s_t)]=E_{a_t\sim \pi}[Q(s_t,a_t)]+H(\pi(\cdot|s_t))
+$$
+于是，根据该 Soft 贝尔曼方程，在有限的状态和动作空间情况下，Soft 策略评估可以收敛到策略 $\pi$​ 的 Soft Q 函数。然后，根据如下 Soft 策略提升公式可以改进策略：
+$$
+\pi_{new}=\underset{\pi'}{arg\;min;}D_{KL}(\pi'(\cdot|s),\frac{exp(\frac{1}{\alpha}Q^{\pi_{old}}(s,\cdot))}
+{Z^{\pi_{old}}(s,\cdot)})
+$$
+重复交替使用 Soft 策略评估和 Soft 策略提升，最终策略可以收敛到最大熵强化学习目标中的最优策略。但该 Soft 策略迭代方法只适用于**表格型**（tabular）设置的情况，即状态空间和动作空间是有限的情况。在连续空间下，我们需要通过参数化函数 $Q$ 和策略 $\pi$ 来近似这样的迭代。
+
+## SAC
+
+在 SAC 算法中，我们为两个动作价值函数 $Q$（参数分别为 $w_1$ 和 $w_2$）和一个策略函数 $\pi$（参数为 $\theta$）建模。基于 Double DQN 的思想，SAC 使用两个 $Q$ 网络，但每次用 $Q$ 网络时会挑选一个 $Q$ 值小的网络，从而缓解 $Q$ 值过高估计的问题。任意一个函数 $Q$ 的损失函数为：
+$$
+\begin{align}
+L_Q(w) 
+& = E_{(s_t,a_t,r_t,s_{t+1})\sim R} [\frac{1}{2}(Q_w(s_t,a_t)-(r_t+\gamma V_{w^-}(s_{t+1})))^2] \\
+& = E_{(s_t,a_t,r_t,s_{t+1})\sim R,\;a_{t+1}\sim \pi_\theta(\cdot|s_{t+1})}
+[\frac{1}{2}(Q_w(s_t,a_t)-(r_t+\gamma (\underset{j=1,2}{min\;}Q_{w_j^-}(s_{t+1},a_{t+1}) - \alpha log \pi(a_{t+1}|s_{t+1})))
+)^2]
+\end{align}
+$$
+其中，$R$ 是策略过去收集的数据，因为 SAC 是一种离线策略算法。为了让训练更加稳定，这里使用了目标 $Q$ 网络 $Q_{w^-}$，同样是两个目标 $Q$ 网络，与两个 $Q$ 网络一一对应。SAC 中目标 $Q$ 网络的更新方式与 DDPG 中的更新方式一样。
+
+策略 $\pi$ 的损失函数由 KL 散度得到，化简后为：
+$$
+L_{\pi}(\theta)=E_{s_t\sim R,\;a_t\sim \pi_\theta}[\alpha\;log(\pi_\theta(a_t|s_t))-Q_w(s_t,a_t)]
+$$
+可以理解为最大化函数 $V$，因为有 $V(s_t)=E_{a_t\sim\pi}[Q(s_t,a_t)-\alpha \; log\; \pi(a_t|s_t)]$
+
+对连续动作空间的环境，SAC 算法的策略输出高斯分布的均值和标准差，但是根据高斯分布来采样动作的过程是不可导的。因此，我们需要用到**重参数化技巧**（reparameterization trick）。重参数化的做法是先从一个单位高斯分布 $N$ 采样，再把采样值乘以标准差后加上均值。这样就可以认为是从策略高斯分布采样，并且这样对于策略函数是可导的。我们将其表示为 $a_t=f_\theta(\epsilon_t;s_t)$，其中 $\epsilon_t$ 是一个噪声随机变量。同时考虑到两个函数 $Q$​，重写策略的损失函数：
+$$
+L_\pi(\theta)=E_{s_t\sim R,\epsilon_t\sim N}[\alpha\;log(\pi_\theta(f_\theta(\epsilon_t;s_t)|s_t))-\underset{j=1,2}{min\;}Q_{w_j}(s_t,f_\theta(\epsilon_t;s_t))]
+$$
+在 SAC 算法中，如何选择熵正则项的系数非常重要。在不同的状态下需要不同大小的熵：在最优动作不确定的某个状态下，熵的取值应该大一点；而在某个最优动作比较确定的状态下，熵的取值可以小一点。为了自动调整熵正则项，SAC 将强化学习的目标改写为一个带约束的优化问题：
+$$
+\underset{\pi}{max\;}E_\pi[\sum_tr(s_t,a_t)] \quad s.t. \; E_{(s_t,a_t)\sim \rho_\pi}[-log(\pi_t(a_t|s_t))] \geq \Eta_0
+$$
+也就是最大化期望回报，同时约束熵的均值大于 $\Eta_0$。通过一些数学技巧化简后，得到 $\alpha$​ 的损失函数：
+$$
+L(\alpha)=E_{s_t\sim R,a_t\sim \pi(\cdot|s_t)}[-\alpha\; log\; \pi(a_t|s_t)-\alpha \Eta_0]
+$$
+即当策略的熵低于目标值 $\Eta_0$时，训练目标 $L(\alpha)$ 会使 $\alpha$ 的值增大，进而在上述最小化损失函数 $L_\pi(\theta)$ 的过程中增加了策略熵对应项的重要性；而当策略的熵高于目标值 $\Eta_0$时，训练目标 $L(\alpha)$ 会使 $\alpha$ 的值减小，进而使得策略训练时更专注于价值提升。
+
+ SAC的具体算法流程如下：
+
+- 用随机的网络参数 $w_1$, 和 $w_2$ 分别初始化 Critic 网络 $Q_{w_1}(s,a)$, 和 Actor 网络 $\pi_\theta(s)$
+- 复制相同的参数 $w^-_1 \leftarrow w_1$ 和 $w^-_2 \leftarrow w_2$，分别初始化目标网络 $Q_{w^-_1}$ 和 $Q_{w^-_2}$
+- 初始化经验回放池 $R$
+- for 序列 $e=1 \to E$ do :
+  - 初始化环境初始状态 $s_1$ 
+  - for 时间步 $t=1\to T$ do :
+    - 根据当前策略选择动作 $a_t=\mu_\theta(s_t)$
+    - 执行动作 $a_t$，获得奖励 $r_t$，环境状态变为 $s_{t+1}$
+    - 将 $(s_t,a_t,r_t,s_{t+1})$ 存储进回放池 $R$
+    - for 训练轮数 $k=1\to K$ do:
+      - 从 $R$ 中采样 $N$ 个元组 $\{(s_i,a_i,r_i,s_{i+1})\}_{i=1,\cdots,N}$
+      - 对每个元组，用目标网络计算 $y_i=r_i+\gamma\;\underset{j=1,2}{min}\; Q_{w_j^-}(s_{i+1},a_{i+1})-\alpha\;log\;\pi_\theta(a_{i+1}|s_{i+1})$，其中 $a_{i+1}\sim \pi_\theta(\cdot|s_{i+1})$
+      - 对两个 Critic 网络都进行如下更新：对 $j=1,2$，最小化损失函数 $L=\frac{1}{N}\sum_{i=1}^N(y_i-Q_{w_j}(s_i,a_i))^2$
+      - 用重参数化技巧采样动作 $\widetilde{a}_i$，然后用以下损失函数更新当前 Actor 网络：$L_\pi(\theta)=\frac{1}{N}\sum_{i=1}^N[\alpha\;log\pi_\theta(\widetilde{a}_i|s_i)-\underset{j=1,2}{min\;}Q_{w_j}(s_i,\widetilde{a}_i)]$
+      - 更新熵正则项的系数 $\alpha$
+      - 更新目标网络：$w^-_1 \leftarrow \tau w_1+(1-\tau)w^-_1 \leftarrow \tau w_2 +(1-\tau)w^-_2$
+    - end for
+  - end for
+- end for
+
+**Code is available at [SAC](https://github.com/CorneliusDeng/UESTC/blob/main/Dive%20Into%20RL/SAC.ipynb)**
