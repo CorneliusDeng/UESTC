@@ -814,6 +814,63 @@ REINFORCE 算法的具体算法流程如下：
     \nabla_{\theta}log\;\pi_{\theta}(a_t|s_t)$
 - end for
 
-**Code is available at [REINFORCE](https://github.com/CorneliusDeng/UESTC/blob/main/Dive%20Into%20RL/Double%20Deep%20Q%20network.ipynb)**
+**Code is available at [REINFORCE](https://github.com/CorneliusDeng/UESTC/blob/main/Dive%20Into%20RL/REINFORCE.ipynb)**
 
 实验证明，随着收集到的轨迹越来越多，REINFORCE 算法有效地学习到了最优策略。不过，相比于前面的 DQN 算法，REINFORCE 算法使用了更多的序列，这是因为 REINFORCE 算法是一个在线策略算法，之前收集到的轨迹数据不会被再次利用。此外，REINFORCE 算法的性能也有一定程度的波动，这主要是因为每条采样轨迹的回报值波动比较大，这也是 REINFORCE 算法主要的不足。
+
+
+
+# Actor-Critic 算法
+
+基于值函数的方法（DQN）和基于策略的方法（REINFORCE），其中基于值函数的方法只学习一个价值函数，而基于策略的方法只学习一个策略函数。**Actor-Critic 方法既学习价值函数，又学习策略函数 。**Actor-Critic 是囊括一系列算法的整体架构，目前很多高效的前沿算法都属于 Actor-Critic 算法。需要明确的是，**Actor-Critic 算法本质上是基于策略的算法**，因为这一系列算法的目标都是优化一个带参数的策略，只是会额外学习价值函数，从而帮助策略函数更好地学习。
+
+在 REINFORCE 算法中，目标函数的梯度中有一项轨迹回报，用于指导策略的更新。REINFOCE 算法用蒙特卡洛方法来估计 $Q(s,a)$ ，**Actor-Critic 算法所做的就是拟合一个值函数来指导策略进行学习**
+
+在策略梯度中，可以把梯度写成下面这个更加一般的形式：$g=E[\sum_{t=0}^T\psi_{t}
+\nabla_{\theta}log\;\pi_{\theta}(a_t|s_t)]$
+
+- 其中，$\psi_{t}$ 可以有很多种形式：
+  - $\sum_{t'=0}^T\gamma^{t'}r_{t'}$：轨迹的总回报
+  - $\sum_{t'=t}^T\gamma^{t'-t}r_{t'}$：动作 $a_t$ 之后的回报
+  - $\sum_{t'=t}^T\gamma^{t'-t}r_{t'}-b(s_t)$：基准线版本的改进
+  - $Q^{\pi_\theta}(s_t,a_t)$：动作价值函数
+  - $A^{\pi_\theta}(s_t,a_t)$：优势函数
+  - $r_t+\gamma V^{\pi_\theta}(s_{t+1})-V^{\pi_\theta}(s_{t})$：时序差分残差
+
+REINFORCE 通过蒙特卡洛采样的方法对策略梯度的估计是无偏的，但是方差非常大。我们可以用形式(3)引入**基线函数**（baseline function）$b(s_t)$ 来减小方差。
+
+此外，我们也可以采用 Actor-Critic 算法估计一个动作价值函数 $Q$，代替蒙特卡洛采样得到的回报，这便是形式(4)
+
+这个时候，我们可以把状态价值函数 $V$ 作为基线，从 $Q$ 函数减去这个 $V$ 函数则得到了 $A$ 函数，我们称之为**优势函数**（advantage function），这便是形式(5)
+
+更进一步，我们可以利用 $Q=r+\gamma V$ 等式得到形式(6)
+
+着重看形式(6)，即通过时序差分残差 $\psi_{t}=r_t+\gamma V^{\pi}(s_{t+1})-V^{\pi}(s_{t})$ 来指导策略梯度进行学习。事实上，用 $Q$ 值或者 $V$ 值本质上也是用奖励来进行指导，但是用神经网络进行估计的方法可以减小方差、提高鲁棒性。除此之外，REINFORCE 算法基于蒙特卡洛采样，只能在序列结束后进行更新，这同时也要求任务具有有限的步数，而 Actor-Critic 算法则可以在每一步之后都进行更新，并且不对任务的步数做限制。
+
+- **我们将 Actor-Critic 分为两个部分：Actor（策略网络）和 Critic（价值网络）** 
+  - Actor 要做的是与环境交互，并在 Critic 价值函数的指导下用策略梯度学习一个更好的策略
+  - Critic 要做的是通过 Actor 与环境交互收集的数据学习一个价值函数，这个价值函数会用于判断在当前状态什么动作是好的，什么动作不是好的，进而帮助 Actor 进行策略更新
+
+<img src="https://hrl.boyuai.com/static/640.5dee5ab0.jpg" style="zoom:50%;" />
+
+Actor 的更新采用策略梯度的原则，Critic 如何更新：将 Critic 价值网络表示为 $V_w$，参数为 $w$ 。于是，我们可以采取时序差分残差的学习方式，对于单个数据定义如下价值函数的损失函数：$L(w)=\frac{1}{2}(r+\gamma V_w(s_{t+1})-V_w(s_t))^2$
+
+与 DQN 中一样，我们采取类似于目标网络的方法，将上式中 $r+\gamma V_w(s_{t+1})$ 作为时序差分目标，不会产生梯度来更新价值函数。因此，价值函数的梯度为：
+$$
+\nabla_wL(w)=-[r+\gamma V_w(s_{t+1})-V_w(s_{t})]\nabla_wV_w(s_t)
+$$
+然后使用梯度下降方法来更新 Critic 价值网络参数即可。
+
+Actor-Critic 算法的具体流程如下：
+
+- 初始化策略网络参数，价值网络参数
+- for 序列 $e=1\rightarrow E$ do :
+  -  用当前策略 $\pi_\theta$ 采样轨迹 $\{s_1,a_1,r_1,s_2,a_2,r_2,\cdots\}$
+  -  为每一步数据计算: $\delta_t=r_t+\gamma V_w(s_{t+1})-V_w(s_{t})$
+  -  更新价值参数 $w=w+\alpha_w\sum_t\delta_t\nabla_wV_w(s_t)$
+  -  更新策略参数 $\theta=\theta+\alpha_\theta\sum_t\delta_t\nabla_\theta log\;\pi_\theta(a_t|s_t)$
+- end for
+
+**Code is available at [Actor-Critic](https://github.com/CorneliusDeng/UESTC/blob/main/Dive%20Into%20RL/Actor-Critic.ipynb)**
+
+实验证明，Actor-Critic 算法很快便能收敛到最优策略，并且训练过程非常稳定，抖动情况相比 REINFORCE 算法有了明显的改进，这说明价值函数的引入减小了方差。
