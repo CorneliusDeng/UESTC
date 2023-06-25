@@ -704,4 +704,26 @@ DQN 算法最终更新的目标是让 $Q_w(s,a)$ 逼近 $r+ \gamma\;\underset{a'
   - end for
 - end for
 
+**Code is available at [DQN](https://github.com/CorneliusDeng/UESTC/blob/main/Dive%20Into%20RL/Deep%20Q%20network.ipynb)**
+
 ## Double DQN
+
+普通的 DQN 算法通常会导致对 $Q$ 值的过高估计（overestimation）。传统 DQN 优化的 TD 误差目标为：$r_i+\gamma\; \underset{a'}{max}\;Q_{w^{-}}(s',a'))$
+
+其中 $\underset{a'}{max}\;Q_{w^{-}}(s',a'))$ 由目标网络（参数为$w^-$）计算得出，我们还可以将其写成如下形式：$Q_{w^{-}}(s',\underset{a'}{arg\;max\;}Q_{w^-}(s',a'))$
+
+- 换句话说，$max$ 操作实际可以被拆解为两部分
+  - 首先选取状态 $s'$ 下的最优动作 $a^*=\underset{a'}{arg\;max\;}Q_{w^-}(s',a')$
+  - 接着计算该动作对应的价值 $Q_{w^-}(s',a^*)$
+
+当这两部分采用同一套 Q 网络进行计算时，每次得到的都是神经网络当前估算的所有动作价值中的最大值。考虑到通过神经网络估算的 $Q$ 值本身在某些时候会产生正向或负向的误差，在 DQN 的更新方式下神经网络会将正向误差累积。对于动作空间较大的任务，DQN 中的过高估计问题会非常严重，造成 DQN 无法有效工作的后果。
+
+为了解决这一问题，Double DQN 算法提出利用两个独立训练的神经网络估算 $\underset{a'}{max}\;Q_*(s',a')$。具体做法是将原有的 $\underset{a'}{max}\;Q_{w^{-}}(s',a')$ 更改为 $Q_{w^{-}}(s',\underset{a'}{arg\;max\;}Q_w(s',a'))$，即利用一套神经网络 $Q_w$ 的输出选取价值最大的动作，但在使用该动作的价值时，用另一套神经网络 $Q_w^-$ 计算该动作的价值。这样，即使其中一套神经网络的某个动作存在比较严重的过高估计问题，由于另一套神经网络的存在，这个动作最终使用的 $Q$ 值不会存在很大的过高估计问题。
+
+在传统的 DQN 算法中，本来就存在两套 $Q$ 函数的神经网络——目标网络和训练网络，只不过 $\underset{a'}{max}\;Q_{w^{-}}(s',a')$的计算只用到了其中的目标网络，那么我们恰好可以直接将训练网络作为 Double DQN 算法中的第一套神经网络来选取动作，将目标网络作为第二套神经网络计算 $Q$ 值，这便是 Double DQN 的主要思想。由于在 DQN 算法中将训练网络的参数记为 $w$ ，将目标网络的参数记为 $w^-$，这与 Double DQN 的两套神经网络的参数是统一的，因此，我们可以直接写出如下 Double DQN 的优化目标：
+$$
+r+\gamma Q_{w^-}(s',\underset{a'}{arg\;max\;}Q_w(s',a'))
+$$
+
+
+## Dueling DQN
