@@ -2,17 +2,11 @@
 
 **[A Gentle Introduction to Graph Neural Networks](https://distill.pub/2021/gnn-intro/)**
 
+**[Understanding Convolutions on Graphs](https://distill.pub/2021/understanding-gnns/)**
+
 Graphs are all around us; real world objects are often defined in terms of their connections to other things. A set of objects, and the connections between them, are naturally expressed as a graph.
 
 Researchers have developed neural networks that operate on graph data (called **graph neural networks, or GNNs**) for over a decade.
-
-1. First, we look at what kind of data is most naturally phrased as a graph, and some common examples.
-
-2. Second, we explore what makes graphs different from other types of data, and some of the specialized choices we have to make when using graphs.
-
-3. Third, we build a modern GNN, walking through each of the parts of the model, starting with historic modeling innovations in the field. We move gradually from a bare-bones implementation to a state-of-the-art GNN model. 
-
-4. Fourth, we provide a GNN playground where you can play around with a real-word task and dataset to build a stronger intuition of how each component of a GNN model contributes to the predictions it makes.
 
 
 # Graph
@@ -106,6 +100,39 @@ Another problem is that there are many adjacency matrices that can encode the sa
 One elegant and memory-efficient way of representing sparse matrices is as adjacency lists. These describe the connectivity of edge $e_k$ between nodes $n_i$ and $n_j$ as a tuple $(i,j)$ in the k-th entry of an adjacency list. Since we expect the number of edges to be much lower than the number of entries for an adjacency matrix $n_{nodes}^2$ , we avoid computation and storage on the disconnected parts of the graph.
 
 Most practical tensor representations have vectors per graph attribute(per node/edge/global). Instead of a node tensor of size $[n_{nodes}]$ we will be dealing with node tensors of size $[n_{nodes},node_{dim}]$. Same for the other graph attributes.
+
+
+
+# The Challenges of Computation on Graphs
+
+## Lack of Consistent Structure
+
+Graphs are extremely flexible mathematical models; but this means they lack consistent structure across instances. 
+
+Consider the task of predicting whether a given chemical molecule is toxic. Looking at a few examples, the following issues quickly become apparent:
+
+- Molecules may have different numbers of atoms.
+- The atoms in a molecule may be of different types.
+- Each of these atoms may have different number of connections.
+- These connections can have different strengths.
+
+Representing graphs in a format that can be computed over is non-trivial, and the final representation chosen often depends significantly on the actual problem.
+
+## Node-Order Equivariance
+
+Extending the point above: graphs often have no inherent ordering present amongst the nodes. Compare this to images, where every pixel is uniquely determined by its absolute position within the image!
+
+The same graph labelled in two different ways. The alphabets indicate the ordering of the nodes.
+
+![](https://distill.pub/2021/understanding-gnns/images/node-order-alternatives.svg)
+
+As a result, we would like our algorithms to be node-order equivariant: they should not depend on the ordering of the nodes of the graph. If we permute the nodes in some way, the resulting representations of the nodes as computed by our algorithms should also be permuted in the same way.
+
+## Scalability
+
+Graphs can be really large! Think about social networks like Facebook and Twitter, which have over a billion users. Operating on data this large is not easy.
+
+Luckily, most naturally occuring graphs are ‘sparse’: they tend to have their number of edges linear in their number of vertices. We will see that this allows the use of clever methods to efficiently compute representations of nodes within the graph. Further, the methods that we look at here will have significantly fewer parameters in comparison to the size of the graphs they operate on.
 
 
 
@@ -217,3 +244,221 @@ In this view all graph attributes have learned representations, so we can levera
 Schematic for conditioning the information of one node based on three other embeddings (adjacent nodes, adjacent edges, global). This step corresponds to the node operations in the Graph Nets Layer.
 
 ![](https://distill.pub/2021/gnn-intro/graph_conditioning.3017e214.png)
+
+
+
+# Problem Setting and Notation
+
+There are many useful problems that can be formulated over graphs:
+
+- **Node Classification:** Classifying individual nodes.
+- **Graph Classification:** Classifying entire graphs.
+- **Node Clustering:** Grouping together similar nodes based on connectivity.
+- **Link Prediction:** Predicting missing links.
+- **Influence Maximization:** Identifying influential nodes.
+- $\cdots \cdots$
+
+<img src="https://distill.pub/2021/understanding-gnns/images/graph-tasks.svg"  />
+
+A common precursor in solving many of these problems is **node representation learning**: learning to map individual nodes to fixed-size real-valued vectors (called ‘representations’ or ‘embeddings’).
+
+Different GNN variants are distinguished by the way these representations are computed. Generally, however, GNNs compute node representations in an iterative process. We will use the notation $h_v^{(k)}$ to indicate the representation of node $v$ after the $k^{th}$  iteration. Each iteration can be thought of as the equivalent of a ‘layer’ in standard neural networks.
+
+We will define a graph $G$ as a set of nodes, $V$ with a set of edges $E$ connecting them. Nodes can have individual features as part of the input: we will denote by $x_v$ the individual feature for node $v\in V$. For example, the ‘node features’ for a pixel in a color image would be the red, green and blue channel (RGB) values at that pixel.
+
+Sometimes we will need to denote a graph property by a matrix $M$, where each row $M_v$ represents a property corresponding to a particular vertex $v$.
+
+
+
+# Extending Convolutions to Graphs
+
+Convolutional Neural Networks have been seen to be quite powerful in extracting features from images. However, images themselves can be seen as graphs with a very regular grid-like structure, where the individual pixels are nodes, and the RGB channel values at each pixel as the node features.
+
+A natural idea, then, is to consider generalizing convolutions to arbitrary graphs. However, ordinary convolutions are not node-order invariant, because they depend on the absolute positions of pixels. It is initially unclear as how to generalize convolutions over grids to convolutions over general graphs, where the neighbourhood structure differs from node to node.
+
+Convolutions in CNNs are inherently localized. GNNs can perform localized convolutions mimicking CNNs.
+
+
+
+# Polynomial Filters on Graphs
+
+## The Graph Laplacian
+
+Given a graph $G$, let us fix an arbitrary ordering of the $n$ nodes of $G$. We denote the $0−1$ adjacency matrix of $G$ by $A$, we can construct the **diagonal degree matrix** $D$ of $G$ as: $D_v=\sum_uA_{vu}$ (The degree of node $v$ is the number of edges incident at $v$) where  $A_{vu}$  denotes the entry in the row corresponding to $v$ and the column corresponding to $u$ in the matrix $A$.
+
+Then, the **graph Laplacian** $L$ is the square $n\times n$ matrix defined as: $L=D-A$. Example as follows:
+
+![](https://distill.pub/2021/understanding-gnns/images/laplacian.svg)
+
+The graph Laplacian gets its name from being the discrete analog of the Laplacian operator from calculus. Although it encodes precisely the same information as the adjacency matrix $A$, the graph Laplacian has many interesting properties of its own.
+
+## Polynomials of the Laplacian
+
+Build polynomials of thethe graph Laplacian:
+$$
+p_w(L)=w_0I_n+w_1L+w_2L^2+\cdots+w_dL^d=\sum^d_{i=0}w_iL^i
+$$
+Each polynomial of this form can alternately be represented by its vector of coefficients $w=[w_0,\cdots,w_d]$. Note that for every $w,p_w(L)$ is an $n\times n$ matrix, just like $L$.
+
+These polynomials can be thought of as the equivalent of ‘filters’ in CNNs, and the coefficients $w$ as the weights of the ‘filters’.
+
+For ease of exposition, we will focus on the case where nodes have one-dimensional features: each of the $x_v$ for $v\in V$ is just a real number. The same ideas hold when each of the $x_v$ are higher-dimensional vectors, as well.
+
+Using the previously chosen ordering of the nodes, we can stack all of the node features $x_v$ to get a vector  $x\in R^n$
+
+<img src="https://distill.pub/2021/understanding-gnns/images/node-order-vector.svg" style="zoom:67%;" />
+
+
+
+Once we have constructed the feature vector $x$, we can define its convolution with a polynomial filter $p_w$ as: $x'=p_w(L)x$
+
+To understand how the coefficients $w$ affect the convolution, let us begin by considering the ‘simplest’ polynomial: when $w_0=1$ and all of the other coefficients are 0. In this case, $x'$ is just x: $x'=p_w(L)x=\sum_{i=0}^dw_iL^ix=w_0I_nx=x$
+
+Now, if we increase the degree, and consider the case where instead $w_1=1$ and and all of the other coefficients are 0. Then, $x'=p_w(L)x=\sum_{i=0}^dw_iL^ix=w_1Lx=Lx$, and so: 
+$$
+\begin{align}
+x'_v=(Lx)_v
+& = L_vx \\
+& = \sum_{u\in G} L_{vu}x_u \\
+& = \sum_{u\in G}(D_{vu}-A_{vu})x_u \\
+& = D_vx_v-\sum_{u\in N(v)x_u}
+\end{align}
+$$
+We see that the features at each node $v$ are combined with the features of its immediate neighbours $u \in N(v)$.
+
+At this point, a natural question to ask is: How does the degree $d$ of the polynomial influence the behaviour of the convolution? Indeed, it is not too hard to show that: $dist_G(v,u)>i \Longrightarrow L_{vu}^i=0$
+
+This implies, when we convolve $x$ with $p_w(L)$ of degree $d$ to get $x'$:
+$$
+\begin{align}
+x'_v=(p_w(L)x)_v
+& = (p_w(L))_vx \\
+& = \sum_{i=0}^dw_iL^i_vx \\
+& = \sum_{i=0}^dw_i\sum_{u\in G}L^i_{vu}x_u \\
+& = \sum_{i=0}^dw_i\sum_{u\in G,\;dist_G(v,u)\leq i}L^i_{vu}x_u
+\end{align}
+$$
+Effectively, the convolution at node $v$ occurs only with nodes $u$ which are not more than $d$ hops away. Thus, these polynomial filters are localized. The degree of the localization is governed completely by $d$.
+
+## ChebNet
+
+ChebNet refines this idea of polynomial filters by looking at polynomial filters of the form: $p_w(L)=\sum^d_{i=1}w_iT_i(\widetilde{L})$ , where $T_i$ is the degree-i Chebyshev polynomial of the first kind and $\widetilde{L}$ is the normalized Laplacian defined using the largest eigenvalue of $L$: $\widetilde{L}=\frac{2L}{\lambda_{max}(L)}-I_n$
+
+- The motivation behind these choices
+  - $L$ is actually positive semi-definite: all of the eigenvalues of $L$ are not lesser than 0. If $\lambda_{max}(L)>1$, the entries in the powers of $L$ rapidly increase in size. $\widetilde{L}$ is effectively a scaled-down version of $L$, with eigenvalues guaranteed to be in the range [−1,1]. This prevents the entries of powers of $\widetilde{L}$ from blowing up. 
+  - The Chebyshev polynomials have certain interesting properties that make interpolation more numerically stable.
+
+## Polynomial Filters are Node-Order Equivariant
+
+The polynomial filters we considered here are actually independent of the ordering of the nodes. This is particularly easy to see when the degree of the polynomial $p_w$ is 1: where each node’s feature is aggregated with the sum of its neighbour’s features. Clearly, this sum does not depend on the order of the neighbours. A similar proof follows for higher degree polynomials: the entries in the powers of $L$ are equivariant to the ordering of the nodes.
+
+## Embedding Computation
+
+We now describe how we can build a graph neural network by stacking ChebNet (or any polynomial filter) layers one after the other with non-linearities, much like a standard CNN.
+
+In particular, if we have $K$ different polynomial filter layers, the $k^{th}$ of which has its own learnable weights $w^{(k)}$, we would perform the following computation:
+
+![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Graph%20Neural%20Networks/Embedding%20Computation.png?raw=true)
+
+Note that these networks reuse the same filter weights across different nodes, exactly mimicking weight-sharing in Convolutional Neural Networks (CNNs) which reuse weights for convolutional filters across a grid.
+
+
+
+# Modern Graph Neural Networks
+
+ChebNet was a breakthrough in learning localized filters over graphs, and it motivated many to think of graph convolutions from a different perspective.
+
+We return back to the result of convolving $x$ by by the polynomial kernel $p_w(L)=L$ , focussing on a particular vertex $v$:
+$$
+\begin{align}
+(Lx)_v
+& = L_vx \\
+& = \sum_{u\in G} L_{vu}x_u \\
+& = \sum_{u\in G}(D_{vu}-A_{vu})x_u \\
+& = D_vx_v-\sum_{u\in N(v)x_u}
+\end{align}
+$$
+As we noted before, this is a 1-hop localized convolution. But more importantly, we can think of this convolution as arising of two steps:
+
+- Aggregating over immediate neighbour features $x_u$
+- Combining with the node’s own feature $x_v$
+
+**Key Idea:** What if we consider different kinds of ‘aggregation’ and ‘combination’ steps, beyond what are possible using polynomial filters?
+
+By ensuring that the aggregation is node-order equivariant, the overall convolution becomes node-order equivariant.
+
+These convolutions can be thought of as ‘message-passing’ between adjacent nodes: after each step, every node receives some ‘information’ from its neighbours.
+
+By iteratively repeating the 1-hop localized convolutions $K$ times (i.e., repeatedly ‘passing messages’), the receptive field of the convolution effectively includes all nodes upto $K$ hops away.
+
+Message-passing forms the backbone of many GNN architectures today. We describe the most popular ones in depth below:
+
+## Graph Convolutional Networks (GCN)
+
+![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Graph%20Neural%20Networks/Graph%20Convolutional%20Networks.png?raw=true)
+
+## Graph Attention Networks (GAT)
+
+![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Graph%20Neural%20Networks/Graph%20Attention%20Networks.png?raw=true)
+
+## Graph Sample and Aggregate (GraphSAGE)
+
+![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Graph%20Neural%20Networks/Graph%20Sample%20and%20Aggregate.png?raw=true)
+
+## Graph Isomorphism Network (GIN)
+
+![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Graph%20Neural%20Networks/Graph%20Isomorphism%20Network.png?raw=true)
+
+
+
+# From Local to Global Convolutions
+
+**‘local’ convolutions: every node’s feature is updated using a function of its local neighbours’ features.**
+
+While performing enough steps of message-passing will eventually ensure that information from all nodes in the graph is passed, one may wonder if there are more direct ways to perform ‘global’ convolutions.
+
+## Spectral Convolutions
+
+As before, we will focus on the case where nodes have one-dimensional features. After choosing an arbitrary node-order, we can stack all of the node features to get a ‘feature vector’ $x\in R^n$
+
+**Key Idea:** Given a feature vector $x$, the Laplacian $L$ allows us to quantify how smooth $x$ is, with respect to $G$.
+
+After normalizing $x$ such that $\sum_{i=1}^nx_i^2=1$, if we look at the following quantity involving $L$:
+$$
+R_L(x)=\frac{x^TLx}{x^Tx}=\frac{\sum_{(i,j)\in E}(x_i-x_j)^2}{\sum_ix_i^2}=\sum_{(i,j)\in E}(x_i-x_j)^2
+$$
+we immediately see that feature vectors $x$ that assign similar values to adjacent nodes in $G$ (hence, are smooth) would have smaller values of $R_L(x)$.
+
+$L$is a real, symmetric matrix, which means it has all real eigenvalues $\lambda_1 \leq \cdots \leq \lambda_n$. Further, the corresponding eigenvectors $u_1,\cdots,u_n$ can be taken to be orthonormal:
+$$
+u^T_{k_1}u_{k_2} = 
+\begin{cases}
+1 & \text{if } k_1 = k_2\\
+0 & \text{if } k_1 \neq k_2
+\end{cases}
+$$
+It turns out that these eigenvectors of $L$ are successively less smooth, as $R_L$ indicates:
+$$
+\underset{x,x\bot \{u_1,\cdots,u_{i-1}\}}{arg\;min\;}R_L(x)=u_i \; \cdot \; \underset{x,x\bot \{u_1,\cdots,u_{i-1}\}}{min} R_L(x)=\lambda_i
+$$
+The set of eigenvalues of $L$ are called its ‘spectrum’, hence the name! We denote the ‘spectral’ decomposition of $L$ as: $L=U \Lambda U^T$. where $\Lambda$ is the diagonal matrix of sorted eigenvalues, and $U$ denotes the matrix of the eigenvectors (sorted corresponding to increasing eigenvalues):
+$$
+\Lambda=
+\begin{bmatrix}
+\lambda_1  & \\ 
+& \ddots \\
+& & \lambda_n
+\end{bmatrix}
+
+\quad 
+
+U=
+\begin{bmatrix}
+u_1 & \cdots & u_n
+\end{bmatrix}
+$$
+The orthonormality condition between eigenvectors gives us that $U^TU=I$, the identity matrix. As these $n$ eigenvectors form a basis for $R^n$, any feature vector $n$ can be represented as a linear combination of these eigenvectors: $x=\sum_{i=1}^n\widehat{x}_iu_i=U\widehat{x}_i$
+
+Where $\widehat{x}$ is he vector of coefficients $[x_0,\cdots,x_n]$. We call $\widehat{x}$ as the spectral representation of the feature vector $x$. The orthonormality condition allows us to state: $x=U\widehat{{x}} \Longleftrightarrow U^Tx=\widehat{{x}}$. This pair of equations allows us to interconvert between the ‘natural’ representation $x$ and the ‘spectral’ representation $\widehat{x}$ for any vector $x\in R^n$.
+
+## Spectral Representations of Natural Images

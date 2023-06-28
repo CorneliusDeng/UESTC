@@ -213,7 +213,8 @@ MAB 中还有一种经典算法——**汤普森采样**（Thompson sampling）�
 
 **马尔可夫过程**（Markov process）指具有马尔可夫性质的随机过程，也被称为**马尔可夫链**（Markov chain）。我们通常用元组 $<S,P>$ 描述一个马尔可夫过程，其中 $S$ 是有限数量的状态集合，$P$ 是**状态转移矩阵**（state transition matrix）。假设一共有 $n$ 个状态，此时 $S=\{s_1,s_2,\cdots,s_n\}$。状态转移矩阵 $P$ 定义了所有状态对之间的转移概率，即
 $$
-\boldsymbol{P}=\left(\begin{array}{cccc}
+\boldsymbol{P}=
+\left(\begin{array}{cccc}
     p\left(s_{1} \mid s_{1}\right) & p\left(s_{2} \mid s_{1}\right) & \ldots & p\left(s_{n} \mid s_{1}\right) \\
     p\left(s_{1} \mid s_{2}\right) & p\left(s_{2} \mid s_{2}\right) & \ldots & p\left(s_{n} \mid s_{2}\right) \\
     \vdots & \vdots & \ddots & \vdots \\
