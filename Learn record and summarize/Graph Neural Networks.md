@@ -462,3 +462,44 @@ The orthonormality condition between eigenvectors gives us that $U^TU=I$, the id
 Where $\widehat{x}$ is he vector of coefficients $[x_0,\cdots,x_n]$. We call $\widehat{x}$ as the spectral representation of the feature vector $x$. The orthonormality condition allows us to state: $x=U\widehat{{x}} \Longleftrightarrow U^Tx=\widehat{{x}}$. This pair of equations allows us to interconvert between the ‘natural’ representation $x$ and the ‘spectral’ representation $\widehat{x}$ for any vector $x\in R^n$.
 
 ## Spectral Representations of Natural Images
+
+We can consider any image as a grid graph, where each pixel is a node, connected by edges to adjacent pixels. Thus, a pixel can have either $3,5,8$ neighbours, depending on its location within the image grid. Each pixel gets a value as part of the image. If the image is grayscale, each value will be a single real number indicating how dark the pixel is. If the image is colored, each value will be a $3-$dimensional vector, indicating the values for the red, green and blue (RGB) channels. We use the alpha channel as well in the visualization below, so this is actually RGBA.
+
+This construction allows us to compute the graph Laplacian and the eigenvector matrix $U$. Given an image, we can then investigate what its spectral representation looks like.
+
+
+
+# Learning GNN Parameters
+
+All of the embedding computations we’ve described here, whether spectral or spatial, are completely differentiable. This allows GNNs to be trained in an end-to-end fashion, just like a standard neural network, once a suitable loss function $L$ is defined:
+
+- **Node Classification**: By minimizing any of the standard losses for classification tasks, such as categorical cross-entropy when multiple classes are present:
+  $$
+  L(y_v,\widehat{y}_v)=\sum_cy_{vc}log\;\widehat{y}_{vc}
+  $$
+  where $\widehat{y}_{vc}$ is the predicted probability that node $v$ is in class $c$. GNNs adapt well to the semi-supervised setting, which is when only some nodes in the graph are labelled. In this setting, one way to define a loss $L_G$ over an input graph $G$ is:
+  $$
+  L_G=\frac{\sum_{v\in Lab(G)}L(y_v,\widehat{y}_v)}{|Lab(G)|}
+  $$
+  where, we only compute losses over labelled nodes $Lab(G)$.
+
+- **Graph Classification**: By aggregating node representations, one can construct a vector representation of the entire graph. This graph representation can be used for any graph-level task, even beyond classification.
+
+- **Link Prediction**: By sampling pairs of adjacent and non-adjacent nodes, and use these vector pairs as inputs to predict the presence/absence of an edge. For a concrete example, by minimizing the following ‘logistic regression’-like loss:
+  $$
+  \begin{align}
+  L(y_v,y_u,e_{vu}) & =-e_{vu}log(p_{vu})-(1-e_{vu})log(1-p_{vu}) \\
+  p_{vu} & = \sigma(y_v^Ty_u)
+  \end{align}
+  $$
+  where $\sigma$ is the sigmoid function, and $e_{vu} = 1$ iff there is an edge between nodes $v$ and $u$, being 0 otherwise.
+
+- **Node Clustering**: By simply clustering the learned node representations.
+
+The broad success of pre-training for natural language processing models such as ELMo and BERT has sparked interest in similar techniques for GNNs . The key idea in each of these papers is to train GNNs to predict local (eg. node degrees, clustering coefficient, masked node attributes) and/or global graph properties (eg. pairwise distances, masked global attributes).
+
+Another self-supervised technique is to enforce that neighbouring nodes get similar embeddings, mimicking random-walk approaches such as node2vec and DeepWalk :
+$$
+L_G=\sum_v\sum_{u\in N_R(v)}log\frac{exp\;z_v^Tz_u}{exp\;z^T_{u'}z_u}
+$$
+where $N_R(v)$ is a multi-set of nodes visited when random walks are started from $v$. For large graphs, where computing the sum over all nodes may be computationally expensive, techniques such as Noise Contrastive Estimation are especially useful.
