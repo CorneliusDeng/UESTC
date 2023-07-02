@@ -4,6 +4,10 @@
 
 **[Understanding Convolutions on Graphs](https://distill.pub/2021/understanding-gnns/)**
 
+**[Build your first Graph Neural Network model to predict traffic speed in 20 minutes](https://towardsdatascience.com/build-your-first-graph-neural-network-model-to-predict-traffic-speed-in-20-minutes-b593f8f838e5)**
+
+**[CNN-explainer](https://poloclub.github.io/cnn-explainer/)**
+
 Graphs are all around us; real world objects are often defined in terms of their connections to other things. A set of objects, and the connections between them, are naturally expressed as a graph.
 
 Researchers have developed neural networks that operate on graph data (called **graph neural networks, or GNNs**) for over a decade.
@@ -91,13 +95,13 @@ So, how do we go about solving these different graph tasks with neural networks?
 
 The first step is to think about how we will represent graphs to be compatible with neural networks.
 
-Machine learning models typically take rectangular or grid-like arrays as input. So, it’s not immediately intuitive how to represent them in a format that is compatible with deep learning. Graphs have up to four types of information that we will potentially want to use to make predictions: nodes, edges, global-context and connectivity. The first three are relatively straightforward: for example, with nodes we can form a node feature matrix $N$ by assigning each node an index $i$ and storing the feature for $node_i$ in $N$. While these matrices have a variable number of examples, they can be processed without any special techniques.
+Machine learning models typically take rectangular or grid-like arrays as input. So, it’s not immediately intuitive how to represent them in a format that is compatible with deep learning. Graphs have up to four types of information that we will potentially want to use to **make predictions: nodes, edges, global-context and connectivity.** The first three are relatively straightforward: for example, with nodes we can form a node feature matrix $N$ by assigning each node an index $i$ and storing the feature for $node_i$ in $N$. While these matrices have a variable number of examples, they can be processed without any special techniques.
 
 However, representing a graph’s connectivity is more complicated. Perhaps the most obvious choice would be to use an adjacency matrix, since this is easily tensorisable. However, this representation has a few drawbacks. From the example dataset table, we see the number of nodes in a graph can be on the order of millions, and the number of edges per node can be highly variable. Often, this leads to very sparse adjacency matrices, which are space-inefficient. 
 
 Another problem is that there are many adjacency matrices that can encode the same connectivity, and there is no guarantee that these different matrices would produce the same result in a deep neural network (that is to say, they are not permutation invariant).
 
-One elegant and memory-efficient way of representing sparse matrices is as adjacency lists. These describe the connectivity of edge $e_k$ between nodes $n_i$ and $n_j$ as a tuple $(i,j)$ in the k-th entry of an adjacency list. Since we expect the number of edges to be much lower than the number of entries for an adjacency matrix $n_{nodes}^2$ , we avoid computation and storage on the disconnected parts of the graph.
+One elegant and memory-efficient way of representing sparse matrices is as **adjacency lists**. These describe the connectivity of edge $e_k$ between nodes $n_i$ and $n_j$ as a tuple $(i,j)$ in the k-th entry of an adjacency list. Since we expect the number of edges to be much lower than the number of entries for an adjacency matrix $n_{nodes}^2$ , we avoid computation and storage on the disconnected parts of the graph.
 
 Most practical tensor representations have vectors per graph attribute(per node/edge/global). Instead of a node tensor of size $[n_{nodes}]$ we will be dealing with node tensors of size $[n_{nodes},node_{dim}]$. Same for the other graph attributes.
 
@@ -172,11 +176,15 @@ We represent the *pooling* operation by the letter $\rho$, and denote that we ar
 
 So If we only have edge-level features, and are trying to predict binary node information, we can use pooling to route (or pass) information to where it needs to go. The model looks like this.
 
-![](https://distill.pub/2021/gnn-intro/prediction_edges_nodes.e6796b8e.png)
+<img src="https://distill.pub/2021/gnn-intro/prediction_edges_nodes.e6796b8e.png" style="zoom:10%;" />
 
 If we only have node-level features, and are trying to predict binary edge-level information, the model looks like this.
 
-![](https://distill.pub/2021/gnn-intro/prediction_nodes_edges.26fadbcc.png)
+<img src="https://distill.pub/2021/gnn-intro/prediction_nodes_edges.26fadbcc.png" style="zoom:10%;" />
+
+If we only have node-level features, and need to predict a binary global property, we need to gather all available node information together and aggregate them. This is similar to *Global Average Pooling* layers in CNNs. The same can be done for edges.
+
+<img src="https://distill.pub/2021/gnn-intro/prediction_nodes_edges_global.7a535eb8.png" style="zoom: 10%;" />
 
 In our examples, the classification model $c$ can easily be replaced with any differentiable model, or adapted to multi-class classification using a generalized linear model.
 
