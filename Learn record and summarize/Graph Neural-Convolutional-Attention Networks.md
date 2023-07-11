@@ -8,6 +8,8 @@
 
 **[CNN-explainer](https://poloclub.github.io/cnn-explainer/)**
 
+[**Fast Fourier Transform**](https://zhuanlan.zhihu.com/p/31584464)
+
 Graphs are all around us; real world objects are often defined in terms of their connections to other things. A set of objects, and the connections between them, are naturally expressed as a graph.
 
 Researchers have developed neural networks that operate on graph data (called **graph neural networks, or GNNs**) for over a decade.
@@ -57,21 +59,19 @@ Of course, in practice, this is not usually how text and images are encoded: the
 
 The structure of real-world graphs can vary greatly between different types of data — some graphs have many nodes with few connections between them, or vice versa. Graph datasets can vary widely (both within a given dataset, and between datasets) in terms of the number of nodes, edges, and the connectivity of nodes.
 
-
-
-# Types of prediction tasks on graphs
+## Types of prediction tasks on graphs
 
 There are three general types of prediction tasks on graphs: graph-level, node-level, and edge-level.
 
 In a graph-level task, we predict a single property for a whole graph. For a node-level task, we predict some property for each node in a graph. For an edge-level task, we want to predict the property or presence of edges in a graph.
 
-## Graph-level task
+### Graph-level task
 
 In a graph-level task, our goal is to predict the property of an entire graph. For example, for a molecule represented as a graph, we might want to predict what the molecule smells like, or whether it will bind to a receptor implicated in a disease.
 
 This is analogous to image classification problems with MNIST and CIFAR, where we want to associate a label to an entire image. With text, a similar problem is sentiment analysis where we want to identify the mood or emotion of an entire sentence at once.
 
-## Node-level task
+### Node-level task
 
 Node-level tasks are concerned with predicting the identity or role of each node within a graph.
 
@@ -79,7 +79,7 @@ A classic example of a node-level prediction problem is Zach’s karate club. Th
 
 Following the image analogy, node-level prediction problems are analogous to *image segmentation*, where we are trying to label the role of each pixel in an image. With text, a similar task would be predicting the parts-of-speech of each word in a sentence (e.g. noun, verb, adverb, etc).
 
-## Edge-level task
+### Edge-level task
 
 One example of edge-level inference is in image scene understanding. Beyond identifying objects in an image, deep learning models can be used to predict the relationship between them. We can phrase this as an edge-level classification: given nodes that represent the objects in the image, we wish to predict which of these nodes share an edge or what the value of that edge is. If we wish to discover connections between entities, we could consider the graph fully connected and based on their predicted value prune edges to arrive at a sparse graph.
 
@@ -89,7 +89,7 @@ One example of edge-level inference is in image scene understanding. Beyond iden
 
 
 
-# The challenges of using graphs in machine learning
+## The challenges of using graphs in machine learning
 
 So, how do we go about solving these different graph tasks with neural networks? 
 
@@ -107,9 +107,9 @@ Most practical tensor representations have vectors per graph attribute(per node/
 
 
 
-# The Challenges of Computation on Graphs
+## The Challenges of Computation on Graphs
 
-## Lack of Consistent Structure
+### Lack of Consistent Structure
 
 Graphs are extremely flexible mathematical models; but this means they lack consistent structure across instances. 
 
@@ -122,7 +122,7 @@ Consider the task of predicting whether a given chemical molecule is toxic. Look
 
 Representing graphs in a format that can be computed over is non-trivial, and the final representation chosen often depends significantly on the actual problem.
 
-## Node-Order Equivariance
+### Node-Order Equivariance
 
 Extending the point above: graphs often have no inherent ordering present amongst the nodes. Compare this to images, where every pixel is uniquely determined by its absolute position within the image!
 
@@ -132,7 +132,7 @@ The same graph labelled in two different ways. The alphabets indicate the orderi
 
 As a result, we would like our algorithms to be node-order equivariant: they should not depend on the ordering of the nodes of the graph. If we permute the nodes in some way, the resulting representations of the nodes as computed by our algorithms should also be permuted in the same way.
 
-## Scalability
+### Scalability
 
 Graphs can be really large! Think about social networks like Facebook and Twitter, which have over a billion users. Operating on data this large is not easy.
 
@@ -255,7 +255,7 @@ Schematic for conditioning the information of one node based on three other embe
 
 
 
-# Problem Setting and Notation
+## Problem Setting and Notation
 
 There are many useful problems that can be formulated over graphs:
 
@@ -278,7 +278,9 @@ Sometimes we will need to denote a graph property by a matrix $M$, where each ro
 
 
 
-# Extending Convolutions to Graphs
+# Graph Convolutional Networks
+
+## Extending Convolutions to Graphs
 
 Convolutional Neural Networks have been seen to be quite powerful in extracting features from images. However, images themselves can be seen as graphs with a very regular grid-like structure, where the individual pixels are nodes, and the RGB channel values at each pixel as the node features.
 
@@ -286,11 +288,9 @@ A natural idea, then, is to consider generalizing convolutions to arbitrary grap
 
 Convolutions in CNNs are inherently localized. GNNs can perform localized convolutions mimicking CNNs.
 
+## Polynomial Filters on Graphs
 
-
-# Polynomial Filters on Graphs
-
-## The Graph Laplacian
+### The Graph Laplacian
 
 Given a graph $G$, let us fix an arbitrary ordering of the $n$ nodes of $G$. We denote the $0−1$ adjacency matrix of $G$ by $A$, we can construct the **diagonal degree matrix** $D$ of $G$ as: $D_v=\sum_uA_{vu}$ (The degree of node $v$ is the number of edges incident at $v$) where  $A_{vu}$  denotes the entry in the row corresponding to $v$ and the column corresponding to $u$ in the matrix $A$.
 
@@ -300,7 +300,7 @@ Then, the **graph Laplacian** $L$ is the square $n\times n$ matrix defined as: $
 
 The graph Laplacian gets its name from being the discrete analog of the Laplacian operator from calculus. Although it encodes precisely the same information as the adjacency matrix $A$, the graph Laplacian has many interesting properties of its own.
 
-## Polynomials of the Laplacian
+### Polynomials of the Laplacian
 
 Build polynomials of thethe graph Laplacian:
 $$
@@ -348,7 +348,7 @@ x'_v=(p_w(L)x)_v
 $$
 Effectively, the convolution at node $v$ occurs only with nodes $u$ which are not more than $d$ hops away. Thus, these polynomial filters are localized. The degree of the localization is governed completely by $d$.
 
-## ChebNet
+### ChebNet
 
 ChebNet refines this idea of polynomial filters by looking at polynomial filters of the form: $p_w(L)=\sum^d_{i=1}w_iT_i(\widetilde{L})$ , where $T_i$ is the degree-i Chebyshev polynomial of the first kind and $\widetilde{L}$ is the normalized Laplacian defined using the largest eigenvalue of $L$: $\widetilde{L}=\frac{2L}{\lambda_{max}(L)}-I_n$
 
@@ -356,11 +356,11 @@ ChebNet refines this idea of polynomial filters by looking at polynomial filters
   - $L$ is actually positive semi-definite: all of the eigenvalues of $L$ are not lesser than 0. If $\lambda_{max}(L)>1$, the entries in the powers of $L$ rapidly increase in size. $\widetilde{L}$ is effectively a scaled-down version of $L$, with eigenvalues guaranteed to be in the range [−1,1]. This prevents the entries of powers of $\widetilde{L}$ from blowing up. 
   - The Chebyshev polynomials have certain interesting properties that make interpolation more numerically stable.
 
-## Polynomial Filters are Node-Order Equivariant
+### Polynomial Filters are Node-Order Equivariant
 
 The polynomial filters we considered here are actually independent of the ordering of the nodes. This is particularly easy to see when the degree of the polynomial $p_w$ is 1: where each node’s feature is aggregated with the sum of its neighbour’s features. Clearly, this sum does not depend on the order of the neighbours. A similar proof follows for higher degree polynomials: the entries in the powers of $L$ are equivariant to the ordering of the nodes.
 
-## Embedding Computation
+### Embedding Computation
 
 We now describe how we can build a graph neural network by stacking ChebNet (or any polynomial filter) layers one after the other with non-linearities, much like a standard CNN.
 
@@ -369,6 +369,62 @@ In particular, if we have $K$ different polynomial filter layers, the $k^{th}$ o
 ![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Graph%20Neural%20Networks/Embedding%20Computation.png?raw=true)
 
 Note that these networks reuse the same filter weights across different nodes, exactly mimicking weight-sharing in Convolutional Neural Networks (CNNs) which reuse weights for convolutional filters across a grid.
+
+## From Local to Global Convolutions
+
+**‘local’ convolutions: every node’s feature is updated using a function of its local neighbours’ features.**
+
+While performing enough steps of message-passing will eventually ensure that information from all nodes in the graph is passed, one may wonder if there are more direct ways to perform ‘global’ convolutions.
+
+### Spectral Convolutions
+
+As before, we will focus on the case where nodes have one-dimensional features. After choosing an arbitrary node-order, we can stack all of the node features to get a ‘feature vector’ $x\in R^n$
+
+**Key Idea:** Given a feature vector $x$, the Laplacian $L$ allows us to quantify how smooth $x$ is, with respect to $G$.
+
+After normalizing $x$ such that $\sum_{i=1}^nx_i^2=1$, if we look at the following quantity involving $L$:
+$$
+R_L(x)=\frac{x^TLx}{x^Tx}=\frac{\sum_{(i,j)\in E}(x_i-x_j)^2}{\sum_ix_i^2}=\sum_{(i,j)\in E}(x_i-x_j)^2
+$$
+we immediately see that feature vectors $x$ that assign similar values to adjacent nodes in $G$ (hence, are smooth) would have smaller values of $R_L(x)$.
+
+$L$is a real, symmetric matrix, which means it has all real eigenvalues $\lambda_1 \leq \cdots \leq \lambda_n$. Further, the corresponding eigenvectors $u_1,\cdots,u_n$ can be taken to be orthonormal:
+$$
+u^T_{k_1}u_{k_2} = 
+\begin{cases}
+1 & \text{if } k_1 = k_2\\
+0 & \text{if } k_1 \neq k_2
+\end{cases}
+$$
+It turns out that these eigenvectors of $L$ are successively less smooth, as $R_L$ indicates:
+$$
+\underset{x,x\bot \{u_1,\cdots,u_{i-1}\}}{arg\;min\;}R_L(x)=u_i \; \cdot \; \underset{x,x\bot \{u_1,\cdots,u_{i-1}\}}{min} R_L(x)=\lambda_i
+$$
+The set of eigenvalues of $L$ are called its ‘spectrum’, hence the name! We denote the ‘spectral’ decomposition of $L$ as: $L=U \Lambda U^T$. where $\Lambda$ is the diagonal matrix of sorted eigenvalues, and $U$ denotes the matrix of the eigenvectors (sorted corresponding to increasing eigenvalues):
+$$
+\Lambda=
+\begin{bmatrix}
+\lambda_1  & \\ 
+& \ddots \\
+& & \lambda_n
+\end{bmatrix}
+
+\quad 
+
+U=
+\begin{bmatrix}
+u_1 & \cdots & u_n
+\end{bmatrix}
+$$
+The orthonormality condition between eigenvectors gives us that $U^TU=I$, the identity matrix. As these $n$ eigenvectors form a basis for $R^n$, any feature vector $n$ can be represented as a linear combination of these eigenvectors: $x=\sum_{i=1}^n\widehat{x}_iu_i=U\widehat{x}_i$
+
+Where $\widehat{x}$ is he vector of coefficients $[x_0,\cdots,x_n]$. We call $\widehat{x}$ as the spectral representation of the feature vector $x$. The orthonormality condition allows us to state: $x=U\widehat{{x}} \Longleftrightarrow U^Tx=\widehat{{x}}$. This pair of equations allows us to interconvert between the ‘natural’ representation $x$ and the ‘spectral’ representation $\widehat{x}$ for any vector $x\in R^n$.
+
+### Spectral Representations of Natural Images
+
+We can consider any image as a grid graph, where each pixel is a node, connected by edges to adjacent pixels. Thus, a pixel can have either $3,5,8$ neighbours, depending on its location within the image grid. Each pixel gets a value as part of the image. If the image is grayscale, each value will be a single real number indicating how dark the pixel is. If the image is colored, each value will be a $3-$dimensional vector, indicating the values for the red, green and blue (RGB) channels. We use the alpha channel as well in the visualization below, so this is actually RGBA.
+
+This construction allows us to compute the graph Laplacian and the eigenvector matrix $U$. Given an image, we can then investigate what its spectral representation looks like.
 
 
 
@@ -417,67 +473,7 @@ Message-passing forms the backbone of many GNN architectures today. We describe 
 
 ![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Graph%20Neural%20Networks/Graph%20Isomorphism%20Network.png?raw=true)
 
-
-
-# From Local to Global Convolutions
-
-**‘local’ convolutions: every node’s feature is updated using a function of its local neighbours’ features.**
-
-While performing enough steps of message-passing will eventually ensure that information from all nodes in the graph is passed, one may wonder if there are more direct ways to perform ‘global’ convolutions.
-
-## Spectral Convolutions
-
-As before, we will focus on the case where nodes have one-dimensional features. After choosing an arbitrary node-order, we can stack all of the node features to get a ‘feature vector’ $x\in R^n$
-
-**Key Idea:** Given a feature vector $x$, the Laplacian $L$ allows us to quantify how smooth $x$ is, with respect to $G$.
-
-After normalizing $x$ such that $\sum_{i=1}^nx_i^2=1$, if we look at the following quantity involving $L$:
-$$
-R_L(x)=\frac{x^TLx}{x^Tx}=\frac{\sum_{(i,j)\in E}(x_i-x_j)^2}{\sum_ix_i^2}=\sum_{(i,j)\in E}(x_i-x_j)^2
-$$
-we immediately see that feature vectors $x$ that assign similar values to adjacent nodes in $G$ (hence, are smooth) would have smaller values of $R_L(x)$.
-
-$L$is a real, symmetric matrix, which means it has all real eigenvalues $\lambda_1 \leq \cdots \leq \lambda_n$. Further, the corresponding eigenvectors $u_1,\cdots,u_n$ can be taken to be orthonormal:
-$$
-u^T_{k_1}u_{k_2} = 
-\begin{cases}
-1 & \text{if } k_1 = k_2\\
-0 & \text{if } k_1 \neq k_2
-\end{cases}
-$$
-It turns out that these eigenvectors of $L$ are successively less smooth, as $R_L$ indicates:
-$$
-\underset{x,x\bot \{u_1,\cdots,u_{i-1}\}}{arg\;min\;}R_L(x)=u_i \; \cdot \; \underset{x,x\bot \{u_1,\cdots,u_{i-1}\}}{min} R_L(x)=\lambda_i
-$$
-The set of eigenvalues of $L$ are called its ‘spectrum’, hence the name! We denote the ‘spectral’ decomposition of $L$ as: $L=U \Lambda U^T$. where $\Lambda$ is the diagonal matrix of sorted eigenvalues, and $U$ denotes the matrix of the eigenvectors (sorted corresponding to increasing eigenvalues):
-$$
-\Lambda=
-\begin{bmatrix}
-\lambda_1  & \\ 
-& \ddots \\
-& & \lambda_n
-\end{bmatrix}
-
-\quad 
-
-U=
-\begin{bmatrix}
-u_1 & \cdots & u_n
-\end{bmatrix}
-$$
-The orthonormality condition between eigenvectors gives us that $U^TU=I$, the identity matrix. As these $n$ eigenvectors form a basis for $R^n$, any feature vector $n$ can be represented as a linear combination of these eigenvectors: $x=\sum_{i=1}^n\widehat{x}_iu_i=U\widehat{x}_i$
-
-Where $\widehat{x}$ is he vector of coefficients $[x_0,\cdots,x_n]$. We call $\widehat{x}$ as the spectral representation of the feature vector $x$. The orthonormality condition allows us to state: $x=U\widehat{{x}} \Longleftrightarrow U^Tx=\widehat{{x}}$. This pair of equations allows us to interconvert between the ‘natural’ representation $x$ and the ‘spectral’ representation $\widehat{x}$ for any vector $x\in R^n$.
-
-## Spectral Representations of Natural Images
-
-We can consider any image as a grid graph, where each pixel is a node, connected by edges to adjacent pixels. Thus, a pixel can have either $3,5,8$ neighbours, depending on its location within the image grid. Each pixel gets a value as part of the image. If the image is grayscale, each value will be a single real number indicating how dark the pixel is. If the image is colored, each value will be a $3-$dimensional vector, indicating the values for the red, green and blue (RGB) channels. We use the alpha channel as well in the visualization below, so this is actually RGBA.
-
-This construction allows us to compute the graph Laplacian and the eigenvector matrix $U$. Given an image, we can then investigate what its spectral representation looks like.
-
-
-
-# Learning GNN Parameters
+## Learning GNN Parameters
 
 All of the embedding computations we’ve described here, whether spectral or spatial, are completely differentiable. This allows GNNs to be trained in an end-to-end fashion, just like a standard neural network, once a suitable loss function $L$ is defined:
 
@@ -511,3 +507,44 @@ $$
 L_G=\sum_v\sum_{u\in N_R(v)}log\frac{exp\;z_v^Tz_u}{exp\;z^T_{u'}z_u}
 $$
 where $N_R(v)$ is a multi-set of nodes visited when random walks are started from $v$. For large graphs, where computing the sum over all nodes may be computationally expensive, techniques such as Noise Contrastive Estimation are especially useful.
+
+
+
+# Fast Fourier Transform
+
+快速傅里叶变换（Fast Fourier Transform，FFT）是一种可在 $O(nlogn)$ 时间内完成的离散傅里叶变换（Discrete Fourier transform，DFT）算法
+
+对于一般的多项式乘法问题：
+
+考虑到两个多项式 $A(x),B(x)$ 的乘积 $C(x)$，假设 $A(n)$ 的项数为 $n$，其系数构成的 $n$ 维向量为 $(a_0,a_1,\cdots,a_{n-1})$，$B(x)$ 的项数为 $m$，其系数构成的 $m$ 维向量为 $(b_0,b_1,\cdots,b_{m-1})$，那么所要求的 $C(x)$ 的系数构成 $n+m-1$ 维的向量，对于朴素做法
+
+```c
+for (int i = 0; i < n; i++){
+    for ( int j = 0 ; j < m ; ++ j ) {
+        c[i+j] += a[i] * b[j]; 
+    }
+}
+```
+
+其时间复杂度是 $O(n^2)$
+
+多项式有两种表示方法，**系数表达法**与**点值表达法**
+
+- **多项式的系数表示法**
+
+  设多项式 $A(x)$ 为一个 $n-1$ 次的多项式，显然，所有项的系数组成的系数向量 $(a_0,a_1,\cdots,a_{n-1})$ 唯一确定了这个多项式：$A(x)=\sum_{i=0}^{n-1}a_i\cdot x^i$
+
+- **多项式的点值表示法**
+
+  **定理：一个 $n-1$ 次多项式在 $n$ 个不同点的取值唯一确定了该多项式**
+
+  将一组互不相同的数 $(x_0,x_1,\cdots,x_n)$ （叫插值节点 ）分别代入 $A(x)$ ，得到 $n$ 个取值 $(y_0,y_1,\cdots,y_n)$，其中 $y_i=\sum_{j=0}^{n-1}a_j\cdot x_i^j$
+
+  从而，$A(x)$ 也可以被写作 $\{(x_0,A(x_0)),(x_1,A(x_1)),\cdots,(x_n,A(x_n))\}$
+
+  已知多项式的点值表示，求其系数表示，可以使用插值。朴素的插值算法时间复杂度为 $O(n^2)$
+
+已知在一组插值节点 $(x_0,x_1,\cdots,x_n)$ 中，$A(x),B(x)$（假设个多项式项数相同） 的点值向量分别是 $(y_{a0},y_{a1},\cdots,y_{an}),(y_{b0},y_{b1},\cdots,y_{bn})$，那么 $C(x)=A(x)\cdot B(x)$ 的点值表达式可以在 $O(n)$ 的时间内求出，为 $(y_{a0}\cdot y_{b0},y_{a1}\cdot y_{b1},\cdots,y_{an}\cdot y_{bn})$
+
+于是多项式的乘法在点值表示法下可以以 $O(n)$ 的复杂度计算，所以我们如果能够在较低的时间复杂度内将系数表示法转化为点值表示法，再将点值表示法转回系数表示法，就能以较低的时间复杂度计算多项式的乘法
+
