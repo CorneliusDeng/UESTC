@@ -1439,3 +1439,115 @@ MADDPG 的具体算法流程如下：
     - 对每个智能体 $i$，更新目标 Actor 网络和目标 Critic 网络
   - end for
 - end for
+
+
+
+# MARL Survey
+
+参考链接：[MARL Survey](https://cloud.tencent.com/developer/article/1618396)
+
+根据综述文章 [A Survey and Critique of Multiagent Deep Reinforcement Learning](https://arxiv.org/abs/1810.05587)， MARL 算法分为以下四类：
+
+- Analysis of emergent behaviors（行为分析）
+- Learning communication（通信学习）
+- Learning cooperation（协作学习）
+- Agents modeling agents（智能体建模）
+
+## Analysis of emergent behaviors
+
+行为分析类别的算法主要是将单智能体强化学习算法（SARL）直接应用到多智能体环境之中，每个智能体之间相互独立，遵循 Independent Q-Learning 的算法思路
+
+- [Multiagent Cooperation and Competition with Deep Reinforcement Learning](https://arxiv.org/abs/1511.08779) 这篇文章首次将 DQN 算法与 IQL 结合起来，并将其应用到 ALE 环境中的 Pong 游戏中，在这样一个环境中，每个智能体拥有独立的 Q network，独自采集数据并进行训练，都有对环境的全局观察，动作空间包含以下四个维度：上移、下移、保持不动以及击球。实验证明，在将 DQN 直接应用到多智能体环境中，也能够达到一个比较好的性能，即便 IQL 算法是一个十分简单的算法，没有办法处理环境非平稳问题，但是依旧是一个比较强的基准算法。由于是一篇比较早期的多智能体论文，因而文中还提到了一些比较有用的实验部分的细节问题：
+
+  - Q 值的收敛与否一定程度上反映了 DQN 算法的收敛与否
+  - 在训练之前首先随机在环境中采样一些 state 作为测试集，监控这些 state 对应的最大的 Q 值平均值来判断算法收敛与否
+
+- [Cooperative Multi-Agent Control Using Deep Reinforcement Learning](https://link.springer.com/chapter/10.1007/978-3-319-71682-4_5) 本文将基于值函数的算法 DQN、基于策略梯度的算法 TRPO 以及演员-评论家算法 DDPG 与 IQL 算法以及循环神经网络（或前向神经网络）相结合，应用到局部观察的多智能体环境中。其与前一篇 paper 的区别在于，为了增加算法在大规模场景下的可扩展性，**所有的智能体都共享同一套参数**。训练时所有智能体采样得到的样本进行汇总，用来更新共享的模型参数。同时，为了进一步保证不同的智能体即使在共享参数的情况下也能够表现出不同的行为，其模型输入除了局部的观察外，还**包括自身的索引**。实验结果表明，在使用前向神经网络构建模型时，基于策略梯度的 TRPO 算法在最终性能上超越了另外两种算法；另外，使用循环神经网络构建模型时，性能超过使用前向神经网络的情况。
+
+  最后，文章还提出了一种课程学习的训练方法：假设我们的课程学习环境是先从 2 个智能体开始训练，逐渐增加到最多 10 个智能体。
+
+  我们首先**构建一个迪利克雷分布**，该分布的概率密度函数最大值点初始偏向于较少的智能体个数，每一次训练时都从这个分布中采样智能体的个数并进行强化学习算法的训练，直到算法在这些采样出的环境中的性能都达到了某个阈值。那么接下来我们就改变迪利克雷分布的参数，来使得其概率密度函数最大值点逐渐偏向于较多的智能体个数。循环上述过程直到算法在 10 个智能体上也能达到比较好的性能，这样我们就完成了课程学习。
+
+## Learning communication
+
+属于这一类别的多智能体强化学习方法显式假设智能体之间存在信息的交互，并在训练过程中学习如何根据自身的局部观察来生成信息，或者来确定是否需要通信、与哪些智能体通信等等。在训练完毕后运行的过程中，需要显式依据其余智能体传递的信息来进行决策。
+
+- [Learning to Communicate with Deep Multi-Agent Reinforcement Learning](https://proceedings.neurips.cc/paper/2016/hash/c7635bfd99248a2cdef8249ef7bfbef4-Abstract.html) 这篇文章最先在深度多智能体强化学习中引入通信学习，其解决的强化学习问题是 Dec-POMDP 问题。换句话说，在 Dec-POMDP 中，所有智能体共享一个全局的回报函数，所以是一个完全协作环境，每个智能体只拥有自己的局部观察。文中假设通信信道是离散的，即智能体之间只能能传递离散的信息（即 one-hot 向量）。本文采用的是 CTDE 框架（即中心化训练去中心化执行，Centralized Training Decentralized Execution），在训练时不对智能体之间的信息传递进行限制（由于是中心化的训练器，所以智能体之间的信息传递完全由这个训练器接管），甚至在训练时可以使用连续的信息。但是训练完毕之后运行时，智能体之间才进行真正的通信，并且该通信信道是离散（如果训练时是连续的，则在运行时要对信息进行离散化）的。
+
+  本文提出了两种算法，后一种是前一种的改进版本，具体名称陈列如下：
+
+  - Reinforced Inter-Agent Learning (RIAL)：由于本文限定通信信道是离散的，因而 RIAL 算法将生成的信息也作为一个离散的动作空间来考虑。RIAL 算法将 DRQN 算法与 IQL 算法结合起来，并显式在智能体之间传输可学习的信息来增加智能体对于环境的感知，从而解决 IQL 面临的因为环境非平稳所带来的性能上的问题。RIAL 算法使用了两个 Q-network，分别输出原始的动作以及离散的信息。并且 RIAL 算法中 Q network 的输入不仅仅是局部观察，还包括**上一时间步**其余智能体传递过来的信息。另外还需提及的一点是，在多智能体环境中，采用 Experience Replay 反而会导致算法性能变差。这是因为之前收集的样本与现在收集的样本，由于智能体策略更新的原因，两者实际上是从不同的环境中收集而来，从而使得这些样本会阻碍算法的正常训练。
+  - Differentiable Inter-Agent Learning (DIAL)：虽然 RIAL 算法可以在智能体之间共享参数，但它仍然没有充分利用中心化训练的优势。而且，智能体不会互相提供，有关其接收到的信息的发送方智能体的通信行为的反馈。然而人类交流富有紧密的反馈循环。例如，在面对面互动时，听众会向发言者反馈一些非语言信息（例如眼神，微动作等），表明理解和兴趣的程度。RIAL 算法缺乏这种反馈机制，但是后者对于通信学习是非常重要的。所以本文在 RIAL 的基础上提出了一种新的算法 DIAL，该算法通过通信信道讲梯度信息从信息接收方传回到信息发送方。具体来说，在中心化训练时，信息发送方的信息动作输出直接连接到信息接收方，并且为了能够实现端到端训练，此时的信息将不再是离散值而是连续值。训练完毕之后执行时，通过这个实值的正负进行 one-hot 离散化。同时为了增加算法的鲁棒性，这个信息实值是从一个拥有固定方差的高斯分布中采样而来，该分布的均值即信息发送方生成的实值。
+
+- [Learning Multiagent Communication with Backpropagation](https://proceedings.neurips.cc/paper/2016/hash/55b1927fdafef39c48e5b73b5d61ea60-Abstract.html) 本文假设智能体之间传递的消息是连续变量（不像 RIAL 或者 DIAL 是离散的），文章采用的强化学习算法是 policy gradient 方法。本文解决的也同样是 Dec-POMDP 问题，遵循的是中心化训练中心化执行 CTCE（Centralized Training Centralized Execution）框架，因而在大规模的多智能体环境下，由于网络输入的数据维度过大，会给强化学习算法的训练带来困难。算法被命名为 CommNet，该算法采用的信息传递方式是采用广播的方式，文中认为可以对算法做出些许修改，让每个智能体只接收其相邻几个智能体的信息。文中还提出了两种对上述算法可以采取的改进方式：
+
+  - 可以对模型中间的结构加上 skip connection，类似于 ResNet。这样可以使得智能体在学习的过程中同时考虑局部信息以及全局信息，类似于计算机视觉领域 multi-scale 的思想
+  - 可以将其中网络结构换成 RNN-like，例如 LSTM 或者 GRU 等等，这是为了处理局部观察所带来的 POMDP 问题
+
+- [Multiagent Bidirectionally-Coordinated Nets: Emergence of Human-level Coordination in Learning to Play StarCraft Combat Games](https://arxiv.org/abs/1703.10069) 本文提出了一个新的算法 BiCNet，同样假设智能体之间传递的信息是离散的，旨在解决 zero-sum Stochastic Game (SG) 问题。算法基于演员-评论家算法框架，使用的是 DDPG 算法，并且考虑到算法在大规模多智能体环境下的可扩展性问题，智能体之间共享模型参数，并且算法假设每个智能体都拥有同样的全局观察（全局状态），这也是本文的局限之一。另外，BiCNet 同样遵循 CTCE 框架。BiCNet 中所有的智能体都拥有独立的回报函数以及 Q-network 以及 policy network，但这些 network 中部分参数是共享的。这些智能体一起在环境中进行数据采样，最后将所有的数据集中起来，更新他们的共享部分的参数
+
+- [Learning Attentional Communication for Multi-Agent Cooperation](https://proceedings.neurips.cc/paper/2018/hash/6a8018b3a00b69c008601b8becae392b-Abstract.html) 前面我们讨论的三种算法，R(D)IAL、CommNet 以及 BiCNet，都是每一个时间步所有智能体之间都要进行通信，或者每个智能体与自己相邻的智能体进行通信，这在本文看来属于一个预定义的通信模式，不够灵活。本文的出发点正是基于此，希望提出一个算法，**能够让智能体在任何时刻，自己决定是否需要与其他智能体进行通信，以及与哪些智能体进行通信。**本文为了达到上述目标，提出了一个基于注意力机制的通信模型 ATOC，该模型基于智能体的局部观察，可同时适用于协作环境（共享一个全局的回报函数或者拥有各自的回报函数）以及竞争环境（实质也是协作环境，因为算法只控制一方）。其基本思想是，通过其局部观察与动作（**其实是策略网络的中间层输出**）的编码，来决定其是否需要与其视野范围内的其他智能体进行通信，以及哪些智能体进行通信。对于决定进行通信的智能体，我们称之为发起者（initiator），这个发起者从其视野范围内选择协作者共同形成一个通信群组，这个通信群组在整个 episode 中动态变化并且只在需要的时候存在。本文采用一个双向的 LSTM 网络作为通信群组之间的通信信道（类似于 BiCNet），这个 LSTM 以通信群组中各个智能体的局部观察与动作的编码（之前提到的）作为输入，输出的 higher-level 的编码信息作为各智能体策略网络的额外输入，来指导协作策略的生成。ATOC 算法采用的是演员-评论家框架，DDPG 算法，遵循 CTDE 框架，同时考虑到算法在大规模多智能体环境下的可扩展性，所有智能体共享策略网络、注意力单元以及通信信道的参数。为什么 ATOC 算法要选择视野范围之内的智能体建立通信群组，主要有以下两点原因：
+
+  - 邻近的智能体的局部观察更加相似，因而更容易互相理解
+  - 邻近的智能体之间更容易协作
+
+  一个发起者邻近的智能体可以分为以下三种：
+
+  - 其他发起者
+  - 被其他发起者选定的智能体
+  - 没有被其他发起者选定的智能体
+
+  与 BiCNet 相比，ATOC 有以下相似以及改进点：
+
+  - 为了进一步凸显不同智能体在特定任务中的不同定位，固定其在 LSTM 中的位置
+  - 将 RNN 通信信道改为 LSTM，从而过滤掉无关信息
+
+  最后，ATOC 在竞争环境下的训练方式是与 baseline 对抗训练，而不是分别 self-play 最后再进行比较。
+
+- [Learning to Schedule Communication in Multi-agent Reinforcement Learning](https://openreview.net/forum?id=SJxu5iR9KQ) 与 ATOC 相比，这篇工作关注的是另外一个问题。这里同样从 R(D)IAL、CommNet 以及 BiCNet 算法出发，这三种算法在每一个时间步所有的智能体之间都参与通信，或者是类似于 R(D)IAL 这样智能体两两之间相互传递信息，或者是像 CommNet 以及 BiCNet 这样所有的智能体都将自己的信息发送到通信信道中参与高级信息的生成。
+
+  但是在现实情况中，通信信道的带宽是有限的，如果所有智能体都往这个有限带宽的信道中发送信息，则容量一旦超出，就会出现信息丢失或者阻塞等等情况。ATOC 是通过限制每个发起者只能选择最多 个智能体加入到通信群组中，但是其选取的方式十分简单。本文将通信领域 MAC (Medium Access Control) 方法引入到多智能体强化学习中，来解决上述问题。
+
+  本文提出的 SchedNet 算法，同样是解决 Dec-POMDP 问题，并遵循 CTDE 框架，基于演员-评论家算法。
+
+## Learning cooperation
+
+此类工作并不显式地学习智能体之间的通信，而是将 multi-agent learning 领域的一些思想引入到 MARL 中。而这类方案又可以分为三个类别
+
+### 基于值函数的方法
+
+- [Value-Decomposition Networks For Cooperative Multi-Agent Learning Based On Team Reward](https://dl.acm.org/doi/10.5555/3237383.3238080) 基于值函数的方法可以说是多智能体强化学习算法最开始的尝试（例如 Independent Q-Learning， IQL 算法）。虽然前面也提到将 IQL 算法与 DQN 算法结合能够在多智能体问题上取得比较好的效果，但是对于较为复杂的环境，IQL 还是无法很好地处理由于环境非平稳而带来的问题。而中心化的方法，即将所有智能体的状态空间以及动作空间合并，当作一个智能体来考虑的方法，虽然能够较好的处理环境非平稳性问题，但是也存在以下缺陷：
+
+  - 在大规模多智能体环境中算法可扩展性较差
+  - 由于所有智能体联合训练，一旦某个智能体较早学到一些有用的策略，则其余智能体会选择较为懒惰的策略。这是因为其余智能体由于进度较慢，从而做出的策略会阻碍已经学到一些策略的智能体，从而使得全局汇报下降
+
+  本文提出的 VDN 方法的基本思想是，中心化地训练一个联合的 Q network，但是这个联合的网络是由所有智能体局部的 Q networks 加和得到，这样不仅可以通过中心化训练处理由于环境非平稳带来的问题，而且由于实际是在学习每个智能体的局部模型，因而解耦智能体之间复杂的相互关系。最后，由于训练完毕后每个智能体拥有只基于自己局部观察的 Q network，可以实现去中心化执行，即 VDN 遵循 CTDE 框架，并且解决的是 Dec-POMDP 问题。
+
+- [QMIX: Monotonic Value Function Factorisation for Deep Multi-Agent Reinforcement Learning](http://proceedings.mlr.press/v80/rashid18a.html) QMIX 算法是 VDN 算法的后续工作，它的出发点是 VDN 做联合 Q-value 分解时只是进行简单的加和，这种做法会使得学到的局部 Q 函数表达能力有限，没有办法捕捉到智能体之间更复杂的相互关系，因而对 VDN 算法进行了修改。
+
+- [QTRAN: Learning to Factorize with Transformation for Cooperative Multi-Agent Reinforcement learning](http://proceedings.mlr.press/v97/son19a.html) QTRAN 算法是对 VDN 以及 QMIX 算法的进一步改进（所以这三个工作是一条线），本文认为直接根据局部 Q 函数采用神经网络去逼近联合 Q 函数是一件比较困难的事情，因而将整个逼近过程分为两步：首先采用 VDN 的方式得到加和的局部 Q 函数，作为联合 Q 函数的近似，接着去拟合局部 Q 函数与联合 Q 函数的差值。QTRAN 提出了两个算法 QTRAN-base 以及 QTRAN-alt。
+
+### 基于演员-评论家的方法
+
+将单智能体强化学习算法扩展到多智能体环境中，最简单就是 IQL 类别方法，但是此类方法在复杂环境中无法处理由于环境非平稳带来的问题；另一方面，虽然中心化方法能够处理上述问题，但是与 IQL 相比又失去了较好的可扩展性。
+
+前面介绍的基于 value-based 方法通过 value decomposition 方式来解决可扩展性问题，那么对于基于演员-评论家方法，由于其结构的特殊性，我们可以通过中心化学习（共享/独立）评论家但是每个智能体独立的演员，来很好的处理算法可扩展性问题的同时，拥有很好的抗环境非平稳能力。
+
+- [Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments](https://proceedings.neurips.cc/paper/2017/hash/68a9750337a418a86fe06c1991a1d64c-Abstract.html) 本文提出的 MADDPG 算法将 DDPG 算法扩展到多智能体环境中，MADDPG 算法假定每一个智能体拥有自己独立的 critic network 以及 actor network，并且假定每个智能体拥有自己独立的回报函数，这样 MADDPG 算法就可以同时解决协作环境、竞争环境以及混合环境下的多智能体问题。但是 MADDPG 算法假定每个智能体在训练时都能够获取其余所有智能体的局部观察以及动作，因而即使每个智能体的 critic network 是独立的，训练时也需要中心化训练，因而遵循 CTDE 框架。
+- [Counterfactual Multi-Agent Policy Gradients](https://arxiv.org/abs/1705.08926) 本文提出的算法 COMA 旨在解决 Dec-POMDP 问题中的 multi-agent credit assignment 问题，即多智能体信用分配问题。这个问题简单概括来说，由于 Dec-POMDP 问题中所有智能体共享同一个全局回报，因而每个智能体不知道自己的行为到底对这个全局回报产生了多大的影响，这就是多智能体信用分配问题。 COMA 算法与 MADDPG 一样，遵循 CTDE 训练框架，但是因为解决的是 Dec-POMDP 问题，所以所有的智能体共享一个联合的 critic network，该 network 与 MADDPG 一样，基于所有智能体的局部观察以及动作，但是 actor network 是独立的并且只基于局部观察。COMA 与 MADDPG 在 actor network 上的不同之处在于前者使用的是 GRU 网络，为了更好的处理局部观察问题，但是后者使用的则是普通的 DNN。COMA 使用的是 vanilla 的 actor-critic 方法，其核心之处在于引入了一个 counterfactual 的 baseline 函数。这个思路是受到 difference rewards 方法启发的，该方法通过比较智能体遵循当前 actor network 进行决策得到的全局回报与遵循某个默认策略进行决策得到的全局回报，来解决多智能体信用分配问题。
+- [Multiagent Soft Q-Learning](https://arxiv.org/abs/1804.09817) 本文提出了一个类似于 MADDPG 的遵循 CTDE 框架的 MASQL（论文中没有这样进行缩写） 算法，本质上是将 Soft Q-Learning 算法迁移到多智能体环境中，因而与将 DDPG 算法迁移到多智能体环境中的 MADDPG 算法类似，不过 MASQL 算法解决的是 Dec-POMDP 问题。与 MADDPG 相比，MASQL 算法并不只是换了一种单智能体算法并将其迁移到多智能体环境，而是为了解决 Dec-POMDP 中的 relative overgeneralization 问题。MASQL 算法与 MADDPG 算法一样，使用了一个中心化的 criti；但与 MADDPG 不同，每个智能体的 policy 不是只输出自己的action，而是输出所有智能体的 joint action，然后与环境交互时从中选取属于自己的 action。值从大到小意味着在训练初期会尽可能探索更大的 policy space，随着训练的进行会逐步收敛到最优的 policy 上。
+- [Actor-Attention-Critic for Multi-Agent Reinforcement Learning](https://arxiv.org/abs/1810.02912) 本文提出的 MAAC 算法是在 MADDPG 上进行了一些修改，将 MADDPG 采用的 DDPG 算法替换为 SAC（soft actor-critic）算法，并将 COMA 提出的 counterfactual baseline 引入进来，因而可以同时处理协作、竞争以及混合环境，遵循 CTDE 框架。 其核心思想体现在，对于 MADDPG 算法，其每个智能体对应的 Q function 都是将其余智能体的局部观察以及动作无差别的作为输入，但是在现实场景中，智能体对于其余智能体的关注度是不一样的。为此，MAAC 算法将注意力机制引入到 Q function 的构建之中，本文注意力机制采用的是多头注意力机制。
+
+### 基于经验回放缓存的方法
+
+- [Stabilising experience replay for deep multi-agent reinforcement learning](http://proceedings.mlr.press/v70/foerster17b.html)  
+- [Deep decentralized multi-task multi-agent reinforcement learning under partial observability](https://dl.acm.org/doi/10.5555/3305890.3305958)
+
+由于这部分要介绍的两个工作主要聚焦于使用 ER 训练 Q-function 时增加稳定性（CommNet 甚至因为 ER 在 multi-agent 环境下的不稳定性而禁用了 ER），这两个方法前者遵循 CTDE 框架，并且类似 MADDPG 方法一样，均假设每个智能体拥有自己独立的 Q-function；后者则是完全独立的 IQL。这两个方法都是基于 Q-Learning 算法。
+
+## Agents modeling agents
+
+这一类方法主要聚焦于通过对其他智能体的策略、目标、类别等等建模来进行更好的协作或者更快地打败竞争对手。
+
+- [Stabilising experience replay for deep multi-agent reinforcement learning](http://proceedings.mlr.press/v70/foerster17b.html) 除了智能体之间的协作，本文还提出了一种估计其他智能体策略的方法。这篇文章首先从 hyper Q-Learning 算法出发，该算法通过贝叶斯估计的方法来估计其他智能体的策略。但是这种方法会增加 Q function 的输入维度，使得 Q function 更难学习。上述情况在深度强化学习中更加明显。考虑如下一个简单的 idea，我们把其他智能体策略函数的参数作为额外输入 ，但是在深度强化学习中策略函数一般是 DNN，因而维度太高基本不可行。本文提出了一个十分简单的指纹表示—— **episode 索引号**。这样一个听上去过于简单的指纹在性能上确实可以带来提升。但是存在一个比较大的问题在于，当其他智能体的策略收敛之后，索引号还在不断增加。另外，本文在之前指纹的基础上还增加了一个新的指纹—— exploration rate，这个值也能够一定程度上反应 policy 的特点。
+- [Machine Theory of Mind](https://www.deepmind.com/publications/machine-theory-of-mind) 这篇论文是将行为以及脑科学领域 Theory of Mind（ToM）理论引入到多智能体强化学习中，用以根据其他智能体历史行为数据来预测其未来行为等（**这里我们只关注行为**）。ToM 理论认为，预测一个智能体的未来行为，我们需要知道其性格（character）、思想（mental）以及当前状态，对于某个智能体 过去的轨迹数据，我们使用一个神经网络编码每一条轨迹，最后将这些编码加起来即可。
