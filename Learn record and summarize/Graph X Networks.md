@@ -10,9 +10,15 @@
 
 [**Fast Fourier Transform**](https://zhuanlan.zhihu.com/p/31584464)
 
+[**如何理解 Graph Convolutional Networks**](https://www.zhihu.com/question/54504471/answer/332657604)
+
+[**如何理解 Graph Attention Networks**](https://zhuanlan.zhihu.com/p/81350196)
+
 Graphs are all around us; real world objects are often defined in terms of their connections to other things. A set of objects, and the connections between them, are naturally expressed as a graph.
 
 Researchers have developed neural networks that operate on graph data (called **graph neural networks, or GNNs**) for over a decade.
+
+
 
 
 # Graph
@@ -278,156 +284,6 @@ Sometimes we will need to denote a graph property by a matrix $M$, where each ro
 
 
 
-# Graph Convolutional Networks
-
-## Extending Convolutions to Graphs
-
-Convolutional Neural Networks have been seen to be quite powerful in extracting features from images. However, images themselves can be seen as graphs with a very regular grid-like structure, where the individual pixels are nodes, and the RGB channel values at each pixel as the node features.
-
-A natural idea, then, is to consider generalizing convolutions to arbitrary graphs. However, ordinary convolutions are not node-order invariant, because they depend on the absolute positions of pixels. It is initially unclear as how to generalize convolutions over grids to convolutions over general graphs, where the neighbourhood structure differs from node to node.
-
-Convolutions in CNNs are inherently localized. GNNs can perform localized convolutions mimicking CNNs.
-
-## Polynomial Filters on Graphs
-
-### The Graph Laplacian
-
-Given a graph $G$, let us fix an arbitrary ordering of the $n$ nodes of $G$. We denote the $0−1$ adjacency matrix of $G$ by $A$, we can construct the **diagonal degree matrix** $D$ of $G$ as: $D_v=\sum_uA_{vu}$ (The degree of node $v$ is the number of edges incident at $v$) where  $A_{vu}$  denotes the entry in the row corresponding to $v$ and the column corresponding to $u$ in the matrix $A$.
-
-Then, the **graph Laplacian** $L$ is the square $n\times n$ matrix defined as: $L=D-A$. Example as follows:
-
-![](https://distill.pub/2021/understanding-gnns/images/laplacian.svg)
-
-The graph Laplacian gets its name from being the discrete analog of the Laplacian operator from calculus. Although it encodes precisely the same information as the adjacency matrix $A$, the graph Laplacian has many interesting properties of its own.
-
-### Polynomials of the Laplacian
-
-Build polynomials of thethe graph Laplacian:
-$$
-p_w(L)=w_0I_n+w_1L+w_2L^2+\cdots+w_dL^d=\sum^d_{i=0}w_iL^i
-$$
-Each polynomial of this form can alternately be represented by its vector of coefficients $w=[w_0,\cdots,w_d]$. Note that for every $w,p_w(L)$ is an $n\times n$ matrix, just like $L$.
-
-These polynomials can be thought of as the equivalent of ‘filters’ in CNNs, and the coefficients $w$ as the weights of the ‘filters’.
-
-For ease of exposition, we will focus on the case where nodes have one-dimensional features: each of the $x_v$ for $v\in V$ is just a real number. The same ideas hold when each of the $x_v$ are higher-dimensional vectors, as well.
-
-Using the previously chosen ordering of the nodes, we can stack all of the node features $x_v$ to get a vector  $x\in R^n$
-
-<img src="https://distill.pub/2021/understanding-gnns/images/node-order-vector.svg" style="zoom:67%;" />
-
-
-
-Once we have constructed the feature vector $x$, we can define its convolution with a polynomial filter $p_w$ as: $x'=p_w(L)x$
-
-To understand how the coefficients $w$ affect the convolution, let us begin by considering the ‘simplest’ polynomial: when $w_0=1$ and all of the other coefficients are 0. In this case, $x'$ is just x: $x'=p_w(L)x=\sum_{i=0}^dw_iL^ix=w_0I_nx=x$
-
-Now, if we increase the degree, and consider the case where instead $w_1=1$ and and all of the other coefficients are 0. Then, $x'=p_w(L)x=\sum_{i=0}^dw_iL^ix=w_1Lx=Lx$, and so: 
-$$
-\begin{align}
-x'_v=(Lx)_v
-& = L_vx \\
-& = \sum_{u\in G} L_{vu}x_u \\
-& = \sum_{u\in G}(D_{vu}-A_{vu})x_u \\
-& = D_vx_v-\sum_{u\in N(v)x_u}
-\end{align}
-$$
-We see that the features at each node $v$ are combined with the features of its immediate neighbours $u \in N(v)$.
-
-At this point, a natural question to ask is: How does the degree $d$ of the polynomial influence the behaviour of the convolution? Indeed, it is not too hard to show that: $dist_G(v,u)>i \Longrightarrow L_{vu}^i=0$
-
-This implies, when we convolve $x$ with $p_w(L)$ of degree $d$ to get $x'$:
-$$
-\begin{align}
-x'_v=(p_w(L)x)_v
-& = (p_w(L))_vx \\
-& = \sum_{i=0}^dw_iL^i_vx \\
-& = \sum_{i=0}^dw_i\sum_{u\in G}L^i_{vu}x_u \\
-& = \sum_{i=0}^dw_i\sum_{u\in G,\;dist_G(v,u)\leq i}L^i_{vu}x_u
-\end{align}
-$$
-Effectively, the convolution at node $v$ occurs only with nodes $u$ which are not more than $d$ hops away. Thus, these polynomial filters are localized. The degree of the localization is governed completely by $d$.
-
-### ChebNet
-
-ChebNet refines this idea of polynomial filters by looking at polynomial filters of the form: $p_w(L)=\sum^d_{i=1}w_iT_i(\widetilde{L})$ , where $T_i$ is the degree-i Chebyshev polynomial of the first kind and $\widetilde{L}$ is the normalized Laplacian defined using the largest eigenvalue of $L$: $\widetilde{L}=\frac{2L}{\lambda_{max}(L)}-I_n$
-
-- The motivation behind these choices
-  - $L$ is actually positive semi-definite: all of the eigenvalues of $L$ are not lesser than 0. If $\lambda_{max}(L)>1$, the entries in the powers of $L$ rapidly increase in size. $\widetilde{L}$ is effectively a scaled-down version of $L$, with eigenvalues guaranteed to be in the range [−1,1]. This prevents the entries of powers of $\widetilde{L}$ from blowing up. 
-  - The Chebyshev polynomials have certain interesting properties that make interpolation more numerically stable.
-
-### Polynomial Filters are Node-Order Equivariant
-
-The polynomial filters we considered here are actually independent of the ordering of the nodes. This is particularly easy to see when the degree of the polynomial $p_w$ is 1: where each node’s feature is aggregated with the sum of its neighbour’s features. Clearly, this sum does not depend on the order of the neighbours. A similar proof follows for higher degree polynomials: the entries in the powers of $L$ are equivariant to the ordering of the nodes.
-
-### Embedding Computation
-
-We now describe how we can build a graph neural network by stacking ChebNet (or any polynomial filter) layers one after the other with non-linearities, much like a standard CNN.
-
-In particular, if we have $K$ different polynomial filter layers, the $k^{th}$ of which has its own learnable weights $w^{(k)}$, we would perform the following computation:
-
-![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Graph%20Neural%20Networks/Embedding%20Computation.png?raw=true)
-
-Note that these networks reuse the same filter weights across different nodes, exactly mimicking weight-sharing in Convolutional Neural Networks (CNNs) which reuse weights for convolutional filters across a grid.
-
-## From Local to Global Convolutions
-
-**‘local’ convolutions: every node’s feature is updated using a function of its local neighbours’ features.**
-
-While performing enough steps of message-passing will eventually ensure that information from all nodes in the graph is passed, one may wonder if there are more direct ways to perform ‘global’ convolutions.
-
-### Spectral Convolutions
-
-As before, we will focus on the case where nodes have one-dimensional features. After choosing an arbitrary node-order, we can stack all of the node features to get a ‘feature vector’ $x\in R^n$
-
-**Key Idea:** Given a feature vector $x$, the Laplacian $L$ allows us to quantify how smooth $x$ is, with respect to $G$.
-
-After normalizing $x$ such that $\sum_{i=1}^nx_i^2=1$, if we look at the following quantity involving $L$:
-$$
-R_L(x)=\frac{x^TLx}{x^Tx}=\frac{\sum_{(i,j)\in E}(x_i-x_j)^2}{\sum_ix_i^2}=\sum_{(i,j)\in E}(x_i-x_j)^2
-$$
-we immediately see that feature vectors $x$ that assign similar values to adjacent nodes in $G$ (hence, are smooth) would have smaller values of $R_L(x)$.
-
-$L$is a real, symmetric matrix, which means it has all real eigenvalues $\lambda_1 \leq \cdots \leq \lambda_n$. Further, the corresponding eigenvectors $u_1,\cdots,u_n$ can be taken to be orthonormal:
-$$
-u^T_{k_1}u_{k_2} = 
-\begin{cases}
-1 & \text{if } k_1 = k_2\\
-0 & \text{if } k_1 \neq k_2
-\end{cases}
-$$
-It turns out that these eigenvectors of $L$ are successively less smooth, as $R_L$ indicates:
-$$
-\underset{x,x\bot \{u_1,\cdots,u_{i-1}\}}{arg\;min\;}R_L(x)=u_i \; \cdot \; \underset{x,x\bot \{u_1,\cdots,u_{i-1}\}}{min} R_L(x)=\lambda_i
-$$
-The set of eigenvalues of $L$ are called its ‘spectrum’, hence the name! We denote the ‘spectral’ decomposition of $L$ as: $L=U \Lambda U^T$. where $\Lambda$ is the diagonal matrix of sorted eigenvalues, and $U$ denotes the matrix of the eigenvectors (sorted corresponding to increasing eigenvalues):
-$$
-\Lambda=
-\begin{bmatrix}
-\lambda_1  & \\ 
-& \ddots \\
-& & \lambda_n
-\end{bmatrix}
-
-\quad 
-
-U=
-\begin{bmatrix}
-u_1 & \cdots & u_n
-\end{bmatrix}
-$$
-The orthonormality condition between eigenvectors gives us that $U^TU=I$, the identity matrix. As these $n$ eigenvectors form a basis for $R^n$, any feature vector $n$ can be represented as a linear combination of these eigenvectors: $x=\sum_{i=1}^n\widehat{x}_iu_i=U\widehat{x}_i$
-
-Where $\widehat{x}$ is he vector of coefficients $[x_0,\cdots,x_n]$. We call $\widehat{x}$ as the spectral representation of the feature vector $x$. The orthonormality condition allows us to state: $x=U\widehat{{x}} \Longleftrightarrow U^Tx=\widehat{{x}}$. This pair of equations allows us to interconvert between the ‘natural’ representation $x$ and the ‘spectral’ representation $\widehat{x}$ for any vector $x\in R^n$.
-
-### Spectral Representations of Natural Images
-
-We can consider any image as a grid graph, where each pixel is a node, connected by edges to adjacent pixels. Thus, a pixel can have either $3,5,8$ neighbours, depending on its location within the image grid. Each pixel gets a value as part of the image. If the image is grayscale, each value will be a single real number indicating how dark the pixel is. If the image is colored, each value will be a $3-$dimensional vector, indicating the values for the red, green and blue (RGB) channels. We use the alpha channel as well in the visualization below, so this is actually RGBA.
-
-This construction allows us to compute the graph Laplacian and the eigenvector matrix $U$. Given an image, we can then investigate what its spectral representation looks like.
-
-
-
 # Modern Graph Neural Networks
 
 ChebNet was a breakthrough in learning localized filters over graphs, and it motivated many to think of graph convolutions from a different perspective.
@@ -510,41 +366,253 @@ where $N_R(v)$ is a multi-set of nodes visited when random walks are started fro
 
 
 
-# Fast Fourier Transform
+# Graph Convolutional Networks
 
-快速傅里叶变换（Fast Fourier Transform，FFT）是一种可在 $O(nlogn)$ 时间内完成的离散傅里叶变换（Discrete Fourier transform，DFT）算法
+## Extending Convolutions to Graphs
 
-对于一般的多项式乘法问题：
+Convolutional Neural Networks have been seen to be quite powerful in extracting features from images. However, images themselves can be seen as graphs with a very regular grid-like structure, where the individual pixels are nodes, and the RGB channel values at each pixel as the node features.
 
-考虑到两个多项式 $A(x),B(x)$ 的乘积 $C(x)$，假设 $A(n)$ 的项数为 $n$，其系数构成的 $n$ 维向量为 $(a_0,a_1,\cdots,a_{n-1})$，$B(x)$ 的项数为 $m$，其系数构成的 $m$ 维向量为 $(b_0,b_1,\cdots,b_{m-1})$，那么所要求的 $C(x)$ 的系数构成 $n+m-1$ 维的向量，对于朴素做法
+A natural idea, then, is to consider generalizing convolutions to arbitrary graphs. However, ordinary convolutions are not node-order invariant, because they depend on the absolute positions of pixels. It is initially unclear as how to generalize convolutions over grids to convolutions over general graphs, where the neighbourhood structure differs from node to node.
 
-```c
-for (int i = 0; i < n; i++){
-    for ( int j = 0 ; j < m ; ++ j ) {
-        c[i+j] += a[i] * b[j]; 
-    }
-}
-```
+Convolutions in CNNs are inherently localized. GNNs can perform localized convolutions mimicking CNNs.
 
-其时间复杂度是 $O(n^2)$
+CNN中的卷积本质上就是利用一个共享参数的过滤器(Kernel)，**通过计算中心像素点以及相邻像素点的加权和来构成 feature map 实现空间特征的提取**，当然加权系数就是卷积核的权重系数。**离散卷积本质就是一种加权求和**
 
-多项式有两种表示方法，**系数表达法**与**点值表达法**
+**卷积核的参数通过优化求出才能实现特征提取的作用，GCN的理论很大一部分工作就是为了引入可以优化的卷积参数**
 
-- **多项式的系数表示法**
+GCN的本质目的就是用来提取拓扑图的空间特征，除了 graph convolution这一种途径外，在 vertex domain(spatial domain) 和 spectral domain 实现目标是两种最主流的方式。
 
-  设多项式 $A(x)$ 为一个 $n-1$ 次的多项式，显然，所有项的系数组成的系数向量 $(a_0,a_1,\cdots,a_{n-1})$ 唯一确定了这个多项式：$A(x)=\sum_{i=0}^{n-1}a_i\cdot x^i$
+- **空间维度**
 
-- **多项式的点值表示法**
+  Vertex domain(spatial domain) 是非常直观的一种方式。顾名思义：提取拓扑图上的空间特征，那么就把每个顶点相邻的 neighbors 找出来，其中蕴含了两个子问题：
 
-  **定理：一个 $n-1$ 次多项式在 $n$ 个不同点的取值唯一确定了该多项式**
+  a. 按照什么条件去找中心vertex的neighbors，也就是如何确定 receptive field
 
-  将一组互不相同的数 $(x_0,x_1,\cdots,x_n)$ （叫插值节点 ）分别代入 $A(x)$ ，得到 $n$ 个取值 $(y_0,y_1,\cdots,y_n)$，其中 $y_i=\sum_{j=0}^{n-1}a_j\cdot x_i^j$
+  b. 确定receptive field，按照什么方式处理包含不同数目neighbors的特征
 
-  从而，$A(x)$ 也可以被写作 $\{(x_0,A(x_0)),(x_1,A(x_1)),\cdots,(x_n,A(x_n))\}$
+  [Learning Convolutional Neural Networks for Graphs](http://proceedings.mlr.press/v48/niepert16.pdf) 给出的方法主要缺点如下：
 
-  已知多项式的点值表示，求其系数表示，可以使用插值。朴素的插值算法时间复杂度为 $O(n^2)$
+  每个顶点提取出来的neighbors不同，使得计算处理必须针对每个顶点；提取特征的效果可能没有卷积好
 
-已知在一组插值节点 $(x_0,x_1,\cdots,x_n)$ 中，$A(x),B(x)$（假设个多项式项数相同） 的点值向量分别是 $(y_{a0},y_{a1},\cdots,y_{an}),(y_{b0},y_{b1},\cdots,y_{bn})$，那么 $C(x)=A(x)\cdot B(x)$ 的点值表达式可以在 $O(n)$ 的时间内求出，为 $(y_{a0}\cdot y_{b0},y_{a1}\cdot y_{b1},\cdots,y_{an}\cdot y_{bn})$
+- **图谱维度**
 
-于是多项式的乘法在点值表示法下可以以 $O(n)$ 的复杂度计算，所以我们如果能够在较低的时间复杂度内将系数表示法转化为点值表示法，再将点值表示法转回系数表示法，就能以较低的时间复杂度计算多项式的乘法
+  **Spectral domain** 就是GCN的理论基础了。这种思路就是希望借助图谱的理论来实现拓扑图上的卷积操作。从整个研究的时间进程来看：首先研究GSP（graph signal processing）的学者定义了graph上的Fourier Transformation，进而定义了graph上的Convolution，最后与深度学习结合提出了Graph Convolutional Network
+
+  从vertex domain分析问题，需要逐节点（node-wise）的处理，而图结构是非欧式的连接关系，这在很多场景下会有明显的局限，而spectral domain是将问题转换在“频域”里分析，不再需要node-wise的处理，对于很多场景能带来意想不到的便利，也成为了GSP的基础
+
+## Graph Convolution
+
+对于图 $G=(V,E)$ ，其Laplacian矩阵的定义为 $L=D-A$，其中 $L$ 是Laplacian 矩阵，$D$ 是顶点的度矩阵（对角矩阵），对角线上元素依次为各个顶点的度，$A$ 是图的邻接矩阵。
+
+<img src="https://picx.zhimg.com/80/v2-5f9cf5fdeed19b63e1079ed2b87617b4_1440w.webp?source=1940ef5c" style="zoom:100%;" />
+
+- 为什么GCN要用拉普拉斯矩阵？
+  - 拉普拉斯矩阵是对称矩阵，可以进行特征分解（谱分解），这就和GCN的spectral domain对应上了
+  - 拉普拉斯矩阵只在中心顶点和一阶相连的顶点上（1-hop neighbor）有非0元素，其余之处均为0
+  - 通过拉普拉斯算子与拉普拉斯矩阵进行类比
+
+**GCN的核心基于拉普拉斯矩阵的谱分解**
+
+矩阵的谱分解，特征分解，对角化都是同一个概念。不是所有的矩阵都可以特征分解，其充要条件为n阶方阵存在n个线性无关的特征向量。拉普拉斯矩阵是半正定对称矩阵，有如下三个性质：
+
+- 实对称矩阵一定n个线性无关的特征向量
+- 半正定矩阵的特征值一定非负
+- 实对阵矩阵的特征向量总是可以化成两两相互正交的正交矩阵
+
+由上可以知道拉普拉斯矩阵一定可以谱分解，且分解后有特殊的形式，对于拉普拉斯矩阵其谱分解为：
+$$
+L= U
+\left(\begin{matrix}\lambda_1 & \\&\ddots \\ &&\lambda_n \end{matrix}\right)
+U^{-1}
+$$
+其中 $U=(\vec{u_1},\vec{u_2},\cdots,\vec{u_n})$，是列向量为单位特征向量的矩阵，也就说 $\vec{u_l}$ 是列向量。由于 $U$ 是正交矩阵，即 $UU^{T}=E$ ，$E$ 是单位矩阵
+
+所以特征分解又可以写成：
+$$
+L= U\left(\begin{matrix}\lambda_1 & \\&\ddots \\ &&\lambda_n \end{matrix}\right) U^{T}
+$$
+把传统的傅里叶变换以及卷积迁移到Graph上来，核心工作其实就是把拉普拉斯算子的特征函数 $e^{-i\omega t}$ 变为Graph对应的拉普拉斯矩阵的特征向量。
+
+### Graph上的傅里叶变换
+
+传统的傅里叶变换定义为：$F(\omega)=\mathcal{F}[f(t)]=\int_{}^{}f(t)e^{-i\omega t} dt$，就是 信号 $f(t)$ 与基函数 $e^{-i\omega t}$ 的积分，从数学上看，$e^{-i\omega t}$ 是拉普拉斯算子的特征函数（满足特征方程）, $\omega$ 就和特征值有关。
+
+广义的特征方程定义为：$A V=\lambda V$，其中 $A$ 是一种变换，$V$ 是特征向量或者特征函数（无穷维的向量），$\lambda$ 是特征值。
+
+$e^{-i\omega t}$ 满足：$\Delta e^{-i\omega t}=\frac{\partial^{2}}{\partial t^{2}} e^{-i\omega t}=-\omega^{2} e^{-i\omega t}$，当然 $e^{-i\omega t}$ 就是变换 $\Delta$ 的特征函数，$\omega$ 和特征值密切相关。
+
+那么，可以联想了，处理Graph问题的时候，用到拉普拉斯矩阵（拉普拉斯矩阵就是离散拉普拉斯算子），自然就去找拉普拉斯矩阵的特征向量了。
+
+$L$ 是拉普拉斯矩阵，$V$ 是其特征向量，自然满足下式：$LV=\lambda V$
+
+离散积分就是一种内积形式，仿上定义Graph上的傅里叶变换：$F(\lambda_l)=\hat{f}(\lambda_l)=\sum_{i=1}^{N}{f(i) u_l^*(i)}$，$f$ 是Graph上的 $N$ 维向量，$f(i)$ 与Graph的顶点一一对应，$u_l(i)$ 表示第 $l$ 个特征向量的第 $i$ 个分量。那么特征值（频率）$\lambda_l$ 下的，$f$ 的Graph 傅里叶变换就是与 $\lambda_l$ 对应的特征向量 $u_l$ 进行内积运算。
+
+利用矩阵乘法将Graph上的傅里叶变换推广到矩阵形式：
+$$
+\left(\begin{matrix} \hat{f}(\lambda_1)\\ \hat{f}(\lambda_2) \\ \vdots \\\hat{f}(\lambda_N)\end{matrix}\right)=\left(\begin{matrix}\ u_1(1) &u_1(2)& \dots &u_1(N) \\u_2(1) &u_2(2)&\dots &u_2(N)\\ \vdots &\vdots &\ddots & \vdots\\ u_N(1) &u_N(2)& \dots &u_N(N)\end{matrix}\right)\left(\begin{matrix}f(1)\\ f(2) \\ \vdots \\f(N) \end{matrix}\right)
+$$
+即 $f$ 在Graph上傅里叶变换的矩阵形式为：$\hat{f}=U^Tf $
+
+### Graph上的傅里叶逆变换
+
+类似地，传统的傅里叶逆变换是对频率 $\omega$ 求积分：$\mathcal{F}^{-1}[F(\omega)]=\frac{1}{2\Pi}\int_{}^{}F(\omega)e^{i\omega t} d\omega$
+
+迁移到Graph上变为对特征值 $\lambda_l$ 求和：$f(i)=\sum_{l=1}^{N}{\hat{f}(\lambda_l) u_l(i)}$
+
+利用矩阵乘法将Graph上的傅里叶逆变换推广到矩阵形式：
+$$
+\left(\begin{matrix}f(1)\\ f(2) \\ \vdots \\f(N) \end{matrix}\right)= \left(\begin{matrix}u_1(1) &u_2(1)& \dots &u_N(1) \\u_1(2) &u_2(2)& \dots &u_N(2)\\ \vdots &\vdots&\ddots & \vdots\\ u_1(N) &u_2(N)& \dots &u_N(N) \end{matrix}\right)\left(\begin{matrix} \hat{f}(\lambda_1)\\ \hat{f}(\lambda_2) \\ \vdots \\\hat{f}(\lambda_N)\end{matrix}\right)
+$$
+即 $f$ 在Graph上傅里叶逆变换的矩阵形式为：$f=U\hat{f}$
+
+### 推广卷积
+
+在上面的基础上，利用卷积定理类比来将卷积运算，推广到Graph上。
+
+卷积定理：函数卷积的傅里叶变换是函数傅立叶变换的乘积，即对于函数 $f(t)$ 与 $h(t)$ 两者的卷积是其函数傅立叶变换乘积的逆变换：
+$$
+f*h=\mathcal{F}^{-1}\left[ \hat{f}(\omega)\hat{h}(\omega) \right]=\frac{1}{2\Pi}\int_{}^{}\hat{f}(\omega)\hat{h}(\omega)e^{i\omega t} d\omega
+$$
+类比到Graph上并把傅里叶变换的定义带入，$f$ 与卷积核 $h$ 在Graph上的卷积可按下列步骤求出：
+
+$f$ 的傅里叶变换为 $\hat{f}=U^Tf$
+
+卷积核 $h$ 的傅里叶变换写成对角矩阵的形式即为： $\left(\begin{matrix}\hat h(\lambda_1) &\\&\ddots \\ &&\hat h(\lambda_n) \end{matrix}\right)$
+
+$\hat{h}(\lambda_l)=\sum_{i=1}^{N}{h(i) u_l^*(i)}$ 是根据需要设计的卷积核 $h$ 在Graph上的傅里叶变换
+
+两者的傅立叶变换乘积即为：$\left(\begin{matrix}\hat h(\lambda_1) & \\&\ddots \\ &&\hat{h}(\lambda_n) \end{matrix}\right)U^Tf$
+
+再乘以 $U$ 求两者傅立叶变换乘积的逆变换，则求出卷积：$(f*h)_G= U\left(\begin{matrix}\hat h(\lambda_1) & \\&\ddots \\ &&\hat h(\lambda_n)\end{matrix}\right) U^Tf$
+
+注：很多论文中的Graph卷积公式为：$(f*h)_G=U((U^Th)\odot(U^Tf)) $
+
+$\odot$ 表示Hadamard product（哈达马积），对于两个维度相同的向量、矩阵、张量进行对应位置的逐元素乘积运算，其实两式是完全等价的
+
+### **为什么拉普拉斯矩阵的**特征向量可以作为傅里叶变换的基？
+
+傅里叶变换一个本质理解就是：把任意一个函数表示成了若干个正交函数（由 $\sin\omega t,\cos\omega t$ 构成）的线性组合。
+
+<img src="https://picx.zhimg.com/80/v2-e9e00533154bfdad940e966e7eca5075_1440w.webp?source=1940ef5c" style="zoom:100%;" />
+
+graph傅里叶变换也把graph上定义的任意向量 $f$，表示成了拉普拉斯矩阵特征向量的线性组合，即：$f=\hat{f}(\lambda_1)u_1+\hat{f}(\lambda_2)u_2+\cdots +\hat{f}(\lambda_n)u_n$
+
+那么：为什么graph上任意的向量 $f$ 都可以表示成这样的线性组合？
+
+原因在于 $(\vec{u_1},\vec{u_2},\cdots,\vec{u_n})$ 是graph上 $n$ 维空间中的 $n$ 个线性无关的正交向量，由线性代数的知识可以知道：$n$ 维空间中 $n$ 个线性无关的向量可以构成空间的一组基，而且拉普拉斯矩阵的特征向量还是一组正交基。
+
+此外，对于传统的傅里叶变换，拉普拉斯算子的特征值 $\omega$ 表示谐波 $\sin\omega t,\cos\omega t$ 的频率。与之类似，拉普拉斯矩阵的特征值 $\lambda_i$ 也表示图拉普拉斯变换的频率。
+
+## Graph Convolution Neural Network
+
+Deep Learning 中的 Convolution 就是要设计含有 trainable 共享参数的 kernel，而 Graph Convolution 中的卷积参数就是 $diag(\hat{h}(\lambda_l))$
+
+###  The first generation GCN
+
+[Spectral Networks and Locally Connected Networks on Graphs](https://arxiv.org/abs/1312.6203) 中简单粗暴地把 $diag(\hat h(\lambda_l) )$ 变成了卷积核 $diag(\theta_l )$ ，也就是：
+$$
+y_{output}=\sigma \left(U g_\theta(\Lambda) U^T x \right) \\
+g_\theta(\Lambda)=\left(\begin{matrix}\theta_1 &\\&\ddots \\ &&\theta_n\end{matrix}\right)
+$$
+它就是标准的第一代GCN中的 layer了，其中 $\sigma(\cdot)$ 是激活函数，$\Theta=({\theta_1},{\theta_2},\cdots,{\theta_n})$ 就跟三层神经网络中的weight一样是任意的参数，通过初始化赋值然后利用误差反向传播进行调整，$x$ 就是graph上对应于每个顶点的feature vector（由特数据集提取特征构成的向量）。
+
+（为避免混淆，记 $g_\theta(\Lambda)$ 是卷积核，$U g_\theta(\Lambda) U^T$ 的运算结果为卷积运算矩阵）
+
+- 第一代的参数方法存在着一些弊端：主要在于：
+  - 每一次前向传播，都要计算 $U$, $diag(\theta_l )$ 及 $U^T$ 三者的矩阵乘积，特别是对于大规模的graph，计算的代价较高，也就是论文中
+    $\mathcal{O}(n^3)$ 的计算复杂度
+  - 卷积核不具有spatial localization
+  - 卷积核需要 n 个参数
+
+###  The second generation GCN
+
+[Convolutional Neural Networks on Graphs with Fast Localized Spectral Filtering](https://proceedings.neurips.cc/paper_files/paper/2016/hash/04df4d434d481c5bb723be1b6df1ee65-Abstract.html) 把 $\hat h(\lambda_l)$ 巧妙地设计成了 $\sum_{j=0}^K \alpha_j \lambda^j_l$，也就是：
+$$
+y_{output}=\sigma \left(U g_\theta(\Lambda) U^T x \right) \\
+g_\theta(\Lambda)=\left(\begin{matrix}\sum_{j=0}^K \alpha_j \lambda^j_1 &\\&\ddots \\&& \sum_{j=0}^K \alpha_j \lambda^j_n \end{matrix}\right)
+$$
+上面的公式仿佛还什么都看不出来，下面利用矩阵乘法进行变换：$\left(\begin{matrix}\sum_{j=0}^K \alpha_j \lambda^j_1 &\\&\ddots \\ && \sum_{j=0}^K\alpha_j \lambda^j_n \end{matrix}\right)=\sum_{j=0}^K \alpha_j \Lambda^j$
+
+进而可以导出：$U \sum_{j=0}^K \alpha_j \Lambda^j U^T =\sum_{j=0}^K \alpha_j U\Lambda^j U^T =\sum_{j=0}^K \alpha_j L^j$ 
+
+上式成立是因为 $L^2=U \Lambda U^TU \Lambda U^T=U \Lambda^2 U^T$ 且 $U^T U=E$
+
+那么，等式变换为
+$$
+y_{output}=\sigma \left( \sum_{j=0}^{K-1} \alpha_j L^j x \right)
+$$
+其中 $({\alpha_0},{\alpha_1},\cdots,{\alpha_{K-1}})$ 是任意的参数，通过初始化赋值然后利用误差反向传播进行调整。
+
+- 这样设计的卷积核其优点在于
+  - 卷积核只有 $K$ 个参数，一般 $K$ 远小于 $n$，参数的复杂度被大大降低了
+  - 矩阵变换后，神奇地发现不需要做特征分解了，直接用拉普拉斯矩阵 $L$ 进行变换。然而由于要计算 $L^j$，计算复杂度还是 $\mathcal{O}(n^3)$
+  - 卷积核具有很好的spatial localization，特别地，$K$ 就是卷积核的receptive field，也就是说每次卷积会将中心顶点K-hop neighbor上的feature进行加权求和，权系数就是 $\alpha_k$
+
+更直观地看，$K=1$ 就是对每个顶点上一阶neighbor的feature进行加权求和，如下图所示：
+
+<img src="https://pic1.zhimg.com/80/v2-5f756da1ce39f38d408bd771a15c8ad3_1440w.webp?source=1940ef5c" style="zoom:100%;" />
+
+同理，$K=2$ 的情形如下图所示：
+
+<img src="https://picx.zhimg.com/80/v2-a13b82907a364c3707a18bb8572b3a63_1440w.webp?source=1940ef5c" style="zoom:100%;" />
+
+### Chebyshev polynomials are used as convolution kernels
+
+在GCN领域中，利用Chebyshev多项式作为卷积核是非常通用的形式，此处暂不展开
+
+
+
+# Graph Attention Networks
+
+[Graph Attention Networks](https://arxiv.org/abs/1710.10903) 在2017年被提出
+
+GCN是处理transductive任务的一把利器（transductive任务是指：训练阶段与测试阶段都基于同样的图结构），然而GCN有**两大局限性**是经常被诟病的：
+
+1. **无法完成inductive任务，即处理动态图问题。**
+
+   inductive任务是指：训练阶段与测试阶段需要处理的graph不同。通常是训练阶段只是在子图（subgraph）上进行，测试阶段需要处理未知的顶点。（unseen node）
+
+2. **处理有向图的瓶颈，不容易实现分配不同的学习权重给不同的neighbor**
+
+在[Graph Attention Networks](https://arxiv.org/abs/1710.10903)中提到，**GAT本质上可以有两种运算方式**
+
+1. **Global graph attention**
+
+   顾名思义，就是每一个顶点 $i$ 都对于图上任意顶点都进行attention运算
+
+   优点：完全不依赖于图的结构，对于inductive任务无压力
+
+   缺点：（1）丢掉了图结构的这个特征，无异于自废武功，效果可能会很差（2）运算面临着高昂的成本
+
+2. **Mask graph attention**
+
+   注意力机制的运算只在邻居顶点上进行
+
+   而在这篇文章中，作者也是采取这样的方式
+
+GAT的计算步骤主要有两步：
+
+- **计算注意力系数（attention coefficient）**
+
+  对于顶点 $i$，逐个计算它的邻居们（ $j\in N_i$ ）和它自己之间的相似系数
+  $$
+  e_{ij}=a([Wh_i||Wh_j]),j\in N_i
+  $$
+  解释：首先一个共享参数 $W$ 的线性映射对于顶点的特征进行了增维，当然这是一种常见的特征增强（feature augment）方法；$[\cdot || \cdot]$ 对于顶点 $i,j$ 的变换后的特征进行了拼接（concatenate）；最后 $a(\cdot)$ 把拼接后的高维特征映射到一个实数上，作者是通过 single-layer feedforward neural network实现的
+
+  显然学习顶点 $i,j$ 之间的相关性，就是通过可学习的参数 $W$ 和映射 $a(\cdot)$ 完成的
+
+  有了相关系数，再通过 softmax 归一化计算注意力系数
+  $$
+  \alpha_{ij}=\frac{exp(\text{Leaky ReLU}(e_{ij}))}{\sum_{k\in N_i}exp(\text{Leaky ReLU}(e_{ik}))}
+  $$
+  
+
+- **加权求和（aggregate）**
+
+  根据计算好的注意力系数，把特征加权求和（aggregate）
+  $$
+  h'_i=\sigma()
+  $$
+  
 
