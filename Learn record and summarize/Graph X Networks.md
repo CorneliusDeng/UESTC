@@ -607,12 +607,30 @@ GAT的计算步骤主要有两步：
   \alpha_{ij}=\frac{exp(\text{Leaky ReLU}(e_{ij}))}{\sum_{k\in N_i}exp(\text{Leaky ReLU}(e_{ik}))}
   $$
   
-
 - **加权求和（aggregate）**
 
   根据计算好的注意力系数，把特征加权求和（aggregate）
   $$
-  h'_i=\sigma()
+  h'_i=\sigma(\sum_{j\in N_i}\alpha_{ij}Wh_j)
   $$
   
+  其中，$h'_i$ 就是 GAT 输出的对于每个顶点 $i$ 的新特征（融合了邻域信息）， $\sigma(\cdot)$ 是激活函数。
+  
+  再使用 **multi-head attention** 进一步增强
+  $$
+  h'_i(K)= ||_{k=1}^K\; \sigma(\sum_{j\in N_i}\alpha_{ij}^kW^kh_j)
+  $$
+  其中，$||$ 表示拼接操作，multi-head attention也可以理解成用了ensemble的方法
+
+**几点深入理解**
+
+- 在本质上，GCN与GAT都是将邻居顶点的特征聚合到中心顶点上（一种aggregate运算），利用graph上的local stationary学习新的顶点特征表达。不同的是GCN利用了拉普拉斯矩阵，GAT利用attention系数。一定程度上而言，GAT会更强，因为顶点特征之间的相关性被更好地融入到模型中。
+
+- GAT适用于有向图最根本的原因是GAT的运算方式是逐顶点的运算（node-wise）。每一次运算都需要循环遍历图上的所有顶点来完成。逐顶点运算意味着，摆脱了拉普利矩阵的束缚，使得有向图问题迎刃而解。
+
+- GAT适用于inductive任务原因是，GAT中重要的学习参数是 $W$ 与 $a(\cdot)$，因为逐顶点运算方式，这两个参数仅与顶点特征相关，与图的结构毫无关系。所以测试任务中改变图的结构，对于GAT影响并不大，只需要改变 $N_i$，重新计算即可。
+
+  与此相反的是，GCN是一种全图的计算方式，一次计算就更新全图的节点特征。学习的参数很大程度与图结构相关，这使得GCN在inductive任务上遇到困境。
+
+
 
