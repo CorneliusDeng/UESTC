@@ -564,7 +564,7 @@ $$
 
 # Graph Attention Networks
 
-[Graph Attention Networks](https://arxiv.org/abs/1710.10903) 在2017年被提出
+[Graph Attention Networks](https://openreview.net/forum?id=rJXMpikCZ) 
 
 GCN是处理transductive任务的一把利器（transductive任务是指：训练阶段与测试阶段都基于同样的图结构），然而GCN有**两大局限性**是经常被诟病的：
 
