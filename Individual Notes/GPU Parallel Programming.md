@@ -8,10 +8,6 @@ GPU并不是一个独立运行的计算平台，而需要与CPU协同工作，�
 
 可以看到GPU包括更多的运算核心，其特别适合数据并行的计算密集型任务，如大型矩阵运算，而CPU的运算核心较少，但是其可以实现复杂的逻辑运算，因此其适合控制密集型任务。另外，CPU上的线程是重量级的，上下文切换开销大，但是GPU由于存在很多核心，其线程是轻量级的。因此，基于CPU+GPU的异构计算平台可以优势互补，CPU负责处理逻辑复杂的串行程序，而GPU重点处理数据密集型的并行计算程序，从而发挥最大功效。
 
-
-
-# GPU程序与CPU程序的区别
-
 一个传统的CPU程序的执行顺序如下图所示：
 
 <img src="https://imgconvert.csdnimg.cn/aHR0cDovL2FpeGluZ3FpdS0xMjU4OTQ5NTk3LmNvcy5hcC1iZWlqaW5nLm15cWNsb3VkLmNvbS8yMDE5LTExLTIwLTAyMTg1Ni5wbmc?x-oss-process=image/format,png" style="zoom:50%;" />
@@ -94,7 +90,7 @@ CPU + GPU 是一种异构计算的组合，各有独立的内存，GPU的优势�
 - 充分利用GPU的多核心，最大化并行执行度
 - 优化内存使用，最大化数据吞吐量，减少不必要的数据拷贝
 
-[Code_Path]()
+[Code_Path](https://github.com/CorneliusDeng/UESTC/blob/main/CUDA%20Code/Optimization.ipynb)
 
 ## 并行计算优化
 
