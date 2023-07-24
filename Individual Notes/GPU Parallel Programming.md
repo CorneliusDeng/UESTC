@@ -72,7 +72,7 @@ block和grid大小均是一维，实际编程使用的执行配置常常更复�
 
 GPU计算时直接从显存中读取数据，因此每当计算时要将数据从主存拷贝到显存上，用CUDA的术语来说就是要把数据从主机端拷贝到设备端。CUDA强大之处在于它能自动将数据从主机和设备间相互拷贝，不需要程序员在代码中写明。这种方法对编程者来说非常方便，不必对原有的CPU代码做大量改动。
 
-以一个向量加法为例，代码及其优化
+以一个向量加法为例，[代码及其优化](https://github.com/CorneliusDeng/UESTC/blob/main/CUDA%20Code/vector_addition.ipynb)
 
 - 实验结果可以发现，GPU比CPU慢，原因主要在于：
   - 向量加法的这个计算比较简单，CPU的numpy已经优化到了极致，无法突出GPU的优势，我们要解决实际问题往往比这个复杂得多，当解决复杂问题时，优化后的GPU代码将远快于CPU代码
@@ -87,5 +87,115 @@ GPU计算时直接从显存中读取数据，因此每当计算时要将数据�
 
 
 
+# CUDA优化方向
 
+CPU + GPU 是一种异构计算的组合，各有独立的内存，GPU的优势是更多的计算核心。该架构在并行计算上有很大优势，但是数据需要从主机和设备间相互拷贝，会造成一定的延迟。因此，要从下面两个方面来优化GPU程序
 
+- 充分利用GPU的多核心，最大化并行执行度
+- 优化内存使用，最大化数据吞吐量，减少不必要的数据拷贝
+
+[Code_Path]()
+
+## 并行计算优化
+
+### 网格跨度
+
+CUDA的执行配置：`[gridDim, blockDim]`中的`blockDim`最大只能是1024，英伟达给出的官方回复是`gridDim`最大为一个32位整数的最大值，也就是2,147,483,648，大约二十亿。这个数字已经非常大了，足以应付绝大多数的计算，但是如果对并行计算的维度有更高需求呢？网格跨度有更好的并行计算效率
+
+<img src="https://imgconvert.csdnimg.cn/aHR0cDovL2FpeGluZ3FpdS0xMjU4OTQ5NTk3LmNvcy5hcC1iZWlqaW5nLm15cWNsb3VkLmNvbS8yMDE5LTExLTIxLTA3MDk1Mi5wbmc?x-oss-process=image/format,png" style="zoom:40%;" />
+
+这里仍然以`[2, 4]`的执行配置为例，该执行配置中整个grid只能并行启动8个线程，假如我们要并行计算的数据是32，会发现后面8号至31号数据共计24个数据无法被计算
+
+<img src="https://imgconvert.csdnimg.cn/aHR0cDovL2FpeGluZ3FpdS0xMjU4OTQ5NTk3LmNvcy5hcC1iZWlqaW5nLm15cWNsb3VkLmNvbS8yMDE5LTExLTIxLTA3MTEyMC5wbmc?x-oss-process=image/format,png" style="zoom:40%;" />
+
+我们可以在0号线程中，处理第0、8、16、24号数据，就能解决数据远大于执行配置中的线程总数的问题，用程序表示，就是在核函数里再写个for循环。注意，跨步大小为网格中线程总数，用`gridDim.x * blockDim.x`来计算。`for`循环的step是网格中线程总数，这也是为什么将这种方式称为**网格跨步**。如果网格总线程数为1024，那么0号线程将计算第0、1024、2048…号的数据。这里我们也不用再明确使用`if (idx < N)`来判断是否越界，因为`for`循环也有这个判断。
+
+- 使用网格跨步的优势主要有：
+  - 扩展性：可以解决数据量比线程数大的问题
+  - 线程复用：CUDA线程启动和销毁都有开销，主要是线程内存空间初始化的开销；不使用网格跨步，CUDA需要启动大于计算数的线程，每个线程内只做一件事情，做完就要被销毁；使用网格跨步，线程内有`for`循环，每个线程可以干更多事情，所有线程的启动销毁开销更少
+  - 方便调试：我们可以把核函数的执行配置写为`[1, 1]`，那么核函数的跨步大小就成为了1，核函数里的`for`循环与CPU函数中顺序执行的`for`循环的逻辑一样，非常方便验证CUDA并行计算与原来的CPU函数计算逻辑是否一致
+
+### 多流
+
+GPU最多就上千个核心，同一时间只能并行执行上千个任务。当我们处理千万级别的数据，整个大任务无法被GPU一次执行，所有的计算任务需要放在一个队列中，排队顺序执行。CUDA将放入队列顺序执行的一系列操作称为**流（Stream）**
+
+- 由于异构计算的硬件特性，CUDA中以下操作是相互独立的，通过编程，是可以操作他们并发地执行的：
+  - 主机端上的计算
+  - 设备端的计算（核函数）
+  - 数据从主机和设备间相互拷贝
+  - 数据从设备内拷贝或转移
+  - 数据从多个GPU设备间拷贝或转移
+
+<img src="https://imgconvert.csdnimg.cn/aHR0cDovL2FpeGluZ3FpdS0xMjU4OTQ5NTk3LmNvcy5hcC1iZWlqaW5nLm15cWNsb3VkLmNvbS8yMDE5LTExLTIxLTA3MTE1NS5wbmc?x-oss-process=image/format,png" style="zoom:70%;" />
+
+针对这种互相独立的硬件架构，CUDA使用多流作为一种高并发的方案：把一个大任务中的上述几部分拆分开，放到多个流中，每次只对一部分数据进行拷贝、计算和回写，并把这个流程做成流水线。因为数据拷贝不占用计算资源，计算不占用数据拷贝的总线（Bus）资源，因此计算和数据拷贝完全可以并发执行。如下图所示，将数据拷贝和函数计算**重叠**起来的，形成流水线，能获得非常大的性能提升。实际上，流水线作业的思想被广泛应用于CPU和GPU等计算机芯片设计上，以加速程序。
+
+<img src="https://imgconvert.csdnimg.cn/aHR0cDovL2FpeGluZ3FpdS0xMjU4OTQ5NTk3LmNvcy5hcC1iZWlqaW5nLm15cWNsb3VkLmNvbS8yMDE5LTExLTIxLTA3MTE1OS5wbmc?x-oss-process=image/format,png" style="zoom:70%;" />
+
+以向量加法为例，上图中第一行的Stream 0部分是[之前采用的逻辑](https://github.com/CorneliusDeng/UESTC/blob/main/CUDA%20Code/vector_addition.ipynb)，没有使用多流技术，程序的三大步骤是顺序执行的：先从主机拷贝初始化数据到设备（Host To Device）；在设备上执行核函数（Kernel）；将计算结果从设备拷贝回主机（Device To Host）。当数据量很大时，每个步骤的耗时很长，后面的步骤必须等前面执行完毕才能继续，整体的耗时相当长。以2000万维的向量加法为例，向量大约有几十M大小，将整个向量在主机和设备间拷贝将占用占用上百毫秒的时间，有可能远比核函数计算的时间多得多。将程序改为多流后，每次只计算一小部分，流水线并发执行，会得到非常大的性能提升。
+
+- 默认情况下，CUDA使用0号流，又称默认流。不使用多流时，所有任务都在默认流中顺序执行，效率较低。多流存在一些规则：
+  - 给定流内的所有操作会按序执行
+  - 非默认流之间的不同操作，无法保证其执行顺序
+  - 所有非默认流执行完后，才能执行默认流；默认流执行完后，才能执行其他非默认流
+
+<img src="https://imgconvert.csdnimg.cn/aHR0cDovL2FpeGluZ3FpdS0xMjU4OTQ5NTk3LmNvcy5hcC1iZWlqaW5nLm15cWNsb3VkLmNvbS8yMDE5LTExLTIxLTA3MTIwNS5wbmc?x-oss-process=image/format,png" style="zoom:50%;" />
+
+- 参照上图，可将这三个规则解释为：
+  - 非默认流1中，根据进流的先后顺序，核函数1和2是顺序执行的
+  - 无法保证核函数2与核函数4的执行先后顺序，因为他们在不同的流中。他们执行的开始时间依赖于该流中前一个操作结束时间，例如核函数2的开始依赖于核函数1的结束，与核函数3、4完全不相关
+  - 默认流有阻塞的作用。如图中红线所示，如果调用默认流，那么默认流会等非默认流都执行完才能执行；同样，默认流执行完，才能再次执行其他非默认流
+
+可见，某个流内的操作是顺序的，非默认流之间是异步的，默认流有阻塞作用
+
+如果想使用多流时，必须先定义流：`stream = numba.cuda.stream()`
+
+CUDA的数据拷贝以及核函数都有专门的`stream`参数来接收流，以告知该操作放入哪个流中执行：`numba.cuda.to_device(obj, stream=0, copy=True, to=None)`，`numba.cuda.copy_to_host(self, ary=None, stream=0`
+
+核函数调用的地方除了要写清执行配置，还要加一项`stream`参数：`kernel[blocks_per_grid, threads_per_block, stream=0]`
+
+根据这些函数定义也可以知道，不指定`stream`参数时，这些函数都使用默认的0号流
+
+## 内存优化
+
+CPU和GPU组成异构计算架构，如果想从内存上优化程序，我们必须尽量减少主机与设备间的数据拷贝，并将更多计算从主机端转移到设备端。尽量在设备端初始化数据，并计算中间数据，并尽量不做无意义的数据回写
+
+<img src="https://imgconvert.csdnimg.cn/aHR0cDovL2FpeGluZ3FpdS0xMjU4OTQ5NTk3LmNvcy5hcC1iZWlqaW5nLm15cWNsb3VkLmNvbS8yMDE5LTExLTIxLTA3MTIxOS5wbmc?x-oss-process=image/format,png" style="zoom:100%;" />
+
+GPU的内存结构如上图所示：GPU的计算核心都在Streaming Multiprocessor（SM）上，Multiprocessor里有计算核心可直接访问的寄存器（Register）和共享内存（Shared Memory）；多个SM可以读取显卡上的显存，包括全局内存（Global Memory）。每个Multiprocessor上的Shared Memory相当于该Multiprocessor上的一个缓存，一般都很小，GPU Telsa V100的Shared Memory也只有96KB。注意，Shared Memory和Global Memory的字面上都有共享的意思，但是不要将两者的概念混淆，Shared Memory离计算核心更近，延迟很低；Global Memory是整个显卡上的全局内存，延迟高。
+
+<img src="https://imgconvert.csdnimg.cn/aHR0cDovL2FpeGluZ3FpdS0xMjU4OTQ5NTk3LmNvcy5hcC1iZWlqaW5nLm15cWNsb3VkLmNvbS8yMDE5LTExLTIxLTA3MTIyNS5wbmc?x-oss-process=image/format,png" style="zoom:70%;" />
+
+从软件角度来看，CUDA的线程可以访问不同级别的存储，每个Thread有独立的私有内存；每个Block中多个Thread都可以在该Block的Shared Memory中读写数据；整个Grid中所有Thread都可以读写Global Memory。Shared Memory的读写访问速度会远高于Global Memory。内存优化一般主要利用Shared Memory技术。下文将以矩阵乘法为例，展示如何使用Shared Memory来优化程序。
+
+### 二维和三维执行配置
+
+`threadIdx` 和`blockIdx`变量都是一维的，实际上，CUDA允许这两个变量最多为三维，一维、二维和三维的大小配置可以适应向量、矩阵和张量等不同的场景
+
+<img src="https://imgconvert.csdnimg.cn/aHR0cDovL2FpeGluZ3FpdS0xMjU4OTQ5NTk3LmNvcy5hcC1iZWlqaW5nLm15cWNsb3VkLmNvbS8yMDE5LTExLTIxLTA3MTIzMS5wbmc?x-oss-process=image/format,png" style="zoom:30%;" />
+
+一个二维的执行配置如上图所示，其中，每个block有(3 * 4)个Thread，每个grid有(2 * 3)个Block。 二维块大小为 *(Dx, Dy)*，某个线程号 *(x, y)* 的公式为 **(x + y Dx)**；三维块大小为 *(Dx, Dy, Dz)*，某个线程号*(x, y, z)* 的公式为 **(x + y Dx + z Dx Dy)**。各个内置变量中`.x` `.y`和`.z`为不同维度下的值
+
+例如，一个二维配置，某个线程在矩阵中的位置可以表示为：`col = cuda.threadIdx.y + cuda.blockDim.y * cuda.blockIdx.y`,`row = cuda.threadIdx.x + cuda.blockDim.x * cuda.blockIdx.x`
+
+如何将二维Block映射到自己的数据上并没有固定的映射方法，一般情况将`.x`映射为矩阵的行，将`.y`映射为矩阵的列。Numba提供了一个更简单的方法帮我们计算线程的编号：`row, col = cuda.grid(2)`，其中，参数2表示这是一个2维的执行配置。1维或3维的时候，可以将参数改为1或3。
+
+对应的执行配置也要改为二维：`threads_per_block = (16, 16)`，`blocks_per_grid = (32, 32)`，`gpu_kernel[blocks_per_grid, threads_per_block]`
+
+`(16, 16)`的二维Block是一个常用的配置，共256个线程。每个Block的Thread个数最好是128、256或512，这与GPU的硬件架构高度相关
+
+<img src="https://imgconvert.csdnimg.cn/aHR0cDovL2FpeGluZ3FpdS0xMjU4OTQ5NTk3LmNvcy5hcC1iZWlqaW5nLm15cWNsb3VkLmNvbS8yMDE5LTExLTIxLTA3MTI0MS5wbmc?x-oss-process=image/format,png" style="zoom:100%;" />
+
+一个`C = AB`的矩阵乘法运算，需要我们把A的某一行与B的某一列的所有元素一一相乘，求和后，将结果存储到结果矩阵C的(row, col)上。在这种实现中，每个线程都要读取A的一整行和B的一整列，共计算M行*P列。以计算第row行为例，计算C[row, 0]、C[row, 1]…C[row, p-1]这些点时都需要从Global Memory中把整个第row行读取一遍。可以算到，A矩阵中的每个点需要被读 B.width 次，B矩阵中的每个点需要被读 A.height 次。这样比较浪费时间。因此，可以将多次访问的数据放到Shared Memory中，减少重复读取的次数，并充分利用Shared Memory的延迟低的优势。
+
+### Shared Memory
+
+这个实现中，跟未做优化的版本相同的是，每个Thread计算结果矩阵中的一个元素，不同的是，每个CUDA Block会以一个 BLOCK_SIZE * BLOCK_SIZE 子矩阵为基本的计算单元。具体而言，需要声明Shared Memory区域，数据第一次会从Global Memory拷贝到Shared Memory上，接下来可多次重复利用Shared Memory上的数据。
+
+<img src="https://imgconvert.csdnimg.cn/aHR0cDovL2FpeGluZ3FpdS0xMjU4OTQ5NTk3LmNvcy5hcC1iZWlqaW5nLm15cWNsb3VkLmNvbS8yMDE5LTExLTIxLTA3MTI0Ny5wbmc?x-oss-process=image/format,png" style="zoom:100%;" />
+
+- 总结
+  - 声明Shared Memory。代码中使用了`cuda.shared.array(shape,type)`，shape为这块数据的向量维度大小，type为Numba数据类型，例如是int32还是float32。这个函数只能在设备端使用。定义好后，这块数据可被同一个Block的所有Thread共享。需要注意的是，这块数据虽然在核函数中定义，但它不是单个Thread的私有数据，它可被同Block中的所有Thread读写
+  - 数据加载。每个Thread会将A中的一个元素加载到sA中，一个Block的 BLOCK_SIZE x BLOCK_SIZE 个Thread可以把sA填充满。`cuda.syncthreads()`会等待Block中所有Thread执行完之后才执行下一步。所以，当执行完这个函数的时候，sA和sB的数据已经拷贝好了
+  - 数据复用。A中的某个点，只会被读取 B.width / BLOCK_SIZE 次；B中的某个点，只会被读 A.height / BLOCK_SIZE 次。`for n in range(BLOCK_SIZE)`这个循环做子矩阵向量乘法时，可多次复用sA和sB的数据
+  - 子矩阵的数据汇总。我们以一个 BLOCK_SIZE x BLOCK_SIZE 的子矩阵为单位分别对A从左到右，对B从上到下平移并计算，共循环 A.width / BLOCK_SIZE 次。在某一步平移，会得到子矩阵的点积。`for m in range(math.ceil(A.shape[1] / BLOCK_SIZE))`这个循环起到了计算A从左到右与B从上到下点积的过程
