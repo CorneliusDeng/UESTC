@@ -172,3 +172,56 @@ Original content is downloaded from [Machine_Learning_Resources](https://github.
 
 
 
+# 优化算法
+
+## 拉格朗日对偶性 Lagrange duality
+
+### 原始问题
+
+假设 $f(x),c_i(x),h_j(x)$ 是定义在 $\mathcal{R}^n$ 上的连续可微函数，考虑约束最优化问题：
+$$
+\begin{aligned}
+& \underset{x\in\mathcal{R}^n}{\min} f(x) \\
+& \begin{array}{r@{\quad}r@{}l@{\quad}l}
+s.t. & c_i(x)\leq 0, \quad i = 1,2,\cdots,k \\
+     & h_j(x)=0, \quad j = 1,2,\cdots,l
+\end{array}
+\end{aligned}
+$$
+则此约束优化问题为原始最优化问题或原始问题。
+
+首先，引入广义拉格朗日函数 generalized Lagrange function：
+$$
+L(x,\alpha,\beta)=f(x)+\sum_{i=1}^k\alpha_ic_i(x)+\sum_{j=1}^l\beta_jh_j(x)
+$$
+其中，$x=(x^{(1)},x^{(2)},\cdots,x^{(n)})^T\in \mathcal{R}^n,\alpha_i,\beta_j$ 是拉格朗日乘子，$\alpha_i\geq 0$，考虑 $x$ 的函数：
+$$
+\theta_P(x)=\underset{\alpha,\beta;\alpha_i\geq0}{\max}L(x,\alpha,\beta)
+$$
+下标 $P$ 表示原始问题
+
+假设给定某个 $x$，如果 $x$ 违反原始问题的约束条件，即存在某个 $i$ 使得 $c_i(x)>0$ 或者存在某个 $j$ 使得 $h_j(x)\neq0$，那么就有
+$$
+\theta_P(x)=\underset{\alpha,\beta;\alpha_i\geq0}{\max}
+\left[f(x)+\sum_{i=1}^k\alpha_ic_i(x)+\sum_{j=1}^l\beta_jh_j(x) \right]
+=+\infty
+$$
+ 因为若某个 $i$ 使约束 $c_i(x)>0$，则可令 $\alpha\rightarrow +\infty$；若某个 $j$ 使 $h_j(x)\neq0$，则可令 $\beta_j$ 使得 $\beta_jh_j(x)\rightarrow+\infty$，而将其余各 $\alpha_i,\beta_j$ 均取为0
+
+相反地，如果 $x$ 满足约束条件，则 $\theta_P(x)=f(x)$，因此
+$$
+\theta_P(x)=
+\begin{cases}
+f(x), & x \text{满足原始问题约束} \\
++\infty, & \text{其他}
+\end{cases}
+$$
+所以如果考虑极小化问题：
+$$
+\underset{x}{\min}\theta_P(x)=\underset{x}{\min}\underset{\alpha,\beta;\alpha_i\geq0}{\max}L(x,\alpha,\beta)
+$$
+它与原始问题是等价的，即它们具有相同解。问题 $\underset{x}{\min}\underset{\alpha,\beta;\alpha_i\geq0}{\max}L(x,\alpha,\beta)$ 称为广义拉格朗日函数的极小极大问题。这样一来，就把原始最优化问题表示为拉格朗日函数的极小极大问题，不妨定义原始问题的最优值 $p^*=\underset{x}{\min}\theta_P(x)$ 为原始问题的值
+
+### 对偶问题
+
+### 原始问题和对偶问题的关系
