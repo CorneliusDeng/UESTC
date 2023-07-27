@@ -594,9 +594,11 @@ Find a policy π that tells you what action (a = π(s)) to take in every state (
 
 ![](https://raw.githubusercontent.com/CorneliusDeng/Markdown-Photos/main/Machine%20Learning/Bellman%20Equation.png)
 
+
+
 # The concept of Entropy
 
-### Summary
+## Summary
 
 **目前分类损失函数多用交叉熵，而不是KL散度**
 
@@ -610,7 +612,7 @@ Find a policy π that tells you what action (a = π(s)) to take in every state (
 
 **KL散度（相对熵）：**衡量不同策略之间的差异，所以我们使用KL散度来做模型分布的拟合损失。
 
-### Self-Information 自信息
+## Self-Information 自信息
 
 任何事件都会承载着一定的信息量，包括已经发生的事件和未发生的事件，只是它们承载的信息量会有所不同。
 
@@ -620,7 +622,7 @@ Find a policy π that tells you what action (a = π(s)) to take in every state (
 
 假设 $X$ 是一个离散型随机变量，其取值集合为 $K$，概率分布函数 $p(x)=P(K=x),x\in K$，则定义事件 $K=x_0$ 的信息量为 $I(x_0)=-log(p(x_0))$
 
-### Entropy 熵
+## Entropy 熵
 
 已知：当一个事件发生的概率为 $p(x)$，那么它的信息量是 $-log(p(x))$		
 
@@ -638,7 +640,7 @@ $$
 
 $H(X)=-\sum_{i=1}^n p(x_i)log(p(x_i))=-p(x)log(p(x))-[1-p(x)]log[1-p(x)]$
 
-### Kullback-Leibler Divergence kL散度(相对熵)
+## Kullback-Leibler Divergence kL散度(相对熵)
 
 如果对同一个随机变量 $x$ 有两个单独的概率分布 $p(x) 和 q(x)$，不妨将 $p(x)$ 看成是真实的分布，$q(x)$ 看成是估计的分布
 
@@ -654,7 +656,7 @@ $$
 
 有时会将KL散度称为KL距离，但它并不满足距离的性质：KL散度不是对称的；KL散度不满足三角不等式。
 
-### Cross Entropy 交叉熵
+## Cross Entropy 交叉熵
 
 $$
 \begin{aligned}
