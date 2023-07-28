@@ -630,9 +630,11 @@ Find a policy π that tells you what action (a = π(s)) to take in every state (
 
 假设事件 $X$ 共有 n 种可能，发生 $x_i$ 的概率为 $P(x_i)$ ，那么该事件的熵为 $H(X)=-\sum_{i=1}^n p(x_i)log(p(x_i))$
 $$
-离散情况：H(X)=-\sum_{i=1}^n p(x_i)log(p(x_i))\\
-连续情况：H(x)=-\int^{+\infty}_{-\infty}{p(x)log(p(x))dx}\\
-期望形式：H(x)=E_{x～p(x)}[-log(p(x))]
+\begin{align}
+& 离散情况：H(X)=-\sum_{i=1}^n p(x_i)log(p(x_i))\\
+& 连续情况：H(x)=-\int^{+\infty}_{-\infty}{p(x)log(p(x))dx}\\
+& 期望形式：H(x)=E_{x～p(x)}[-log(p(x))]
+\end{align}
 $$
 如果式中的log以2为底的话，我们可以将这个式子解释为：要花费至少多少位的编码来表示此概率分布。从此式也可以看出，信息熵的本质是一种期望
 
@@ -646,9 +648,11 @@ $H(X)=-\sum_{i=1}^n p(x_i)log(p(x_i))=-p(x)log(p(x))-[1-p(x)]log[1-p(x)]$
 
 KL散度，是指当估计分布 $q(x)$ 被用于近似真实 $p(x)$ 时的信息损失，也就是说，$q(x)$ 能在多大程度上表达 $p(x)$ 所包含的信息，KL散度越大，表达效果越差
 $$
-离散情况：D_{KL}(p\;||\;q)=\sum_{i=1}^np(x_i)log(\frac{p(x_i)}{q(x_i)}) \\
-连续情况：D_{KL}(p\;||\;q)=\int^{+\infty}_{-\infty}{p(x)log(\frac{p(x)}{q(x)})dx}\\
-期望形式：E_{x～p(x)}[log(\frac{p(x)}{q(x)})]
+\begin{align}
+& 离散情况：D_{KL}(p\;||\;q)=\sum_{i=1}^np(x_i)log(\frac{p(x_i)}{q(x_i)}) \\
+& 连续情况：D_{KL}(p\;||\;q)=\int^{+\infty}_{-\infty}{p(x)log(\frac{p(x)}{q(x)})dx}\\
+& 期望形式：E_{x～p(x)}[log(\frac{p(x)}{q(x)})]
+\end{align}
 $$
 当我们使用一个较简单、常见的分布(如均匀分布、二项分布等)来拟合我们观察到的一个较为复杂的分布时，由于拟合出的分布与观察到的分布并不一致，会有信息损失的情况出现。KL散度就是为了度量这种损失而被提出的。
 

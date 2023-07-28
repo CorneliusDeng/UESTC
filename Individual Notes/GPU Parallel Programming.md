@@ -195,3 +195,4 @@ GPU的内存结构如上图所示：GPU的计算核心都在Streaming Multiproce
   - 数据加载。每个Thread会将A中的一个元素加载到sA中，一个Block的 BLOCK_SIZE x BLOCK_SIZE 个Thread可以把sA填充满。`cuda.syncthreads()`会等待Block中所有Thread执行完之后才执行下一步。所以，当执行完这个函数的时候，sA和sB的数据已经拷贝好了
   - 数据复用。A中的某个点，只会被读取 B.width / BLOCK_SIZE 次；B中的某个点，只会被读 A.height / BLOCK_SIZE 次。`for n in range(BLOCK_SIZE)`这个循环做子矩阵向量乘法时，可多次复用sA和sB的数据
   - 子矩阵的数据汇总。我们以一个 BLOCK_SIZE x BLOCK_SIZE 的子矩阵为单位分别对A从左到右，对B从上到下平移并计算，共循环 A.width / BLOCK_SIZE 次。在某一步平移，会得到子矩阵的点积。`for m in range(math.ceil(A.shape[1] / BLOCK_SIZE))`这个循环起到了计算A从左到右与B从上到下点积的过程
+
