@@ -32,7 +32,7 @@ https://huggingface.co/blog/peft
 
 最早来自于这篇论文：
 
-论文地址：https://arxiv.org/abs/1902.00751
+论文地址：http://proceedings.mlr.press/v97/houlsby19a.html
 论文标题：Parameter-Efficient Transfer Learning for NLP
 标题翻译：用于NLP的参数高效转移学习
 
@@ -46,7 +46,7 @@ adapter层参数量和大模型相比非常少，例如在175B的GPT3中使用Lo
 
 ## PEFT 方法二：prompt tuning
 
-论文地址：https://arxiv.org/abs/2109.01134
+论文地址：https://link.springer.com/article/10.1007/s11263-022-01653-1
 论文标题：Learning to Prompt for Vision-Language Models
 
 prompt tuning是指可以任意调整提示词，这样的调整对最后的性能会有很大的影响，能否得到想要的结果，取决于有没有选择一个好的提示词。例如下图所示，不同的提示词对准确率的影响很大。
@@ -73,7 +73,7 @@ VPT: Deep，在每一层的输入输出都加入prompt。
 VPT: Shallow，在输入端加入prompt
 
 综述文章，近期PEFT方法总结，从统一的观点进行归纳：
-论文地址：https://arxiv.org/abs/2110.04366
+论文地址：https://openreview.net/forum?id=0RDcd5Axok
 
 ## Example
 
