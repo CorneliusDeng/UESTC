@@ -175,13 +175,15 @@ $$
 
 
 
-# Code Skill
+# Code 
 
 - [数据量太大导致Dataloader加载很慢](https://www.zhihu.com/question/356829360/answer/3008169314)
 
 - [深度学习炼丹技巧](https://zhuanlan.zhihu.com/p/518189935)
 
 - [PyTorch常用代码段合集](https://zhuanlan.zhihu.com/p/497640563)
+
+- [Annotated  Deep Learning Paper Implementations](https://github.com/labmlai/annotated_deep_learning_paper_implementations)：非常好！
 
   
 
@@ -380,7 +382,7 @@ VPT: Shallow，在输入端加入prompt
 
 - [大模型面试八股文](https://zhuanlan.zhihu.com/p/643560888)
 - [NLP/AI面试全记录](https://zhuanlan.zhihu.com/p/57153934)
-- [牛客网面经总结](https://www.nowcoder.com/discuss/165930)
+- [牛客网面经总结](https://www.nowcoder.com/discuss/165930)，[答案](https://www.nowcoder.com/ta/review-ml?query=&asc=true&order=&tagQuery=&page=1)
 - [海量数据判重](https://www.nowcoder.com/discuss/153978)
 - [常考智力题/逻辑题](https://github.com/wangyuGithub01/Machine_Learning_Resources/blob/master/pdf/IQ.md)
 - [常考概率题](https://github.com/wangyuGithub01/Machine_Learning_Resources/blob/master/pdf/statistic.md)
