@@ -161,6 +161,8 @@ $$
 - [斯塔克尔伯格博弈](https://www.zhihu.com/question/475143505/answer/2638019081)，[推荐系统中的斯塔克尔伯格博弈](https://zhuanlan.zhihu.com/p/380135679)
 - [平均场博弈](https://zhuanlan.zhihu.com/p/265578530)，[深度学习方法求解平均场博弈论问题](https://zhuanlan.zhihu.com/p/419182257)
 - [纳什均衡](https://zhuanlan.zhihu.com/p/593411677)
+- [帕累托最优](https://blog.csdn.net/qq_42364307/article/details/115096393)，[通俗地解释帕累托最优](https://www.zhihu.com/question/22570835/answer/21816685)
+
 
 
 
