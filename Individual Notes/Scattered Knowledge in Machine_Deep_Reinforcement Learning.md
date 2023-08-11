@@ -187,6 +187,8 @@ $$
 
 - [Annotated  Deep Learning Paper Implementations](https://github.com/labmlai/annotated_deep_learning_paper_implementations)：非常好！
 
+- [Machine Learning in Numpy](https://github.com/ddbourgin/numpy-ml)：值得一看
+
   
 
 # 具体模型
@@ -405,6 +407,7 @@ VPT: Shallow，在输入端加入prompt
 - [美团技术团队](https://tech.meituan.com/tags/%E7%AE%97%E6%B3%95.html)：美团的技术博客，新技术与实际应用相结合
 - [张俊林——深度学习前沿笔记](https://zhuanlan.zhihu.com/c_188941548)：LLM为主
 - [计算广告论文、学习资料、业界分享](https://github.com/wzhe06/Ad-papers)
+- [Annotated PyTorch Paper Implementations](https://github.com/labmlai/annotated_deep_learning_paper_implementations)：用 pytorch 框架实现各种深度学习模型，并且带有讲解
 
 
 
