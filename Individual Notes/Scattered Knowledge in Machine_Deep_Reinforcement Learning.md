@@ -193,10 +193,21 @@ $$
 
 # 具体模型
 
-- Attention：[参考1](https://zhuanlan.zhihu.com/p/342235515)，[参考2](https://zhuanlan.zhihu.com/p/575643771)，[Transformer讲解——张俊林](https://zhuanlan.zhihu.com/p/37601161)，[Transformer讲解——李沐](https://www.bilibili.com/video/BV1pu411o7BE/?spm_id_from=333.999.0.0&vd_source=aed4f12da37d96d8f25730419892c4a9)
+- Attention：[Attention 图解](https://zhuanlan.zhihu.com/p/342235515)，[浅谈Attention机制(Self-Attention，QKV矩阵)](https://zhuanlan.zhihu.com/p/575643771)，[Transformer讲解——张俊林](https://zhuanlan.zhihu.com/p/37601161)，[Transformer讲解——李沐](https://www.bilibili.com/video/BV1pu411o7BE/?spm_id_from=333.999.0.0&vd_source=aed4f12da37d96d8f25730419892c4a9)，[图解 Transformers 的数学原理](https://zhuanlan.zhihu.com/p/654051912)
+
 - Stable Diffusion：[参考1](https://zhuanlan.zhihu.com/p/583124756)，[参考2](https://huggingface.co/blog/annotated-diffusion)，[参考3](https://mp.weixin.qq.com/s/nU0_GrhWQv_gir--ZUBmOg)，[参考4](https://lambdalabs.com/blog/how-to-fine-tune-stable-diffusion-how-we-made-the-text-to-pokemon-model-at-lambda)，[参考5](https://lilianweng.github.io/posts/2021-07-11-diffusion-models/)
 
+- BERT：[BERT 论文逐段精读——李沐](https://www.bilibili.com/video/BV1PL411M7eQ?vd_source=973b1421e263dea47bcea4ee868b05a3)
 
+- ViT：[ViT论文逐段精读](https://www.bilibili.com/video/BV15P4y137jb?vd_source=973b1421e263dea47bcea4ee868b05a3)，[ViLT 论文精读](https://www.bilibili.com/video/BV14r4y1j74y?vd_source=973b1421e263dea47bcea4ee868b05a3)
+
+- CLIP：[CLIP 论文逐段精读](https://www.bilibili.com/video/BV1SL4y1s7LQ?vd_source=973b1421e263dea47bcea4ee868b05a3)，[CLIP改进工作串讲(上)](https://www.bilibili.com/video/BV1FV4y1p7Lm?vd_source=973b1421e263dea47bcea4ee868b05a3)，[CLIP改进工作串讲(下)](https://www.bilibili.com/video/BV1gg411U7n4?vd_source=973b1421e263dea47bcea4ee868b05a3)
+
+- Multimodal：[多模态串讲(上)](https://www.bilibili.com/video/BV1Vd4y1v77v?vd_source=973b1421e263dea47bcea4ee868b05a3)，[多模态串讲(下)](https://www.bilibili.com/video/BV1fA411Z772?vd_source=973b1421e263dea47bcea4ee868b05a3)
+
+- BLIP-2：
+
+  
 
 # Research thinking in the era of large models
 
@@ -390,6 +401,7 @@ VPT: Shallow，在输入端加入prompt
 - [海量数据判重](https://www.nowcoder.com/discuss/153978)
 - [常考智力题/逻辑题](https://github.com/wangyuGithub01/Machine_Learning_Resources/blob/master/pdf/IQ.md)
 - [常考概率题](https://github.com/wangyuGithub01/Machine_Learning_Resources/blob/master/pdf/statistic.md)
+- [商汤研究院基础视觉组(大模型专题)](https://mp.weixin.qq.com/s?__biz=MzkwNDE4Nzg1MQ==&mid=2247493130&idx=1&sn=777abbae93825972dcf9f42afc2d4c6e&chksm=c0887caef7fff5b804dcd3e58f7abff36701a300b4c09a3de09d46640dfb7547e9ff8b5bd0b5&mpshare=1&scene=1&srcid=0827SraNLKVodOjvLDBGhX1H&sharer_sharetime=1693123853559&sharer_shareid=6224ae01f0b343747219af88e94201f4&from=singlemessage&isappinstalled=0&clicktime=1693797129&enterid=1693797129&ascene=1&devicetype=iOS16.6&version=18002831&nettype=WIFI&lang=zh_CN&countrycode=CN&fontScale=100&exportkey=n_ChQIAhIQLXWe3YrOonRVPbuDLDTfkRLjAQIE97dBBAEAAAAAAIoNOKCKUT4AAAAOpnltbLcz9gKNyK89dVj0rY46vSSDnwOGNMHBMXI28op6Yew4La3ZjEWzzIX3qE10SaNyayyZdueWq8kYN%2FG4XokYwlRKpwt2g0nIRhM%2Brp6dn1LKvzbFFtgLuoGJMFw%2Fh2CTd1YeZwg%2FkKzBVI2psWzfFwi5lJJNvEaqkFgBwJVzJOuY7LkQ5SSfkF8mTFYwSy5BQwTKomFgsyek2SNFhNpiCA02HvfwF6KZxe9yd4%2B2aKuSLEIAw9sPPNlJ1x1NjP9lP%2B8Wl%2BbcOO7L&pass_ticket=aSPwmN2aoMEAuxUvIaZKTdY76A6olWQBX9%2FTWISIjXpmcxGUfU926aeQtLarpdx0&wx_header=3)
 
 
 
