@@ -405,11 +405,12 @@ VPT: Shallow，在输入端加入prompt
 
 
 
-# 推荐书籍/笔记/专栏
+# 书籍/笔记/专栏
 
 - 《机器学习方法》李航：原《统计学习方法》
 - [《动手学深度学习》](https://zh.d2l.ai/)：深度学习教科书，pytorch代码实现
 - [《动手学强化学习》](https://hrl.boyuai.com/chapter/intro/)：强化学习快速入门，代码实现
+- [Explanation to key concepts in ML](https://github.com/dair-ai/ML-Papers-Explained)
 - [《Easy RL》](https://datawhalechina.github.io/easy-rl/#/)：强化学习更详细的算法解释
 - [南瓜书PumpkinBook](https://datawhalechina.github.io/pumpkin-book/#/)：西瓜书推导公式的细节详述
 - [《推荐系统实战》](https://github.com/wangyuGithub01/E-book/blob/master/%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F%E5%AE%9E%E8%B7%B5.pdf)
