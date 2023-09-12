@@ -1,0 +1,19 @@
+需要安装好gawk
+同时生成了静态和动态库
+
+../glibc-2.13/configure --prefix=/root/glibc-2.13/lib --enable-debug=yes CFLAGS="-O1 -U_FORTIFY_SOURCE -fno-stack-protector -g" CPPFLAGS="-O1 -U_FORTIFY_SOURCE -fno-stack-protector -g"
+make
+make install    //此时出现 /root/glibc-2.13/lib/etc/ld.so.conf: No such file or directory 但仍是成功的
+
+
+
+使用动态库：
+gcc test.c -g -Wl,-rpath,/root/glibc-2.13/lib/lib
+
+
+
+使用静态库静态：
+gcc -c -ggdb -fno-builtin -nostdlib -fno-stack-protector test.c
+
+顺序要正确： General linking order: crt1.o crti.o crtbegin.o [-L paths] [user objects] [gcc libs] [C libs] [gcc libs] crtend.o crtn.o
+ld -static -e _start ../lib/lib/crt1.o ../lib/lib/crti.o /usr/lib/gcc/x86_64-linux-gnu/4.6/crtbeginT.o test.o ../lib/lib/libc.a ../build/string/strlen.o ../build/elf/dl-iteratephdr.o /usr/lib/gcc/x86_64-linux-gnu/4.6/libgcc.a /usr/lib/gcc/x86_64-linux-gnu/4.6/libgcc_eh.a /usr/lib/gcc/x86_64-linux-gnu/4.6/crtend.o ../lib/lib/crtn.o -o test
