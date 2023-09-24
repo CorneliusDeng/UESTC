@@ -1,6 +1,6 @@
 clear
 clc
-
+%是否要进行指标降维自行添加
 load data
 Num=unique(Table(2:end,1),'stable');
 A=[];%首检
@@ -41,17 +41,21 @@ Y2=string(predict(net,Xtest2));
 figure
 plotconfusion(categorical(Ytrain),categorical(Y));
 title('训练集')
+figure
+hold on
+auc=plot_roc(double(Y)',Ytrain');
+legend(['训练集 auc=',num2str(round(auc,2))])
 %% b
 Xyuce = B;
 Y3 = string(predict(net,Xyuce));
-result3="";
+result3="""";
 for i=1:length(Num)
     a=find(N2==Num(i));
     for j=1:length(a)
         result3(i,j)=Y3(a(j));
     end
 end
-result3(ismissing(result3)==1)="";
+result3(ismissing(result3)==1)="""";
 z=[];
 for i=1:size(result3,2)
     z=[z,"第"+num2str(i)+"次随访"];
@@ -71,6 +75,6 @@ set(gca,'position',[0.05 0.05 0.9 0.9])
 h=heatmap(P,'ColorbarVisible', 'on');
 h.FontSize = 8;
 h.CellLabelFormat = '%0.2g';
-resultp=["",Z;Z',P];%自行分析相关性结果
+resultp=["""",Z;Z',P];%自行分析相关性结果
 
 disp('预测结果见result3，相关性结果见resultp')

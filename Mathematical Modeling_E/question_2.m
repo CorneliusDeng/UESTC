@@ -1,11 +1,12 @@
+clear
 clc
 
 %% a
 load data
 Num=unique(Table(2:end,1),'stable');
-T=[];%记录复查时间
-ED=[];%记录水肿数据
-A=[];%记录除此诊断信息
+T=[]; % 记录复查时间
+ED=[]; % 记录水肿数据
+A=[]; % 记录除此诊断信息
 for i=1:length(Num)
     a=find(Table(:,1)==Num(i));
     A=[A;double(Table(a(1),4:end))];
@@ -28,6 +29,7 @@ for i=1:length(Num)
     a=find(Table(:,1)==Num(i))-1;
     Error(i,1)=mean(abs(ED_fit(a)-ED(a)));
 end
+
 %% b
 %个体差异用Tabel第4-15列的指标来进行聚类
 cluster_n=5;%聚类中心
@@ -37,7 +39,7 @@ plot(obj_fcn)
 xlabel('iteration')
 ylabel('obj.fcn_value')
 title('FCM聚类')
-[~,u]=max(U);
+[~,u]=max(U);%所属亚类
 ED_fit2=[];
 for i=1:cluster_n
     a=find(u==i);
@@ -61,7 +63,8 @@ for i=1:length(Num)
     a=find(Table(:,1)==Num(i))-1;
     Error2(i,1)=mean(abs(ED_fit2(a)-ED(a)));
 end
-result2=["患者","残差(全体)","残差(亚类)","亚类"];[Num,Error,Error2,u'];
+result2=[["患者","残差(全体)","残差(亚类)","亚类"];[Num,Error,Error2,u']];
+
 %% c
 %计算水肿指标的变化率，在不同治疗方法下，改善效率
 K=[];
@@ -101,6 +104,7 @@ disp('不同治疗对水肿进展模式的影响大小为：')
 [~,q]=sort(p);
 str=Z(q)+"">"";
 disp(str)
+
 %% d
 %同上述步骤求血肿体积的
 %计算水肿指标的变化率，在不同治疗方法下，改善效率
@@ -145,6 +149,4 @@ y0=double(Table(2:end,34));
 theta=x0'*y0/(norm(x0)*norm(y0));%余弦相似度
 fprintf('血肿指标与水肿指标的相关度为：%.4f\n',theta)
 
-
-
-
+disp('结果见矩阵result2')

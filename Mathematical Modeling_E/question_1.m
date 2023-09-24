@@ -83,4 +83,4 @@ figure
 plotconfusion(categorical(Ytest2),categorical(T_sim2));
 title('测试集2')
 
-result1=[["患者","是否发生血肿扩张","血肿扩张时间","血肿扩张预测概率"];[result1,[t_sim';t_sim1';t_sim2']]];
+result1=[["患者","是否发生血肿扩张","血肿扩张时间","血肿扩张预测概率"];[result1,[t_sim';t_sim1';t_sim2']]]; 
