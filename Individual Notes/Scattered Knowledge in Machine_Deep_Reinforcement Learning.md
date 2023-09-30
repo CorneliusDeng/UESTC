@@ -222,6 +222,7 @@ $$
 - [常考智力题/逻辑题](https://github.com/wangyuGithub01/Machine_Learning_Resources/blob/master/pdf/IQ.md)
 - [常考概率题](https://github.com/wangyuGithub01/Machine_Learning_Resources/blob/master/pdf/statistic.md)
 - [商汤研究院基础视觉组(大模型专题)](https://mp.weixin.qq.com/s?__biz=MzkwNDE4Nzg1MQ==&mid=2247493130&idx=1&sn=777abbae93825972dcf9f42afc2d4c6e&chksm=c0887caef7fff5b804dcd3e58f7abff36701a300b4c09a3de09d46640dfb7547e9ff8b5bd0b5&mpshare=1&scene=1&srcid=0827SraNLKVodOjvLDBGhX1H&sharer_sharetime=1693123853559&sharer_shareid=6224ae01f0b343747219af88e94201f4&from=singlemessage&isappinstalled=0&clicktime=1693797129&enterid=1693797129&ascene=1&devicetype=iOS16.6&version=18002831&nettype=WIFI&lang=zh_CN&countrycode=CN&fontScale=100&exportkey=n_ChQIAhIQLXWe3YrOonRVPbuDLDTfkRLjAQIE97dBBAEAAAAAAIoNOKCKUT4AAAAOpnltbLcz9gKNyK89dVj0rY46vSSDnwOGNMHBMXI28op6Yew4La3ZjEWzzIX3qE10SaNyayyZdueWq8kYN%2FG4XokYwlRKpwt2g0nIRhM%2Brp6dn1LKvzbFFtgLuoGJMFw%2Fh2CTd1YeZwg%2FkKzBVI2psWzfFwi5lJJNvEaqkFgBwJVzJOuY7LkQ5SSfkF8mTFYwSy5BQwTKomFgsyek2SNFhNpiCA02HvfwF6KZxe9yd4%2B2aKuSLEIAw9sPPNlJ1x1NjP9lP%2B8Wl%2BbcOO7L&pass_ticket=aSPwmN2aoMEAuxUvIaZKTdY76A6olWQBX9%2FTWISIjXpmcxGUfU926aeQtLarpdx0&wx_header=3)
+- [商汤科技基础视觉组(自动驾驶专题)](https://mp.weixin.qq.com/s/qrosfiJjDj6vZdRb7Mz5Cg)
 
 
 
