@@ -1,8 +1,9 @@
-# 梯度下降 Gradient Descent
+# 优化算法 Optimization Algorithm
 
 - [理解梯度下降法](https://zhuanlan.zhihu.com/p/36902908)
 - [梯度下降法、牛顿法和拟牛顿法](https://zhuanlan.zhihu.com/p/37524275)
 - [深度学习优化算法SGD、Momentum、Adagrad等](https://zhuanlan.zhihu.com/p/32230623)
+- 神经网网络优化算法：[参考1](https://mp.weixin.qq.com/s/kj8VulNMfEgVShnyE43G9A)，[参考2](https://mp.weixin.qq.com/s/ekykS5xdTayD0NaZPPITdA)
 
 
 

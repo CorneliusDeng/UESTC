@@ -16,3 +16,7 @@ buildNumber.properties
 **/target/
 
 .idea
+
+__pycache__/
+*.egg-info/
+*.pyc
