@@ -27,6 +27,12 @@ def moving_average(a, window_size):
     end = (np.cumsum(a[:-window_size:-1])[::2] / r)[::-1]
     return np.concatenate((begin, middle, end))
 
+
+'''
+on-policy：在训练过程中使用的策略和在执行过程中使用的策略相同
+智能体在每一轮训练中都使用当前的策略来采取动作，并将状态转移信息添加到状态转移字典中
+然后，智能体使用状态转移字典来更新策略网络和值函数网络的参数，从而提高策略的准确性和动作价值的准确性。
+'''
 def train_on_policy_agent(env, agent, num_episodes):
     return_list = []
     for i in range(10):
@@ -53,6 +59,11 @@ def train_on_policy_agent(env, agent, num_episodes):
                 pbar.update(1)
     return return_list
 
+'''
+off-policy：在训练过程中使用的策略和在执行过程中使用的策略不同
+智能体在每一轮训练中都使用当前的策略来采取动作，并将状态转移信息添加到回放缓冲区中
+然后，智能体从回放缓冲区中随机采样一批状态转移信息，并使用这些信息来更新策略网络和值函数网络的参数，从而提高策略的准确性和动作价值的准确性
+'''
 def train_off_policy_agent(env, agent, num_episodes, replay_buffer, minimal_size, batch_size):
     return_list = []
     for i in range(10):

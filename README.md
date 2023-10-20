@@ -1,8 +1,8 @@
-# CS_Master_Daily
+# CS Master Daily
 
 - #### Who am I？
 
-​		CorneliusDeng, CS Master of UESTC.
+​		Cornelius Deng, CS Master of UESTC.
 
 - #### Why did I create this repository？
 
