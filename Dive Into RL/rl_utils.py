@@ -88,14 +88,16 @@ def train_off_policy_agent(env, agent, num_episodes, replay_buffer, minimal_size
                 pbar.update(1)
     return return_list
 
-
+'''
+计算GAE（Generalized Advantage Estimation）中的优势估计，其中gamma和lmbda分别是GAE算法中的超参数，td_delta是时序差分目标
+函数首先将td_delta转换为numpy数组，然后从后向前遍历td_delta，计算每个时间步的优势，并将其添加到优势列表中。最后将优势列表反转并转换为PyTorch张量并返回
+'''
 def compute_advantage(gamma, lmbda, td_delta):
     td_delta = td_delta.detach().numpy()
     advantage_list = []
     advantage = 0.0
-    for delta in td_delta[::-1]:
+    for delta in td_delta[::-1]: # 从后向前遍历td_delta
         advantage = gamma * lmbda * advantage + delta
         advantage_list.append(advantage)
-    advantage_list.reverse()
-    return torch.tensor(advantage_list, dtype=torch.float)
-                
+    advantage_list.reverse() # 将优势列表反转
+    return torch.tensor(advantage_list, dtype=torch.float) # 将优势列表转换为PyTorch张量并返回
