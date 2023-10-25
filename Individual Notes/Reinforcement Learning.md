@@ -971,6 +971,8 @@ $$
 
 大量实验表明，PPO-截断总是比 PPO-惩罚表现得更好。
 
+![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/PPO.jpg?raw=true)
+
 
 
 # DDPG 算法
@@ -1362,95 +1364,6 @@ HER 算法的具体流程如下，值得注意的是，这里的策略优化算�
 
 
 
-# 多智能体强化学习
-
-单智能体强化学习算法，其基本假设是动态环境是**稳态的**（stationary），即状态转移概率和奖励函数不变，并依此来设计相应的算法。而如果环境中还有其他智能体做交互和学习，那么任务则上升为**多智能体强化学习**（multi-agent reinforcement learning，MARL），如下图所示。
-
-<img src="https://hrl.boyuai.com/static/640.7a0e3ef2.png" style="zoom:50%;" />
-
-多智能体的情形相比于单智能体更加复杂，因为每个智能体在和环境交互的同时也在和其他智能体进行直接或者间接的交互。因此，多智能体强化学习要比单智能体更困难，其难点主要体现在以下几点：
-
-- 由于多个智能体在环境中进行实时动态交互，并且每个智能体在不断学习并更新自身策略，因此在每个智能体的视角下，环境是**非稳态的**（non-stationary），即对于一个智能体而言，即使在相同的状态下采取相同的动作，得到的状态转移和奖励信号的分布可能在不断改变；
-- 多个智能体的训练可能是多目标的，不同智能体需要最大化自己的利益；
-- 训练评估的复杂度会增加，可能需要大规模分布式训练来提高效率。
-
-## 问题建模
-
-将一个多智能体环境用一个元组 $(N,S,A,R,P)$ 表示，其中 $N$ 是智能体的数目，$S=S_1\times \cdots \times S_N$ 是所有智能体的状态集合，$A=A_1\times \cdots \times A_N$ 是所有智能体的动作集合，$R=r_1\times \cdots \times r_N$ 是所有智能体奖励函数的集合，$P$ 是环境的状态转移概率。一般多智能体强化学习的目标是为每个智能体学习一个策略来最大化其自身的累积奖励。
-
-## 多智能体强化学习的基本求解范式
-
-面对上述问题形式，最直接的想法是基于已经熟悉的单智能体算法来进行学习，这主要分为两种思路。
-
-- **完全中心化**（fully centralized）方法：将多个智能体进行决策当作一个超级智能体在进行决策，即把所有智能体的状态聚合在一起当作一个全局的超级状态，把所有智能体的动作连起来作为一个联合动作。这样做的好处是，由于已经知道了所有智能体的状态和动作，因此对这个超级智能体来说，环境依旧是稳态的，一些单智能体的算法的收敛性依旧可以得到保证。然而，这样的做法不能很好地扩展到智能体数量很多或者环境很大的情况，因为这时候将所有的信息简单暴力地拼在一起会导致维度爆炸，训练复杂度巨幅提升的问题往往不可解决。
-- **完全去中心化**（fully decentralized）方法：与完全中心化方法相反的范式便是假设每个智能体都在自身的环境中独立地进行学习，不考虑其他智能体的改变。完全去中心化方法直接对每个智能体用一个单智能体强化学习算法来学习。这样做的缺点是环境是非稳态的，训练的收敛性不能得到保证，但是这种方法的好处在于随着智能体数量的增加有比较好的扩展性，不会遇到维度灾难而导致训练不能进行下去。
-
-## IPPO 算法
-
-完全去中心化的算法这类算法被称为**独立学习**（independent learning）。由于对于每个智能体使用单智能体算法 PPO 进行训练，所因此这个算法叫作**独立 PPO**（Independent PPO，IPPO）算法。具体而言，这里使用的 PPO 算法版本为 PPO-截断，其算法流程如下：
-
-- 对于 $N$ 个智能体，为每个智能体初始化各自的策略以及价值函数
-- for 训练轮数 $k=0,1,2\cdots$  do:
-  - 所有智能体在环境中交互分别获得各自的一条轨迹数据
-  - 对每个智能体，基于当前的价值函数用 GAE 计算优势函数的估计
-  - 对每个智能体，通过最大化其 PPO-截断的目标来更新其策略
-  - 对每个智能体，通过均方误差损失函数优化其价值函数
-- end for
-
-实验证明，当智能体数量较少的时候，IPPO 这种完全去中心化学习在一定程度上能够取得好的效果，但是最终达到的胜率也比较有限。这可能是因为多个智能体之间无法有效地通过合作来共同完成目标。这时候可能就需要引入更多的算法来考虑多个智能体之间的交互行为，或者使用**中心化训练去中心化执行**（centralized training with decentralized execution，CTDE）的范式来进行多智能体训练。
-
-## MADDPG 算法
-
-所谓中心化训练去中心化执行是指在训练的时候使用一些单个智能体看不到的全局信息而以达到更好的训练效果，而在执行时不使用这些信息，每个智能体完全根据自己的策略直接动作以达到去中心化执行的效果。中心化训练去中心化执行的算法能够在训练时有效地利用全局信息以达到更好且更稳定的训练效果，同时在进行策略模型推断时可以仅利用局部信息，使得算法具有一定的扩展性。CTDE 可以类比成一个足球队的训练和比赛过程：在训练时，11 个球员可以直接获得教练的指导从而完成球队的整体配合，而教练本身掌握着比赛全局信息，教练的指导也是从整支队、整场比赛的角度进行的；而训练好的 11 个球员在上场比赛时，则根据场上的实时情况直接做出决策，不再有教练的指导。
-
-CTDE 算法主要分为两种：一种是基于值函数的方法，例如 VDN，QMIX 算法等；另一种是基于 Actor-Critic 的方法，例如 MADDPG 和 COMA 等。
-
-**多智能体 DDPG**（muli-agent DDPG，MADDPG）算法从字面意思上来看就是对于每个智能体实现一个 DDPG 的算法。所有智能体共享一个中心化的 Critic 网络，该 Critic 网络在训练的过程中同时对每个智能体的 Actor 网络给出指导，而执行时每个智能体的 Actor 网络则是完全独立做出行动，即去中心化地执行。
-
-CTDE 算法的应用场景通常可以被建模为一个**部分可观测马尔可夫博弈**（partially observable Markov games）：用 $S$ 代表 $N$ 个智能体所有可能的状态空间，这是全局的信息。对于每个智能体 $i$，其动作空间为 $A_i$，观测空间为 $O_i$，每个智能体的策略 $\pi_{\theta_i}:O_i \times A_i \rightarrow [0,1]$ 是一个概率分布，用来表示智能体在每个观测下采取各个动作的概率。环境的状态转移函数为 。每个智能体的奖励函数为 $r_i:S\times A\rightarrow R$，每个智能体从全局状态得到的部分观测信息为 $o_i:S\rightarrow O_i$，初始状态分布为 $\rho:S\rightarrow [0,1] $ 。每个智能体的目标是最大化其期望累积奖励 $E[\sum^T_{t=0}\gamma^tr_i^t]$。
-
-<img src="https://hrl.boyuai.com/static/480.c487a865.png" style="zoom:67%;" />
-
-如上图所示，每个智能体用 Actor-Critic 的方法训练，但不同于传统单智能体的情况，在 MADDPG 中每个智能体的 Critic 部分都能够获得其他智能体的策略信息。具体来说，考虑一个有 $N$ 个智能体的博弈，每个智能体的策略参数为 $\theta=\{\theta_1,\cdots,\theta_N\}$，记 $\pi=\{\pi_1,\cdots,\pi_N\}$ 为所有智能体的策略集合，那么我们可以写出在随机性策略情况下每个智能体的期望收益的策略梯度：
-$$
-\nabla_{\theta_i}J(\theta_i)=E_{s\sim p^\mu,a\sim \pi_i}
-[\nabla_{\theta_i}\;log\;\pi_i(a_i|o_i)Q_i^\pi(x,a_1,\cdots,a_N))]
-$$
-其中，$Q_i^\pi(x,a_1,\cdots,a_N)$ 就是一个中心化的动作价值函数。
-
-对于确定性策略来说，考虑现在有 $N$ 个连续的策略 $\mu_{\theta_i}$，可以得到 DDPG 的梯度公式：
-$$
-\nabla_{\theta_i}J(\mu_i)=E_{x\sim D}
-[\nabla_{\theta_i}\mu_i(o_i) \nabla_{a_i}Q_i^\mu(x,a_1,\cdots,a_N)|_{a_i=\mu_i(o_i)}]
-$$
-其中，$D$ 是用来存储数据的经验回放池，它存储的每一个数据为 $(x,x',a_1,\cdots,a_N,r_1,\cdots,r_N)$。而在 MADDPG 中，中心化动作价值函数可以按照下面的损失函数来更新：
-$$
-L(w_i) = E_{x,a,r,x'}[(Q_i^\mu(x,a_1,\cdots,a_N)-y)^2] \\
-y = r_i+\gamma Q_i^{\mu'}(x',a'_1,\cdots,a'_N)|_{a_j^{'}=\mu_j^{'}(o_j)}
-$$
-其中，$\mu'=(\mu'_{\theta_1},\cdots,\mu'_{\theta_N})$ 是更新价值函数中使用的目标策略的集合，它们有着延迟更新的参数。
-
-MADDPG 的具体算法流程如下：
-
-- 随机初始化每个智能体的 Actor 网络和 Critic 网络
-- for 序列 $e=1\to E$  do
-  - 初始化一个随机过程 $N$，用于动作探索
-  - 获取所有智能体的初始观测  $x$
-  - for $t=1\to T$ do：
-    - 对于每个智能体 $i$，用当前的策略选择一个动作 $a_i=\mu_{\theta_i}(o_i)+N_t$
-    - 执行动作 $a=(a_1,\cdots,a_N)$ 并且获得奖励 $r$ 和新的观测 $x'$
-    - 把 $(x,a,r,x')$ 存储到经验回放池 $D$ 中
-    - 从 $D$ 中随机采样一些数据
-    - 对于每个智能体 $i$，中心化训练 Critic 网络
-    - 对于每个智能体 $i$，训练自身的 Actor 网络
-    - 对每个智能体 $i$，更新目标 Actor 网络和目标 Critic 网络
-  - end for
-- end for
-
-## MAPPO 算法
-
-
-
 # MARL Survey
 
 参考链接：[MARL Survey](https://cloud.tencent.com/developer/article/1618396)
@@ -1560,3 +1473,171 @@ MADDPG 的具体算法流程如下：
 
 - [Stabilising experience replay for deep multi-agent reinforcement learning](http://proceedings.mlr.press/v70/foerster17b.html) 除了智能体之间的协作，本文还提出了一种估计其他智能体策略的方法。这篇文章首先从 hyper Q-Learning 算法出发，该算法通过贝叶斯估计的方法来估计其他智能体的策略。但是这种方法会增加 Q function 的输入维度，使得 Q function 更难学习。上述情况在深度强化学习中更加明显。考虑如下一个简单的 idea，我们把其他智能体策略函数的参数作为额外输入 ，但是在深度强化学习中策略函数一般是 DNN，因而维度太高基本不可行。本文提出了一个十分简单的指纹表示—— **episode 索引号**。这样一个听上去过于简单的指纹在性能上确实可以带来提升。但是存在一个比较大的问题在于，当其他智能体的策略收敛之后，索引号还在不断增加。另外，本文在之前指纹的基础上还增加了一个新的指纹—— exploration rate，这个值也能够一定程度上反应 policy 的特点。
 - [Machine Theory of Mind](https://www.deepmind.com/publications/machine-theory-of-mind) 这篇论文是将行为以及脑科学领域 Theory of Mind（ToM）理论引入到多智能体强化学习中，用以根据其他智能体历史行为数据来预测其未来行为等（**这里我们只关注行为**）。ToM 理论认为，预测一个智能体的未来行为，我们需要知道其性格（character）、思想（mental）以及当前状态，对于某个智能体 过去的轨迹数据，我们使用一个神经网络编码每一条轨迹，最后将这些编码加起来即可。
+
+
+
+
+
+# 多智能体强化学习
+
+单智能体强化学习算法，其基本假设是动态环境是**稳态的**（stationary），即状态转移概率和奖励函数不变，并依此来设计相应的算法。而如果环境中还有其他智能体做交互和学习，那么任务则上升为**多智能体强化学习**（multi-agent reinforcement learning，MARL），如下图所示。
+
+<img src="https://hrl.boyuai.com/static/640.7a0e3ef2.png" style="zoom:50%;" />
+
+多智能体的情形相比于单智能体更加复杂，因为每个智能体在和环境交互的同时也在和其他智能体进行直接或者间接的交互。因此，多智能体强化学习要比单智能体更困难，其难点主要体现在以下几点：
+
+- 由于多个智能体在环境中进行实时动态交互，并且每个智能体在不断学习并更新自身策略，因此在每个智能体的视角下，环境是**非稳态的**（non-stationary），即对于一个智能体而言，即使在相同的状态下采取相同的动作，得到的状态转移和奖励信号的分布可能在不断改变；
+- 多个智能体的训练可能是多目标的，不同智能体需要最大化自己的利益；
+- 训练评估的复杂度会增加，可能需要大规模分布式训练来提高效率。
+
+## 问题建模
+
+将一个多智能体环境用一个元组 $(N,S,A,R,P)$ 表示，其中 $N$ 是智能体的数目，$S=S_1\times \cdots \times S_N$ 是所有智能体的状态集合，$A=A_1\times \cdots \times A_N$ 是所有智能体的动作集合，$R=r_1\times \cdots \times r_N$ 是所有智能体奖励函数的集合，$P$ 是环境的状态转移概率。一般多智能体强化学习的目标是为每个智能体学习一个策略来最大化其自身的累积奖励。
+
+## 多智能体强化学习的基本求解范式
+
+面对上述问题形式，最直接的想法是基于已经熟悉的单智能体算法来进行学习，这主要分为两种思路。
+
+- **完全中心化**（fully centralized）方法：将多个智能体进行决策当作一个超级智能体在进行决策，即把所有智能体的状态聚合在一起当作一个全局的超级状态，把所有智能体的动作连起来作为一个联合动作。这样做的好处是，由于已经知道了所有智能体的状态和动作，因此对这个超级智能体来说，环境依旧是稳态的，一些单智能体的算法的收敛性依旧可以得到保证。然而，这样的做法不能很好地扩展到智能体数量很多或者环境很大的情况，因为这时候将所有的信息简单暴力地拼在一起会导致维度爆炸，训练复杂度巨幅提升的问题往往不可解决。
+- **完全去中心化**（fully decentralized）方法：与完全中心化方法相反的范式便是假设每个智能体都在自身的环境中独立地进行学习，不考虑其他智能体的改变。完全去中心化方法直接对每个智能体用一个单智能体强化学习算法来学习。这样做的缺点是环境是非稳态的，训练的收敛性不能得到保证，但是这种方法的好处在于随着智能体数量的增加有比较好的扩展性，不会遇到维度灾难而导致训练不能进行下去。
+
+## IPPO 算法
+
+完全去中心化的算法这类算法被称为**独立学习**（independent learning）。由于对于每个智能体使用单智能体算法 PPO 进行训练，所因此这个算法叫作**独立 PPO**（Independent PPO，IPPO）算法。具体而言，这里使用的 PPO 算法版本为 PPO-截断，其算法流程如下：
+
+- 对于 $N$ 个智能体，为每个智能体初始化各自的策略以及价值函数
+- for 训练轮数 $k=0,1,2\cdots$  do:
+  - 所有智能体在环境中交互分别获得各自的一条轨迹数据
+  - 对每个智能体，基于当前的价值函数用 GAE 计算优势函数的估计
+  - 对每个智能体，通过最大化其 PPO-截断的目标来更新其策略
+  - 对每个智能体，通过均方误差损失函数优化其价值函数
+- end for
+
+实验证明，当智能体数量较少的时候，IPPO 这种完全去中心化学习在一定程度上能够取得好的效果，但是最终达到的胜率也比较有限。这可能是因为多个智能体之间无法有效地通过合作来共同完成目标。这时候可能就需要引入更多的算法来考虑多个智能体之间的交互行为，或者使用**中心化训练去中心化执行**（centralized training with decentralized execution，CTDE）的范式来进行多智能体训练。
+
+## MADDPG 算法
+
+所谓中心化训练去中心化执行是指在训练的时候使用一些单个智能体看不到的全局信息而以达到更好的训练效果，而在执行时不使用这些信息，每个智能体完全根据自己的策略直接动作以达到去中心化执行的效果。中心化训练去中心化执行的算法能够在训练时有效地利用全局信息以达到更好且更稳定的训练效果，同时在进行策略模型推断时可以仅利用局部信息，使得算法具有一定的扩展性。CTDE 可以类比成一个足球队的训练和比赛过程：在训练时，11 个球员可以直接获得教练的指导从而完成球队的整体配合，而教练本身掌握着比赛全局信息，教练的指导也是从整支队、整场比赛的角度进行的；而训练好的 11 个球员在上场比赛时，则根据场上的实时情况直接做出决策，不再有教练的指导。
+
+CTDE 算法主要分为两种：一种是基于值函数的方法，例如 VDN，QMIX 算法等；另一种是基于 Actor-Critic 的方法，例如 MADDPG 和 COMA 等。
+
+**多智能体 DDPG**（muli-agent DDPG，MADDPG）算法从字面意思上来看就是对于每个智能体实现一个 DDPG 的算法。所有智能体共享一个中心化的 Critic 网络，该 Critic 网络在训练的过程中同时对每个智能体的 Actor 网络给出指导，而执行时每个智能体的 Actor 网络则是完全独立做出行动，即去中心化地执行。
+
+CTDE 算法的应用场景通常可以被建模为一个**部分可观测马尔可夫博弈**（partially observable Markov games）：用 $S$ 代表 $N$ 个智能体所有可能的状态空间，这是全局的信息。对于每个智能体 $i$，其动作空间为 $A_i$，观测空间为 $O_i$，每个智能体的策略 $\pi_{\theta_i}:O_i \times A_i \rightarrow [0,1]$ 是一个概率分布，用来表示智能体在每个观测下采取各个动作的概率。环境的状态转移函数为 。每个智能体的奖励函数为 $r_i:S\times A\rightarrow R$，每个智能体从全局状态得到的部分观测信息为 $o_i:S\rightarrow O_i$，初始状态分布为 $\rho:S\rightarrow [0,1] $ 。每个智能体的目标是最大化其期望累积奖励 $E[\sum^T_{t=0}\gamma^tr_i^t]$。
+
+<img src="https://hrl.boyuai.com/static/480.c487a865.png" style="zoom:67%;" />
+
+如上图所示，每个智能体用 Actor-Critic 的方法训练，但不同于传统单智能体的情况，在 MADDPG 中每个智能体的 Critic 部分都能够获得其他智能体的策略信息。具体来说，考虑一个有 $N$ 个智能体的博弈，每个智能体的策略参数为 $\theta=\{\theta_1,\cdots,\theta_N\}$，记 $\pi=\{\pi_1,\cdots,\pi_N\}$ 为所有智能体的策略集合，那么我们可以写出在随机性策略情况下每个智能体的期望收益的策略梯度：
+$$
+\nabla_{\theta_i}J(\theta_i)=E_{s\sim p^\mu,a\sim \pi_i}
+[\nabla_{\theta_i}\;log\;\pi_i(a_i|o_i)Q_i^\pi(x,a_1,\cdots,a_N))]
+$$
+其中，$Q_i^\pi(x,a_1,\cdots,a_N)$ 就是一个中心化的动作价值函数。
+
+对于确定性策略来说，考虑现在有 $N$ 个连续的策略 $\mu_{\theta_i}$，可以得到 DDPG 的梯度公式：
+$$
+\nabla_{\theta_i}J(\mu_i)=E_{x\sim D}
+[\nabla_{\theta_i}\mu_i(o_i) \nabla_{a_i}Q_i^\mu(x,a_1,\cdots,a_N)|_{a_i=\mu_i(o_i)}]
+$$
+其中，$D$ 是用来存储数据的经验回放池，它存储的每一个数据为 $(x,x',a_1,\cdots,a_N,r_1,\cdots,r_N)$。而在 MADDPG 中，中心化动作价值函数可以按照下面的损失函数来更新：
+$$
+L(w_i) = E_{x,a,r,x'}[(Q_i^\mu(x,a_1,\cdots,a_N)-y)^2] \\
+y = r_i+\gamma Q_i^{\mu'}(x',a'_1,\cdots,a'_N)|_{a_j^{'}=\mu_j^{'}(o_j)}
+$$
+其中，$\mu'=(\mu'_{\theta_1},\cdots,\mu'_{\theta_N})$ 是更新价值函数中使用的目标策略的集合，它们有着延迟更新的参数。
+
+MADDPG 的具体算法流程如下：
+
+- 随机初始化每个智能体的 Actor 网络和 Critic 网络
+- for 序列 $e=1\to E$  do
+  - 初始化一个随机过程 $N$，用于动作探索
+  - 获取所有智能体的初始观测  $x$
+  - for $t=1\to T$ do：
+    - 对于每个智能体 $i$，用当前的策略选择一个动作 $a_i=\mu_{\theta_i}(o_i)+N_t$
+    - 执行动作 $a=(a_1,\cdots,a_N)$ 并且获得奖励 $r$ 和新的观测 $x'$
+    - 把 $(x,a,r,x')$ 存储到经验回放池 $D$ 中
+    - 从 $D$ 中随机采样一些数据
+    - 对于每个智能体 $i$，中心化训练 Critic 网络
+    - 对于每个智能体 $i$，训练自身的 Actor 网络
+    - 对每个智能体 $i$，更新目标 Actor 网络和目标 Critic 网络
+  - end for
+- end for
+
+## MAPPO 算法
+
+出自 NeurIPS 2022 文章《The Surprising Effectiveness of PPO in Cooperative Multi-Agent Games》
+
+PPO 是一种常用的 on-policy 的强化学习算法，但是在多智能体强化学习中其使用率低于 off-policy 的算法，其原因是学界普遍认为 on-policy 的采样效率低于 off-policy
+
+多智能体强化学习算法大致上可以分为两类，中心式和分散式。中心式的思想是考虑一个合作式的环境，直接将单智能体算法扩展，让其直接学习一个联合动作的输出，但是并不好给出单个智能体该如何进行决策。分散式是每个智能体独立学习自己的奖励函数，对于每个智能体来说，其它智能体就是环境的一部分，因此往往需要去考虑环境的非平稳态。并且分散式学习到的并不是全局的策略。
+
+最近的一些工作提出了两种框架连接中心式和分散式这两种极端方法，从而得到折衷的办法：中心式训练分散式执行(centealized training and decentralized execution CTDE)和值分解(value decomposition VD)。CETD的方式通过学习一个全局的Critic来减少值函数的方差，这类方法的代表作有MADDPG和COMA；VD通过对局部智能体的Q函数进行组合来得到一个联合的Q函数
+
+MAPPO 研究了 PPO 算法中的5个核心超参数设置，以将其迁移到多智能体环境，达到了很好的效果。但是本文的局限性在于：实验环境都是离散的动作空间，都是协作性的，包含同构的智能体；本文的工作基于经验性质，并没有直接分析 PPO 的理论基础
+
+具有共享奖励的 DEC-POMDP (decentralized partially observable Markov decision processes) 被定义为 $<S,A,O,R,P,n,\gamma>$
+
+- $S$ 是状态空间
+- $A$ 是每个智能体的共享动作空间
+- $o_i=O(s;i)$  在全局状态 $s$ 下智能体 $i$ 的局部观测
+- $P(s'|s,A)$ 表示对全部 $n$ 个智能体，给定联合动作 $A=(a_1,\cdots,a_n)$，从状态 $s$ 转移到状态 $s'$ 的概率
+- $R(s,A)$ 表示共享奖励函数
+- $\gamma$ 是折扣因子
+
+多个智能体使用策略 $\pi_\theta(a_i|o_i)$ 从局部观测 $o_i$ 中产生一个动作 $a_i	$，并且联合优化累计折扣奖励 $J(\theta)=\mathbb{E}_{A^t,s^t}\left[\displaystyle\sum_t\gamma^tR(s^t,A^t)\right]$，其中 $A^t=(a_1^t，\cdots,a_n^t)$ 表示在时间步 $t$ 的联合动作
+
+<img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/MAPPO_Architecture.png?raw=true" style="zoom: 33%;" />
+
+- **MAPPO采用一种中心式的值函数方式来考虑全局信息，属于CTDE框架范畴内的一种方法，通过一个全局的值函数来使得各个单个的PPO智能体相互配合。它有一个前身IPPO，是一个完全分散式的PPO算法，类似IQL算法**
+
+  ![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/MAPPO_Algorithm.jpg?raw=true)
+
+- **总体理解**
+
+  每个局部智能体接收一个局部的观察`obs`，输出一个动作概率，所有的`actor`智能体都采用一个`actor`网络。`critic`网络接收所有智能体的观测`obs`，`cent_obs_space = n x obs_space`  其中`n`为智能体的个数，输出为一个`V`值，这个`V`值用于`actor`的更新。`actor`的`loss`和`PPO`的`loss`类似，有添加一个熵的`loss`。`Critic`的`loss`更多的是对`value`的值做`normalizer`，并且在计算`episode`的折扣奖励的时候不是单纯的算折扣奖励，采用`GAE`算折扣回报的方式
+
+MAPPO 有两个网络，策略网络 $\pi_\theta$ 和 价值网络 $V_\phi$。策略网络 $\pi_\theta$ 学习一个映射从观测 $o_t^{(a)}$ 到一个范围的分布或者是映射到一个高斯函数的动作均值和方差用于之后采样动作，价值网络 $V_\phi$ 学习一个映射 $S\rightarrow \mathbb{R}$
+
+Actor 网络的优化目标：
+$$
+L(\theta)=
+\left[\frac{1}{Bn}\sum_{i=1}^B\sum_{k=1}^n min\left(r_{\theta,i}^{(k)}A_i^{(k)},clip(r_{\theta,i}^{(k)},1-\epsilon,1+\epsilon)A_i^{(k)}\right)\right]
++
+\sigma\frac{1}{Bn}\sum_{i=1}^B\sum_{k=1}^n S \left[\pi_\theta(o_i^{(k)})\right]
+$$
+其中 $r_{\theta,i}^{(k)}=\frac{\pi_\theta(a_i^{(k)}|o_i^{(k)})}{\pi_{\theta_{old}}(a_i^{(k)}|o_i^{(k)})}$，$A_i^{(k)}$ 是 GAE 算法计算的优势函数，$S$ 是策略熵，$\sigma$ 是控制熵系数的一个超参数
+
+Critic 网络的优化目标：
+$$
+L(\phi)=\frac{1}{Bn}\sum_{i=1}^B\sum_{k=1}^n 
+\left(max
+\left[\left(V_\phi(s_i^{(k)})-\hat{R}_i\right)^2, 
+\left(clip\left(V_\phi(s_i^{(k)}),V_{\phi_{old}}(s_i^{(k)})-\epsilon,V_{\phi_{old}}(s_i^{(k)})+\epsilon\right)
+-\hat{R}_i
+\right)^2
+\right]
+\right)
+$$
+其中 $\hat{R}_i$ 是是折扣奖励。$B$ 表示 batch_size 的大小，$n$ 表示智能体的数量
+
+
+
+- 对于单个智能体，PPO 的技巧有
+  - `Generalized Advantage Estimation`：这个技巧来自文献：Hign-dimensional continuous control using generalized advantage estimation
+  - `Input Normalization`
+  - `Value Clipping`：与策略截断类似，将值函数进行一个截断
+  - `Relu activation with Orthogonal Initialization`
+  - `Gredient Clipping`：梯度更新不要太大
+  - `Layer Normalization`：这个技巧来自文献：Regularization matters in policy optimization-an empirical study on continuous control
+  - `Soft Trust-Region Penalty`：这个技巧来自文献：Revisiting design choices in proximal policy optimization
+- 多智能体环境下，MAPPO 的技巧有
+  - `Value Normalization`：用来稳定`Value`函数的学习，通过在`Value Estimates`中利用一些统计数据来归一化目标，值函数网络回归的目标就是归一化的目标值函数，但是当计算`GAE`的时候，又采用反归一化使得其放大到正常值。这个技巧来自文献：`Multi-task Deep Reinforcement Learning with popart`
+  - `Agent-Specific Global State`：对于多智能体算法而言，大部分的工作都在处理值函数这一块，因为大部分算法都是通过值函数来实现各个子智能体的相互配合。值函数的输入通常也是直接给全局的状态信息 $s$ 使得一个部分可观测马尔可夫决策问题(`POMDP`)转化为了一个马尔可夫决策问题(`MDP`)。
+    `Multi-agent actor-critic for mixed cooperative-competitive environment`中提出将所有智能体地局部观测信息拼接起来 $(o_1,\cdots,o_n)$ 作为`Critic`的输入，存在的问题就是智能体数量太多之后，尤其是值函数的输入维度远高于策略函数的输入维度的时候，会使得值函数的学习变得更加困难。
+    `SMAC`环境有提供一个包含所有智能体和敌方的全局信息，但是这个信息并不完整。虽然每个智能体的局部信息中会缺失敌方的信息，但是会有一些智能体特有的信息，像智能体的`ID`、可选动作、相对距离等等，这些在全局状态信息中是没有的。因此作者构建了一个带有智能体特征的全局状态信息，包含所有的全局信息和一些必须的局部智能体特有的状态特征。
+  - `Training Data Usage`：通常训练单个智能体的时候，我们会将数据切分成很多个`mini-batch`，并且在一个`epoch`中将其多次训练来提高数据的利用效率，但是作者在实践中发现，可能是由于环境的非平稳态问题，如果数据被反复利用训练的话效果会不太好，因此建议对于简单的`task`用`15`个`epoch`，比较困难的任务用`10`个或者`5`个`epoch`，并且不要将数据切分成多个`mini-batch`。当然也不是绝对的，作者说到了对于`SMAC`中的一个环境，将数据切分成两个`mini-batch`的时候有提高性能，对此作者给出了解释说有帮助跳出局部最优，还引用了一篇参考文献。
+  - `Action Masking`：由于游戏规则的限制，在某些情况下，某些动作就是不允许被执行。当计算动作概率 $\pi_\theta(a_i|o_i)$ 的时候，我们将不被允许的动作直接`mask`掉，这样在前向和反向传播的过程中，这些动作将永远为`0`，作者发现这种做法能够加速训练。
+  - `Death Masking`：如果智能体死掉了的话，在`Agent-Specific`特征中直接用一个`0`向量来描述即可。
+
+
+
