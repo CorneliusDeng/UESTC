@@ -1519,13 +1519,13 @@ HER 算法的具体流程如下，值得注意的是，这里的策略优化算�
 
 所谓中心化训练去中心化执行是指在训练的时候使用一些单个智能体看不到的全局信息而以达到更好的训练效果，而在执行时不使用这些信息，每个智能体完全根据自己的策略直接动作以达到去中心化执行的效果。中心化训练去中心化执行的算法能够在训练时有效地利用全局信息以达到更好且更稳定的训练效果，同时在进行策略模型推断时可以仅利用局部信息，使得算法具有一定的扩展性。CTDE 可以类比成一个足球队的训练和比赛过程：在训练时，11 个球员可以直接获得教练的指导从而完成球队的整体配合，而教练本身掌握着比赛全局信息，教练的指导也是从整支队、整场比赛的角度进行的；而训练好的 11 个球员在上场比赛时，则根据场上的实时情况直接做出决策，不再有教练的指导。
 
-CTDE 算法主要分为两种：一种是基于值函数的方法，例如 VDN，QMIX 算法等；另一种是基于 Actor-Critic 的方法，例如 MADDPG 和 COMA 等。
+CTDE 算法主要分为两种：一种是基于值函数的方法，例如 VDN，QMIX 算法等；另一种是基于 Actor-Critic 的方法，例如 MADDPG 和 COMA 等
 
-**多智能体 DDPG**（muli-agent DDPG，MADDPG）算法从字面意思上来看就是对于每个智能体实现一个 DDPG 的算法。所有智能体共享一个中心化的 Critic 网络，该 Critic 网络在训练的过程中同时对每个智能体的 Actor 网络给出指导，而执行时每个智能体的 Actor 网络则是完全独立做出行动，即去中心化地执行。
+**多智能体 DDPG（muli-agent DDPG，MADDPG）算法从字面意思上来看就是对于每个智能体实现一个 DDPG 的算法。所有智能体共享一个中心化的 Critic 网络，该 Critic 网络在训练的过程中同时对每个智能体的 Actor 网络给出指导，而执行时每个智能体的 Actor 网络则是完全独立做出行动，即去中心化地执行。**
 
-CTDE 算法的应用场景通常可以被建模为一个**部分可观测马尔可夫博弈**（partially observable Markov games）：用 $S$ 代表 $N$ 个智能体所有可能的状态空间，这是全局的信息。对于每个智能体 $i$，其动作空间为 $A_i$，观测空间为 $O_i$，每个智能体的策略 $\pi_{\theta_i}:O_i \times A_i \rightarrow [0,1]$ 是一个概率分布，用来表示智能体在每个观测下采取各个动作的概率。环境的状态转移函数为 。每个智能体的奖励函数为 $r_i:S\times A\rightarrow R$，每个智能体从全局状态得到的部分观测信息为 $o_i:S\rightarrow O_i$，初始状态分布为 $\rho:S\rightarrow [0,1] $ 。每个智能体的目标是最大化其期望累积奖励 $E[\sum^T_{t=0}\gamma^tr_i^t]$。
+CTDE 算法的应用场景通常可以被建模为一个**部分可观测马尔可夫博弈**（partially observable Markov games）：用 $S$ 代表 $N$ 个智能体所有可能的状态空间，这是全局的信息。对于每个智能体 $i$，其动作空间为 $A_i$，观测空间为 $O_i$，每个智能体的策略 $\pi_{\theta_i}:O_i \times A_i \rightarrow [0,1]$ 是一个概率分布，用来表示智能体在每个观测下采取各个动作的概率。环境的状态转移函数为 $\Gamma: S\times A_1 \times \cdots \times A_N \rightarrow \Omega(S)$。每个智能体的奖励函数为 $r_i:S\times A\rightarrow \mathbb{R}$，每个智能体从全局状态得到的部分观测信息为 $o_i:S\rightarrow O_i$，初始状态分布为 $\rho:S\rightarrow [0,1] $ 。每个智能体的目标是最大化其期望累积奖励 $\mathbb{E}[\sum^T_{t=0}\gamma^tr_i^t]$。
 
-<img src="https://hrl.boyuai.com/static/480.c487a865.png" style="zoom:67%;" />
+<img src="https://hrl.boyuai.com/static/480.c487a865.png" style="zoom: 50%;" /> <img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/MADDPG_Architecture.jpg?raw=true" style="zoom: 33%;" />
 
 如上图所示，每个智能体用 Actor-Critic 的方法训练，但不同于传统单智能体的情况，在 MADDPG 中每个智能体的 Critic 部分都能够获得其他智能体的策略信息。具体来说，考虑一个有 $N$ 个智能体的博弈，每个智能体的策略参数为 $\theta=\{\theta_1,\cdots,\theta_N\}$，记 $\pi=\{\pi_1,\cdots,\pi_N\}$ 为所有智能体的策略集合，那么我们可以写出在随机性策略情况下每个智能体的期望收益的策略梯度：
 $$
@@ -1546,6 +1546,8 @@ y = r_i+\gamma Q_i^{\mu'}(x',a'_1,\cdots,a'_N)|_{a_j^{'}=\mu_j^{'}(o_j)}
 $$
 其中，$\mu'=(\mu'_{\theta_1},\cdots,\mu'_{\theta_N})$ 是更新价值函数中使用的目标策略的集合，它们有着延迟更新的参数。
 
+![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/MADDPG_Algorithm.jpg?raw=true)
+
 MADDPG 的具体算法流程如下：
 
 - 随机初始化每个智能体的 Actor 网络和 Critic 网络
@@ -1564,8 +1566,6 @@ MADDPG 的具体算法流程如下：
 - end for
 
 ## MAPPO 算法
-
-出自 NeurIPS 2022 文章《The Surprising Effectiveness of PPO in Cooperative Multi-Agent Games》
 
 PPO 是一种常用的 on-policy 的强化学习算法，但是在多智能体强化学习中其使用率低于 off-policy 的算法，其原因是学界普遍认为 on-policy 的采样效率低于 off-policy
 
@@ -1589,6 +1589,7 @@ MAPPO 研究了 PPO 算法中的5个核心超参数设置，以将其迁移到�
 <img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/MAPPO_Architecture.png?raw=true" style="zoom: 33%;" />
 
 - **MAPPO采用一种中心式的值函数方式来考虑全局信息，属于CTDE框架范畴内的一种方法，通过一个全局的值函数来使得各个单个的PPO智能体相互配合。它有一个前身IPPO，是一个完全分散式的PPO算法，类似IQL算法**
+  **MAPPO 中每个智能体 $i$ 基于局部观测 $o_i$ 和一个共享策略 $\pi_\theta(a_i|o_i)$(这里的共享策略是针对智能体是同类型的情况而言的，对于非同类型的，可以拥有自己独立的 actor 和 critic 网络)去生成一个动作 $a_i$ 来最大化折扣累积奖励，基于全局的状态 $s$ 来学习一个中心式的值函数$V_\phi$**
 
   ![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/MAPPO_Algorithm.jpg?raw=true)
 

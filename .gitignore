@@ -20,3 +20,5 @@ buildNumber.properties
 __pycache__/
 *.egg-info/
 *.pyc
+
+results/
