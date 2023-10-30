@@ -1642,3 +1642,12 @@ $$
 
 
 
+# Mean Field Multi-Agent RL
+
+Mean Field Multi-Agent Reinforcement Learning（MFMARL），MFMARL算法借用了平均场论（Mean Field Theory，MFT）的思想，其对多智能体系统给出了一个近似假设：对某个智能体，其他所有智能体对其产生的作用可以用一个均值替代。
+
+这样就就将一个智能体与其邻居智能体之间的相互作用简化为两个智能体之间的相互作用（该智能体与其所有邻居的均值）。这样极大地简化了智能体数量带来的模型空间的增大。应用平均场论后，学习在两个智能体之间是相互促进的：单个智能体的最优策略的学习是基于智能体群体的动态；同时，集体的动态也根据个体的策略进行更新。
+
+参考1：https://zhuanlan.zhihu.com/p/56049023
+
+参考2：https://zhuanlan.zhihu.com/p/125708566
