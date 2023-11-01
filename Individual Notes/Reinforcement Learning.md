@@ -1596,6 +1596,8 @@ MAPPO 研究了 PPO 算法中的5个核心超参数设置，以将其迁移到�
 - **总体理解**
 
   每个局部智能体接收一个局部的观察`obs`，输出一个动作概率，所有的`actor`智能体都采用一个`actor`网络。`critic`网络接收所有智能体的观测`obs`，`cent_obs_space = n x obs_space`  其中`n`为智能体的个数，输出为一个`V`值，这个`V`值用于`actor`的更新。`actor`的`loss`和`PPO`的`loss`类似，有添加一个熵的`loss`。`Critic`的`loss`更多的是对`value`的值做`normalizer`，并且在计算`episode`的折扣奖励的时候不是单纯的算折扣奖励，采用`GAE`算折扣回报的方式
+  
+  简单地说，假设有n个智能体，那么就有n个actor-critic网络对，不过每个critic输入都是一样的，都是全局状态，只是网络初始化不一样，而且每个critic目标是一样的，就相当于是一个中心化的critic网络
 
 MAPPO 有两个网络，策略网络 $\pi_\theta$ 和 价值网络 $V_\phi$。策略网络 $\pi_\theta$ 学习一个映射从观测 $o_t^{(a)}$ 到一个范围的分布或者是映射到一个高斯函数的动作均值和方差用于之后采样动作，价值网络 $V_\phi$ 学习一个映射 $S\rightarrow \mathbb{R}$
 
@@ -1648,6 +1650,8 @@ Mean Field Multi-Agent Reinforcement Learning（MFMARL），MFMARL算法借用�
 
 这样就就将一个智能体与其邻居智能体之间的相互作用简化为两个智能体之间的相互作用（该智能体与其所有邻居的均值）。这样极大地简化了智能体数量带来的模型空间的增大。应用平均场论后，学习在两个智能体之间是相互促进的：单个智能体的最优策略的学习是基于智能体群体的动态；同时，集体的动态也根据个体的策略进行更新。
 
-参考1：https://zhuanlan.zhihu.com/p/56049023
+MFMARL算法主要解决的是联合动作 $a=[a_1,\cdots,a_n]$ 的维度随智能体数量增多的扩张问题，将 $a$ 的维度缩减为 $[a_j,\bar{a}_j]$，但是各个智能体的策略还是需要直到全局的状态信息 $s$，算是一个分布化的算法，并且依赖于通信获取邻居智能体的动作 $a_k$。虽然不是完全分布式的，但是该算法是一个解决大规模数量智能体强化学习的一个非常有效的算法，并且理论证明十分严格。
 
-参考2：https://zhuanlan.zhihu.com/p/125708566
+![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/MF-AC.jpg?raw=true)
+
+![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/MF-Q.jpg?raw=true)
