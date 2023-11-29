@@ -1,4 +1,3 @@
-#include <iostream>
 #include "FileOption.h"
 
 // 测试带缓存的文件操作类
