@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    *{
+        padding: 0;
+        margin: 0;
+    }
+    .chat_commento{
+        width: 450px;
+        height: 650px;
+        margin: auto;
+        border-radius: 10px;
+        border: 2px solid #f4f5f7;
+    }
+    .clearfix::after{
+        content: "";
+        display: block;
+        clear: both;
+        width: 0;
+        height: 0;
+        line-height: 0;
+        visibility: hidden;
+    }
+    /* top */
+    .chat_top{
+        width: 100%;
+        height: 50px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        padding-left: 20px;
+        font-size: 20px;
+        line-height: 50px;
+        box-sizing: border-box;
+        font-weight: 550;
+        border-width: 0px;
+    }
+    /* middle */
+    /* 左边 */
+    .chat_middle{
+        width: 450px;
+        height: 455px;
+        position: relative;
+        box-sizing: border-box;
+        overflow: auto;
+        border-width: 0px;
+    }
+    .chat_left{
+        width: 100%;
+        height: 120px;
+        margin-top: 20px;
+    }
+    .chat_left_item_1{
+        width: 50px;
+        height: 50px;
+        background-color: #4459AB;
+        float: left;
+        margin-top: 10px;
+        margin-left: 10px;
+        margin-right: 10px;
+        text-align: center;
+        line-height: 50px;
+        color: white;
+        border-radius: 25px;
+    }
+    .chat_left_item_2{
+        width: 55%;
+        height: 100px;
+        float: left;
+        margin-top: 10px;
+    }
+    .chat_left_item_2 .chat_left_chat{
+        float: left;
+    }
+    .chat_left_item_2 .chat_left_content{
+        padding: 15px;
+        margin-top: 10px;
+        background-color: #f4f5f7;
+        display: inline-block;
+        border-radius: 10px;
+        border-top-left-radius: 0px;
+    }
+    /* 右边 */
+    .chat_right{
+        width: 100%;
+        height: 120px;
+        margin-top: 20px;
+    }
+    .chat_right_item_1{
+        width: 50px;
+        height: 50px;
+        background-color: #4459AB;
+        float: right;
+        margin-top: 10px;
+        margin-left: 10px;
+        margin-right: 10px;
+        text-align: center;
+        line-height: 50px;
+        color: white;
+        border-radius: 25px;
+    }
+    .chat_right_item_2{
+        width: 55%;
+        height: 100px;
+        float: right;
+        margin-top: 10px;
+    }
+    .chat_right_time{
+        width: 100%;
+        text-align: right;
+    }
+    .chat_right_content{
+        float: right;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 10px;
+        border-top-right-radius: 0px;
+        background-color: #4F7cff;
+        color: white;
+    }
+    /* foot */
+    .chat_foot{
+        width: 450px;
+        height: 130px;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+        position: relative;
+    }
+    .chat_context{
+        width: 100%;
+        height: 100%;
+        font-size: 17px;
+        box-sizing: border-box;
+        outline: none;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+        border-width: 0px;
+        padding: 16px;
+    }
+    .chat_commit{
+        width: 80px;
+        height: 30px;
+        color: white;
+        background-color: #4F7cff;
+        line-height: 30px;
+        text-align: center;
+        border-radius: 5px;
+        position: absolute;
+        right: 10px;
+        bottom: 20px;
+        margin-right: 10px;
+    }
+    .chat_context{
+        resize: none;
+    }
+    .chat_context::placeholder{
+        color: black;
+        font-weight: 500k;
+    }
+    .line{
+        width: 100%;
+        border-top: 1px;
+        border-color: #f4f5f7;
+        border-style: solid;
+    }
+</style>
+<body>
+    <!-- entry -->
+    <div class="chat_commento">
+        <!-- top -->
+        <div class="chat_top">
+            是兄弟就来砍我
+        </div>
+        <!-- line -->
+        <div class="line"></div>
+        <!-- middle -->
+        <div class="chat_middle" id="chat_middle_item">
+             <!-- 左边 -->
+            <div class="chat_left clearfix">
+                <div class="chat_left_item_1 ">天乐</div>
+                <div class="chat_left_item_2">
+                    <div class="chat_time">18:57</div>
+                    <div class="chat_left_content">
+                        今天吃点啥？
+                    </div>
+                </div>
+            </div>
+            <!--右边 -->
+            <div class="chat_right">
+                <div class="chat_right_item_1 ">热巴</div>
+                <div class="chat_right_item_2 ">
+                    <div class="chat_right_time">18:59</div>
+                    <div class="chat_right_content">
+                        最近八合里周年庆店，咱们去薅羊毛呀
+                    </div>
+                </div>
+            </div>
+            <!-- l_2 -->
+            <div class="chat_left clearfix">
+                <div class="chat_left_item_1 ">天乐</div>
+                <div class="chat_left_item_2">
+                    <div class="chat_time">18:57</div>
+                    <div class="chat_left_content">
+                        行收拾一下走吧，早点去排个号
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- line -->
+        <div class="line"></div>
+        <!-- foot -->
+        <div class="chat_foot">
+            <!-- context -->
+            <textarea class="chat_context" id="chat_context_item" cols="30" rows="10" placeholder="请输入"></textarea>
+            <div class="chat_commit" id="button">发送</div>
+        </div>
+    </div>
+    <script>
+        // 成功发送
+        var send_message=document.getElementById("chat_middle_item");
+        var domBtm=document.getElementById("button");
+        // 发送内容
+        var message=document.getElementById("chat_context_item");
+        domBtm.addEventListener("click",function(){
+            var str=message.value;
+            var date=new Date();
+            var hour=date.getHours();
+            var mm=date.getMinutes();
+            var time=hour+':'+mm;
+            var ans='<div class="chat_right_item_1 clearfix">热巴</div>'+
+                '<div class="chat_right_item_2">'+
+                    '<div class="chat_right_time clearfix">'+time+'</div>'+
+                    '<div class="chat_right_content clearfix">'+str+'</div>'
+                    +'</div>';
+            var oLi=document.createElement("div");
+            oLi.setAttribute("class","chat_right");
+            oLi.innerHTML=ans;
+            send_message.append(oLi);
+            message.value="";
+        });
+    </script>
+</body>
+</html>
