@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            list-style: none
+        }
+
+        .box {
+            margin: 50px auto;
+            width: 600px;
+            position: relative;
+        }
+
+        ul {
+            width: 100%;
+            /* margin: 5px; */
+            padding: 2px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #666;
+            border-radius: 10px;
+        }
+
+        li {
+            padding: 0 8px;
+            margin: 2px;
+            background: #ccc;
+            float: left;
+            line-height: 30px;
+            height: 30px;
+            border-radius: 10px;
+            clear: both;
+        }
+
+        .my-msg {
+            float: right;
+            background: #58bc58;
+            color: #fff
+        }
+
+        textarea {
+            margin: 5px;
+            width: 100%;
+            min-height: 50px;
+        }
+
+        .status {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #555;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <ul></ul>
+        <textarea class="text"></textarea>
+        <button>发送消息</button>
+        <div class="status">对方正在输入....</div>
+    </div>
+    <script>
+        oBtn = document.querySelector('button')
+        oStatus = document.querySelector('.status')
+        oText = document.querySelector('.text')
+        oUl = document.querySelector('ul')
+
+        oBtn.onclick = function () {
+            var text = oText.value
+            console.log(text);
+            oText.value = '' //清空输入框,不能用text
+            var oLi = document.createElement('li')
+            oLi.innerText = text
+            console.log(oLi.innerText);
+            oLi.classList.add('my-msg')
+            oUl.append(oLi)
+            oStatus.style.display = 'block'
+
+            var q = ["吃了吗？", "中午一起去吃吗", "那中午吃什么", "附近这个不是正宗的", "叉烧牛鞭", "再见"];
+            var a = ["在国家层面，支持社区慈善基金发展的法规有《中华人民共和国慈善法》、《慈善组织公开募捐管理办法》和《中共中央、国务院关于加强和完善城乡社区治理的意见》；政策有《“互联网+社会组织（社会工作、志愿服务）”行动方案（2018-2020）》", "行，那12点老地方见", ["麻辣小龙虾", "兰州牛肉拉面", "串串香火锅", "重庆酸辣粉", '武汉热干面', '吴忠手抓羊肉', '牛羊肉泡馍',
+                '猪肉丸糊辣汤', '卤肉饭', '盐焗鸡'
+            ], "还好啦，要不你推荐一个", "可以哦，我天天吃", "？？？"];
+            var empty = ['有话快说有屁快放', '要说啥', '到底想表达什么', '你说话跟个妹纸似的', '你是不是沙雕', '好玩吗', '你非要尬聊么', '说正事', '我去洗澡了', '干哈',
+                '我一口浓痰吐死你', '今天摸鱼了没', 'JS天下第一', '今年胖了10斤', '你身高多少', '哦', '了解了', '假的吧', '呵呵', '哈哈', '你来搞笑的吧',
+                '今天又摸了一天鱼', '又放了一天音乐', '中午去哪里吃饭', '不懂', '啥', '再说一遍', '咦', '裂开', '先来个红包', '？？？', '。。。'
+            ]
+
+            var index = q.indexOf(text); //1 ? -1 
+
+            var responseText = index == -1 ? empty[getNumber(0, empty.length - 1)] : (!Array.isArray(a[index]) ? a[
+                    index] :
+                a[index][getNumber(0, a[index].length - 1)]);
+
+            var oLiB = document.createElement("li");
+            oLiB.innerText = responseText;
+
+
+            setTimeout(() => {
+                oUl.appendChild(oLiB);
+                oStatus.style.display = 'none'
+                console.log('1秒');
+                console.log("最大时间和最小时间：：", this.hhh);
+            }, getNumber(300, 5000));
+
+            function getNumber(min, max) {
+                return hhh = parseInt(Math.random() * (max - min + 1) + min)
+
+            }
+        }
+    </script>
+
+</body>
+
+</html>
