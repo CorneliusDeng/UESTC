@@ -5,9 +5,13 @@
 .chat_commento{
     width: 450px;
     height: 650px;
-    margin: auto;
     border-radius: 10px;
     border: 2px solid #f4f5f7;
+    /* margin: auto; */
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
 }
 .clearfix::after{
     content: "";
