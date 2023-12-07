@@ -13,6 +13,26 @@
     top: 50%;
     transform: translateY(-50%);
 }
+.chat_commento.collapsed {
+    transform: translateX(100%);
+}
+#toggleContent {
+    border: 1px solid #ccc;
+}
+#toggleButton {
+    background-color: #4F7cff;
+    border: none;
+    color: white;
+    padding: 15px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 0px 0px;
+    cursor: pointer;
+    position: fixed;
+    right: 0;
+}
 .clearfix::after{
     content: "";
     display: block;

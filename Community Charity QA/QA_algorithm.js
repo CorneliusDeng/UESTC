@@ -278,3 +278,12 @@ query.addEventListener("keydown", function(event) {
 });
 
 domBtm.addEventListener("click", send_query);
+
+document.getElementById('toggleButton').addEventListener('click', function() {
+    var content = document.getElementById('toggleContent');
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+    } else {
+        content.style.display = 'none';
+    }
+});
