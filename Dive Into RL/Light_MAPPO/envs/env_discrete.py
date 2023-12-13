@@ -32,7 +32,7 @@ class DiscreteActionEnv(object):
         # configure spaces
         self.action_space = []
         self.observation_space = []
-        self.share_observation_space = []
+        self.share_observation_space = [] # critic的输入维度
 
         share_obs_dim = 0
         total_action_space = []
@@ -74,7 +74,7 @@ class DiscreteActionEnv(object):
 
         self.share_observation_space = [
             spaces.Box(low=-np.inf, high=+np.inf, shape=(share_obs_dim,), dtype=np.float32)
-            for _ in range(self.num_agent)
+            for _ in range(self.num_agent) # 每个智能体都有critic，那么每个智能体都可以看到共享的观测空间
         ]
 
     def step(self, actions):

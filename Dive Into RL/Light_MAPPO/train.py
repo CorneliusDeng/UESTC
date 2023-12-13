@@ -12,12 +12,12 @@ def make_train_env(all_args):
     def get_env_fn(rank):
         def init_env():
             # 选择连续环境
-            from envs.env_continuous import ContinuousActionEnv
-            env = ContinuousActionEnv()
+            # from envs.env_continuous import ContinuousActionEnv
+            # env = ContinuousActionEnv()
             
             # 选择离散环境
-            # from envs.env_discrete import DiscreteActionEnv
-            # env = DiscreteActionEnv()
+            from envs.env_discrete import DiscreteActionEnv
+            env = DiscreteActionEnv() # 创建环境，里面配置了很多参数，主要是obeservation、action space、share obeservation维度
 
             env.seed(all_args.seed + rank * 1000)
             return env
@@ -30,12 +30,12 @@ def make_eval_env(all_args):
     def get_env_fn(rank):
         def init_env():
             # 选择连续环境
-            from envs.env_continuous import ContinuousActionEnv
-            env = ContinuousActionEnv()
+            # from envs.env_continuous import ContinuousActionEnv
+            # env = ContinuousActionEnv()
 
             # 选择离散环境
-            # from envs.env_discrete import DiscreteActionEnv
-            # env = DiscreteActionEnv()
+            from envs.env_discrete import DiscreteActionEnv
+            env = DiscreteActionEnv()
 
             env.seed(all_args.seed + rank * 1000)
             return env
@@ -88,7 +88,6 @@ def main(args):
         / all_args.algorithm_name
         / all_args.experiment_name
     )
-
     if not run_dir.exists():
         os.makedirs(str(run_dir))
 
@@ -125,7 +124,7 @@ def main(args):
     np.random.seed(all_args.seed)
 
     # 初始化环境
-    envs = make_train_env(all_args)
+    envs = make_train_env(all_args) # 创建多个env
     eval_envs = make_eval_env(all_args) if all_args.use_eval else None
     num_agents = all_args.num_agents
 
@@ -139,7 +138,7 @@ def main(args):
     }
 
     # run experiments
-    if all_args.share_policy:
+    if all_args.share_policy: 
         from runner.shared.env_runner import EnvRunner as Runner
     else:
         from runner.separated.env_runner import EnvRunner as Runner

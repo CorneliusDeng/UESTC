@@ -162,7 +162,7 @@ def get_config():
     parser.add_argument(
         "--experiment_name",
         type=str,
-        default="check",
+        default="test",
         help="an identifier to distinguish different experiment.",
     )
     parser.add_argument("--seed", type=int, default=1, help="Random seed for numpy/torch")
@@ -211,7 +211,7 @@ def get_config():
     parser.add_argument(
         "--user_name",
         type=str,
-        default="marl",
+        default="cornelius",
         help="[for wandb usage], to specify user's name for simply collecting training data.",
     )
 
@@ -231,7 +231,7 @@ def get_config():
     parser.add_argument(
         "--share_policy",
         action="store_false",
-        default=False,
+        default=True,
         help="Whether agent share the same policy",
     )
     parser.add_argument(

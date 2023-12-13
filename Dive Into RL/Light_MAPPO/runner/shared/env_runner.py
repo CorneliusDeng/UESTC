@@ -108,9 +108,8 @@ class EnvRunner(Runner):
         # replay buffer
         if self.use_centralized_V:
             share_obs = obs.reshape(self.n_rollout_threads, -1)  # shape = [env_num, agent_num * obs_dim]
-            share_obs = np.expand_dims(share_obs, 1).repeat(
-                self.num_agents, axis=1
-            )  # shape = shape = [env_num, agent_num， agent_num * obs_dim]
+            # 把共享观测再给到每个智能体
+            share_obs = np.expand_dims(share_obs, 1).repeat(self.num_agents, axis=1)  # shape = [env_num, agent_num， agent_num * obs_dim]
         else:
             share_obs = obs
 
@@ -157,7 +156,6 @@ class EnvRunner(Runner):
             # actions  --> actions_env : shape:[10, 1] --> [5, 2, 5]
             actions_env = np.squeeze(np.eye(self.envs.action_space[0].n)[actions], 2)
         else:
-            # TODO 这里改造成自己环境需要的形式即可
             # TODO Here, you can change the shape of actions_env to fit your environment
             actions_env = actions
             # raise NotImplementedError
