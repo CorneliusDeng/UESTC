@@ -1412,7 +1412,7 @@ CTDE 算法主要分为两种：一种是基于值函数的方法，例如 VDN�
 
 **多智能体 DDPG（muli-agent DDPG，MADDPG）算法从字面意思上来看就是对于每个智能体实现一个 DDPG 的算法。所有智能体共享一个中心化的 Critic 网络，该 Critic 网络在训练的过程中同时对每个智能体的 Actor 网络给出指导，而执行时每个智能体的 Actor 网络则是完全独立做出行动，即去中心化地执行。**
 
-CTDE 算法的应用场景通常可以被建模为一个**部分可观测马尔可夫博弈**（partially observable Markov games）：用 $S$ 代表 $N$ 个智能体所有可能的状态空间，这是全局的信息。对于每个智能体 $i$，其动作空间为 $A_i$，观测空间为 $O_i$，每个智能体的策略 $\pi_{\theta_i}:O_i \times A_i \rightarrow [0,1]$ 是一个概率分布，用来表示智能体在每个观测下采取各个动作的概率。环境的状态转移函数为 $\Gamma: S\times A_1 \times \cdots \times A_N \rightarrow \Omega(S)$。每个智能体的奖励函数为 $r_i:S\times A\rightarrow \mathbb{R}$，每个智能体从全局状态得到的部分观测信息为 $o_i:S\rightarrow O_i$，初始状态分布为 $\rho:S\rightarrow [0,1] $ 。每个智能体的目标是最大化其期望累积奖励 $\mathbb{E}[\sum^T_{t=0}\gamma^tr_i^t]$。
+CTDE 算法的应用场景通常可以被建模为一个**部分可观测马尔可夫博弈**（partially observable Markov games）：用 $S$ 代表 $N$ 个智能体所有可能的状态空间，这是全局的信息。对于每个智能体 $i$，其动作空间为 $A_i$，观测空间为 $O_i$，每个智能体的策略 $\pi_{\theta_i}:O_i \times A_i \rightarrow [0,1]$ 是一个概率分布，用来表示智能体在每个观测下采取各个。环境的状态转移函数为 $\Gamma: S\times A_1 \times \cdots \times A_N \rightarrow \Omega(S)$。每个智能体的奖励函数为 $r_i:S\times A\rightarrow \mathbb{R}$，每个智能体从全局状态得到的部分观测信息为 $o_i:S\rightarrow O_i$，初始状态分布为 $\rho:S\rightarrow [0,1] $ 。每个智能体的目标是最大化其期望累积奖励 $\mathbb{E}[\sum^T_{t=0}\gamma^tr_i^t]$。
 
 <img src="https://hrl.boyuai.com/static/480.c487a865.png" style="zoom: 50%;" /> <img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/MADDPG_Architecture.jpg?raw=true" style="zoom: 33%;" />
 
