@@ -105,14 +105,15 @@ class EnvRunner(Runner):
         # reset env
         obs = self.envs.reset()  # shape = [env_num, agent_num, obs_dim]
 
-        # replay buffer
+        # share ob
         if self.use_centralized_V:
             share_obs = obs.reshape(self.n_rollout_threads, -1)  # shape = [env_num, agent_num * obs_dim]
             # 把共享观测再给到每个智能体
-            share_obs = np.expand_dims(share_obs, 1).repeat(self.num_agents, axis=1)  # shape = [env_num, agent_num， agent_num * obs_dim]
+            share_obs = np.expand_dims(share_obs, 1).repeat(self.num_agents, axis=1)  # shape = [env_num, agent_num, agent_num * obs_dim]
         else:
             share_obs = obs
 
+        # reply buffer 
         self.buffer.share_obs[0] = share_obs.copy()
         self.buffer.obs[0] = obs.copy()
 
@@ -170,6 +171,7 @@ class EnvRunner(Runner):
         )
 
     def insert(self, data):
+        # unpack the data
         (
             obs,
             rewards,
@@ -182,6 +184,7 @@ class EnvRunner(Runner):
             rnn_states_critic,
         ) = data
 
+        # reset the RNN states for the episodes that are done
         rnn_states[dones == True] = np.zeros(
             ((dones == True).sum(), self.recurrent_N, self.hidden_size),
             dtype=np.float32,
@@ -193,12 +196,14 @@ class EnvRunner(Runner):
         masks = np.ones((self.n_rollout_threads, self.num_agents, 1), dtype=np.float32)
         masks[dones == True] = np.zeros(((dones == True).sum(), 1), dtype=np.float32)
 
+        # if using centralized value function, reshape the observations
         if self.use_centralized_V:
             share_obs = obs.reshape(self.n_rollout_threads, -1)
             share_obs = np.expand_dims(share_obs, 1).repeat(self.num_agents, axis=1)
         else:
             share_obs = obs
 
+        # insert the data into the buffer
         self.buffer.insert(
             share_obs,
             obs,
