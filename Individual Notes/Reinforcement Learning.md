@@ -1561,4 +1561,58 @@ MADDPG 的具体算法流程如下：
   - 动作偏好(action preference)：对于给定的相同状态，比较两个动作，这种方法无法处理短期偏好与长期偏好的关系
   - 状态偏好(state preference)：$s_{i1}\succ s_{i2}$ 表示相比于状态 $s_{i2}$，人类更偏好状态 $s_{i1}$
   - 轨迹偏好(trajectory preference)：$\tau_{i1}\succ \tau_{i2}$ 表示轨迹 $\tau_{i1}$ 优于轨迹 $\tau_{i2}$，轨迹偏好里一个重要问题就是信用分配问题(temporal credit assignment problem)
+  
+  
 
+# Comparation: RLHF, Preference-based RL, LLM-based RL
+
+## Reinforcement Learning from Human Feedback
+
+Reinforcement Learning from Human Feedback (RLHF) focuses on training RL agents using feedback provided by humans, rather than relying solely on predefined reward signals. This feedback can come in various forms, such as direct rewards, corrections, preferences, or demonstrations.
+
+- Key aspects of RLHF include:
+  - Human-in-the-Loop Training: Incorporating human feedback during the training process to guide the agent's learning.
+  - Reward Modeling: Constructing a model that translates human feedback into reward signals that the RL agent can use.
+  - Interactive Learning: Continuously refining the agent's policy based on ongoing feedback from humans.
+
+RLHF aims to create more adaptable and aligned RL agents that can perform effectively in complex, real-world environments where predefined rewards are insufficient.
+
+## Preference-Based Reinforcement Learning
+
+Preference-Based Reinforcement Learning (PBRL) is a subfield of reinforcement learning (RL) where the learning agent optimizes its policy based on preferences provided by a human or another external system. Instead of relying solely on explicit numerical rewards, PBRL leverages comparative feedback where humans indicate which of two or more trajectories or outcomes they prefer. This approach can be particularly useful in scenarios where defining a precise reward function is challenging or infeasible.
+
+- Key components of PBRL include:
+  - Preference Elicitation: The process of querying humans for their preferences between different trajectories or outcomes.
+  - Preference Modeling: Constructing a model that can predict human preferences based on past feedback.
+  - Policy Optimization: Using the preference model to guide the learning agent in improving its policy.
+
+PBRL aims to create systems that align more closely with human values and intentions without the need to explicitly define a reward function.
+
+## Large Language Model Based Agents
+
+LLM-Based Agents refer to autonomous systems that utilize large language models (LLMs), such as GPT-4, to perform tasks, make decisions, and interact with humans or other systems. These agents leverage the extensive knowledge and language understanding capabilities of LLMs to process and generate human-like text, understand context, and execute complex instructions.
+
+- Key features of LLM-based agents include:
+  - Natural Language Understanding: The ability to comprehend and interpret human language at a high level.
+  - Contextual Reasoning: Utilizing context to make informed decisions and generate appropriate responses.
+  - Task Execution: Performing specific tasks, such as answering questions, generating text, or controlling other systems, based on human instructions.
+
+LLM-based agents can be applied in various domains, including customer service, content generation, and interactive applications.
+
+## Relatedness and Independence
+
+- Relatedness
+
+  - Human Involvement: Both PBRL and RLHF heavily rely on human input to guide the learning process. In PBRL, humans provide preferences, while in RLHF, they can give various forms of feedback, including preferences, corrections, and demonstrations.
+  - Alignment with Human Intentions: Both approaches aim to align the behavior of RL agents with human values and intentions, addressing the challenge of specifying complex reward functions.
+  - Preference Modeling: PBRL can be considered a specific instance of RLHF where the human feedback is in the form of preferences. Thus, techniques used in PBRL for modeling preferences can also be applied in RLHF.
+
+- Independence
+
+  - Scope of Feedback: RLHF encompasses a broader range of feedback types beyond preferences, including direct rewards, corrections, and demonstrations, whereas PBRL focuses specifically on preferences.
+  - Applications of LLM-Based Agents: LLM-based agents, while potentially benefiting from RLHF, are distinct in that they utilize large language models for natural language understanding and generation. Their primary focus is not necessarily on learning from human feedback but on leveraging pre-trained knowledge to perform tasks and interact with humans.
+  - Underlying Models: PBRL and RLHF are primarily concerned with RL paradigms and the optimization of policies based on feedback. In contrast, LLM-based agents use large language models that are typically trained in a supervised or unsupervised manner on vast text corpora before being fine-tuned or adapted for specific tasks.
+
+- Conclusion
+
+  In summary, while PBRL and RLHF share a common goal of leveraging human feedback to guide RL agents, they differ in the types of feedback they utilize and their specific methodologies. LLM-based agents, on the other hand, represent a broader class of systems that use language models for various tasks, which may or may not involve RL.
