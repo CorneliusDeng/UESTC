@@ -1616,3 +1616,19 @@ LLM-based agents can be applied in various domains, including customer service, 
 - Conclusion
 
   In summary, while PBRL and RLHF share a common goal of leveraging human feedback to guide RL agents, they differ in the types of feedback they utilize and their specific methodologies. LLM-based agents, on the other hand, represent a broader class of systems that use language models for various tasks, which may or may not involve RL.
+
+
+
+# Some thoughts on RL
+
+## COMA
+
+- 
+
+## QMIX
+
+## SAC
+
+## HAPPO
+
+## HASAC
