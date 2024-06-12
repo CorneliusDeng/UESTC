@@ -1482,7 +1482,7 @@ y = r_i+\gamma Q_i^{\mu'}(x',a'_1,\cdots,a'_N)|_{a_j^{'}=\mu_j^{'}(o_j)}
 $$
 其中，$\mu'=(\mu'_{\theta_1},\cdots,\mu'_{\theta_N})$ 是更新价值函数中使用的目标策略的集合，它们有着延迟更新的参数。
 
-![](https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/MADDPG_Algorithm.jpg?raw=true)
+<img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/MADDPG_Algorithm.jpg?raw=true" style="zoom: 40%;" />
 
 MADDPG 的具体算法流程如下：
 
@@ -1623,9 +1623,97 @@ LLM-based agents can be applied in various domains, including customer service, 
 
 ## COMA
 
-- 
+CTDE框架下的完全协作多智能体系统，即所有的智能体之间通过合作完成同一个任务，它们共享同一个奖励函数 $r_t$，但是这样存在multi-agent credit assignment (多智能体信用分配)的挑战，意思就是如何去评价某一个智能体的策略对于团队整体的回报值做出的贡献大小。如果我们不去管credit assignment问题，学习到的多智能体策略很有可能就是局部最优的
+
+- COMA基于三个主要的想法
+  - 使用一个集中式critic网络，在训练的过程中可以获取所有智能体的信息
+  - **采用反事实基线（counterfactual baseline）来解决信用分配的问题**。作者受差分奖励 (difference rewards) 思想的启发，即每个智能体在执行完动作 $a_t$ 并获得一个全局奖励 $r_t$ 之后，假设它当初执行的是一个默认动作(default action) $a_{default}$ 并计算出可能会获得的奖励 $\tilde{r}_t$ ，这样就可以通过比较这两个奖励值来判断 $a_t$ 对整体有多大的贡献。差分奖励的思想对解决credit assignment问题是有帮助的，但是它需要系统奖励函数的模型，而且default action往往不好确定。因此，COMA给每个智能体一个特定的优势函数 (advantage function)，在其它智能体动作保持不变的情况下比较该智能体的期望回报和反事实基线，以此估计该智能体的动作对整体任务的贡献
+  - Critic网络要能够对反事实基线进行高效的计算
+
+作者是基于Actor-Critic结构来设计MARL算法的。最直接的方法是每个智能体利用该结构独立学习，称作independent actor-critic (IAC)。但是IAC有个明显的问题，就是不考虑其它智能体的信息，这将导致训练过程不稳定。但是再进一步，如果IAC在训练的过程中考虑所有智能体的信息，利用CTDE训练方法，则和MADDPG方法没有太大区别。在协作任务下的多智能体系统中，智能体之间共享参数，所以只需要一对actor，critic网络就可以了。但是那样的话，所有的智能体优化目标都是同一个。因此，对每个actor网络来说，从critic那边反向传播过来的误差都是一样的。这种“吃大锅饭”式的训练方式显然不是最有效的，因为每个actor网络对整体性能的贡献不一样，贡献大的反向传播的误差应该要稍微小些，贡献小的其反向传播误差应该要大一些。最终的目标都是优化整体的性能。所以，作者提出利用counterfactual baseline来解决该问题
+
+- Counterfactual Multi-Agent Policy Gradients
+
+  - 对智能体 $a$， $u^a$ 表示其动作，$\tau^a$ 是其历史观测-动作序列，$u$ 表示所有智能体的联合动作，$u^{-a}$ 表示除 $a$ 外所有其它智能体的联合动作，$s$ 代表系统全局状态，则智能体 $a$ 的 counterfactual baseline计算公式表示为
+    $$
+    A^a(s,u)=Q(s,u)-\sum_{u^{'a}}\pi^a(u^{'a}|\tau^a)Q(s,(u^{-a},u^{'a}))
+    $$
+    等式右边第二项实际上是在计算关于动作价值函数的期望值，需要遍历智能体 $a$ 动作空间里的所有动作，而保持其它智能体动作 $u^{-a}$ 不变，这个和这个和IAC或者单智能体强化学习中计算优势函数的方式几乎一样，即 $A=Q-V$，但不同的是上式计算的 $A^a(s,u)$ 能够根据每个智能体的策略有所区分，即单个策略对整体策略贡献度大小的评价
+
+  - 有了目标函数，下一步就是计算梯度并优化更新了。COMA的策略梯度计算公式如下
+    $$
+    g_k=\mathbb{E}_\pi\left[\sum_a\nabla_{\theta_k}\log \pi^a(u^a|\tau^a)A^a(s,u)\right]
+    $$
+    其中，$k$ 表示迭代次数，$\theta_k$  表示第 $k$ 次迭代时的参数。此外，$A^a(s,u)$ 的更新采用 $TD(\lambda)$ 方法，并使用周期性更新参数的目标网络来计算目标值
+
+- COMA Architecture
+
+  - <img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/COMA.jpg?raw=true" style="zoom: 50%;" />
+
+    所有的Actor共享一套参数，只是在输入的时候，加上智能体的ID以区分各智能体的动作输出
 
 ## QMIX
+
+- VDN (Value-Decomposition Networks For Cooperative Multi-Agent Learning)
+
+  - VDN 作为 QMIX 的前身，它和 COMA 一样，是考虑协作任务的多智能体强化学习问题，即所有的智能体共享同一个奖励值（或者叫团队奖励），不同的是 VDN 是一种基于值函数的方法，而 COMA 基于策略梯度。VDN 也是想解决协作任务的多智能体强化学习中的 credit assignment 问题
+
+  - 作者认为，由于每个智能体都是局部观测，那么对其中一个智能体来说，其获得的团队奖励很有可能是其队友的行为导致的。也就是说该奖励值对该智能体来说，是“虚假奖励 (spurious reward signals)”。因此，每个智能体独立使用强化学习算法学习 (即independent RL) 往往效果很差。这种虚假奖励还会伴随一种现象，作者称作 “lazy agent (惰性智能体)”。当团队中的部分智能体学习到了比较好的策略并且能够完成任务时，其它智能体不需要做什么也能获得不错的团队奖励，这些智能体就被称作“惰性智能体”
+
+  - 其实不管是“虚假奖励”还是“惰性智能体”，本质上还是credit assignment问题。如果每个智能体都会根据自己对团队的贡献，优化各自的目标函数，就能够解决上述问题。基于这样的动机，作者提出了“值函数分解”的研究思路，将团队整体的值函数分解成N个子值函数，分别作为各智能体执行动作的依据
+
+  - $$
+    Q((h^1,h^2，\cdots,h^d),((a^1,a^2，\cdots,a^d))) \approx \sum_{i=1}^d \tilde{Q}_i(h^i,a^i)
+    $$
+
+    该假设表明团队的 $Q$ 函数可以通过求和的方式近似分解成 $d$ 个子 $Q$ 函数，分别对应 $d$ 个不同的智能体，且每个子 $Q$ 函数的输入为该对应智能体的局部观测序列和动作，互相不受影响。注：此处的 $\tilde{Q}_i(h^i,a^i)$ 并不是任何严格意义上的 $Q$ 值函数，因为并没有理论依据表明一定存在一个reward函数，使得该 $\tilde{Q}_i$ 满足贝尔曼方程
+
+    这样，每个智能体就有了自己的值函数，它们就可以根据自己的局部值函数来进行决策了 
+    $$
+    a^i=\arg \max _{a^{i'}}\tilde{Q}_i(h^i,a^{i'})
+    $$
+    事实上，上述式子的成立至少需要满足一个条件：$r(s,a)=\sum_{i=1}^dr(o^i,a^i)$，表明团队的整体奖励应由所有智能体各自的奖励函数求和得到。然而，即使这个条件成立，根据文章中的证明，$Q$ 函数的分解也应该写成 $Q(s,a)=\sum_{i=1}^dQ_i(s,a)$，不应该是之前给出的那样，作者也因此将每个智能体历史状态、动作、奖励的序列信息作为其值函数 $\tilde{Q}_i$ 的输入，以此弥补局部观测上的不足
+
+- 针对协作任务，CTDE下需要考虑的关键问题就是如何找到最好的分布式策略，使得团队的“状态-联合动作”值函数 $Q_{tot}$ 是最优的。为此 VDN 直接将其分解，并以 $Q_{tot}= \sum_{i=1}^nQ_i$  的分解形式端到端地训练网络。然而，这种以简单的求和方式对整体值函数进行分解，将会导致网络的函数表达能力受到很大限制，难以拟合出真实的 $Q_{tot}$
+
+- 本文提出的 QMIX 方法，与VDN一样，它介于 IQL 和 COMA 这两个极端之间，可以表达更丰富的动作值函数类。**QMIX 的关键是洞察到 VDN 的完全分解对于提取分散策略是不必要的**。相反，只需要确保在 $Q_{tot}$ 上执行的全局 $\arg\max$ 与在每个  $Q_a$ 上执行的一组单独的 $\arg\max$ 操作产生相同的结果。为此，在 $Q_{tot}$ 和每个 $Q_a$ 之间的关系上强制设置一个单调性约束就足够了：
+  $$
+  \frac{\partial Q_{tot}}{\partial Q_a} \geq 0, \forall a \\
+  
+  \underset{u}{\arg\max}Q_{tot}(\tau,u)=
+  \left(\begin{array}{c}
+  \underset{u^1}{\arg\max}Q_1(\tau^1,u^1) \\
+  \vdots \\
+  \underset{u^n}{\arg\max}Q_n(\tau^n,u^n) 
+  \end{array}\right)
+  $$
+  所谓单调性，就是指通过分布式策略计算出来的动作，和通过整体 $Q$ 函数计算出来的动作，在“性能最优”上需要保持一致。其中 $\tau$ 表示历史观测-动作序列，$u$ 表示动作，如果上式不成立，则分布式策略就不能使 $Q_{tot}$ 最大化，自然不会是最优策略，这就是非单调性
+
+  实际上， VDN 的分解式满足 $\frac{\partial Q_{tot}}{\partial Q_a} \geq 1, \forall a$。但是，该式中的关系太强了。事实上，值函数分解的单调性只需要满足 $\frac{\partial Q_{tot}}{\partial Q_a} \geq 0, \forall a$ 即可
+
+  因此，QMIX 的研究目标就是设计一个神经网络，输入为 $\{Q_i\}_{i=1}^N$，输出 $Q_{tot}$，强制满足上述的单调性约束，并在该前提下进行探索，能够增强网络的函数拟合能力，从而弥补VDN算法的不足
+
+- QMIX Architecture
+
+  <img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/QMIX.png?raw=true" style="zoom: 40%;" />
+
+  - 混合网络包含输入层、隐含层、输出层，和普通的单隐层MLP网络不同的是，其隐藏层的权重和偏置均由另外一组网络 (超网络) 计算得出。混合网络隐层的激活函数为 ELU (Exponential Linear Unit)，输出层线性激活 (没有激活函数)。$W_1,W_2$ 由两个单层线性网络经过绝对值函数激活之后得出。**作者如此设计混合网络是为了使混合网络的权重参数都是非负的，从而保证混合网络能够以任意的精度拟合出任意单调函数**。理解如下，首先展开混合网络的表达式
+    $$
+    Q_{tot}(\tau,u)=W_2^\intercal Elu(W_1^\intercal Q+B_1)+B_2
+    $$
+    其中，$Q=[Q_1(\tau^1,u_t^1),\cdots,Q_n(\tau^n,u_t^n)]$ 为 n 维向量，根据链式法则以及线性变换的求导法则，有
+    $$
+    \frac{\partial Q_{tot}}{\partial Q} =
+    \left(\frac{\partial Elu(W_1^\intercal Q+B_1)}{\partial Q}\right)^\intercal W_2 =
+    \left(\frac{\partial Elu(W_1^\intercal Q+B_1)}{\partial (W_1^\intercal Q+B_1)}\cdot W_1 \right)^\intercal W_2
+    $$
+    根据 ELU 激活函数曲线及其一阶导数曲线，我们知道 $0\leq \frac{\partial Elu(x)}{\partial x} \leq 1$，而 $W_1,W_2$ 中的每个元素均为非负，所以上式非负
+
+  - 由于超网络组的输入均为全局状态 $s$，超网络的输出为混合网络的参数。因此，需要被训练的参数包括**超网络组参数**和**智能体网络参数**。作者通过端到端训练的方式，最小化损失函数
+    $$
+    \mathcal{L}(\theta)=\sum_{i=1}^b\left[\left(y_i^{tot}-Q_{tot}(\tau,u,s;\theta)\right)^2\right]
+    $$
+    $b$ 是 batch size，$y^{tot}=r+\gamma \max_{u'}Q_{tot}(\tau',u',s';\theta^-)$，并且 $\theta^-$ 是目标网络参数，与DQN类似。由于混合网络的设计能够保证单调性成立，所以 $ \max_{u'}Q_{tot}(\tau',u',s';\theta^-)$ 的求解就可以通过最大化各智能体的值函数分别得到，大大简化了 $\max$ 函数的求解复杂度
 
 ## SAC
 
