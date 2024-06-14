@@ -948,6 +948,104 @@ Actor-Critic 算法的具体流程如下：
 
 
 
+# COMA
+
+CTDE框架下的完全协作多智能体系统，即所有的智能体之间通过合作完成同一个任务，它们共享同一个奖励函数 $r_t$，但是这样存在multi-agent credit assignment (多智能体信用分配)的挑战，意思就是如何去评价某一个智能体的策略对于团队整体的回报值做出的贡献大小。如果我们不去管credit assignment问题，学习到的多智能体策略很有可能就是局部最优的
+
+- COMA基于三个主要的想法
+  - 使用一个集中式critic网络，在训练的过程中可以获取所有智能体的信息
+  - **采用反事实基线（counterfactual baseline）来解决信用分配的问题**。作者受差分奖励 (difference rewards) 思想的启发，即每个智能体在执行完动作 $a_t$ 并获得一个全局奖励 $r_t$ 之后，假设它当初执行的是一个默认动作(default action) $a_{default}$ 并计算出可能会获得的奖励 $\tilde{r}_t$ ，这样就可以通过比较这两个奖励值来判断 $a_t$ 对整体有多大的贡献。差分奖励的思想对解决credit assignment问题是有帮助的，但是它需要系统奖励函数的模型，而且default action往往不好确定。因此，COMA给每个智能体一个特定的优势函数 (advantage function)，在其它智能体动作保持不变的情况下比较该智能体的期望回报和反事实基线，以此估计该智能体的动作对整体任务的贡献
+  - Critic网络要能够对反事实基线进行高效的计算
+
+作者是基于Actor-Critic结构来设计MARL算法的。最直接的方法是每个智能体利用该结构独立学习，称作independent actor-critic (IAC)。但是IAC有个明显的问题，就是不考虑其它智能体的信息，这将导致训练过程不稳定。但是再进一步，如果IAC在训练的过程中考虑所有智能体的信息，利用CTDE训练方法，则和MADDPG方法没有太大区别。在协作任务下的多智能体系统中，智能体之间共享参数，所以只需要一对actor，critic网络就可以了。但是那样的话，所有的智能体优化目标都是同一个。因此，对每个actor网络来说，从critic那边反向传播过来的误差都是一样的。这种“吃大锅饭”式的训练方式显然不是最有效的，因为每个actor网络对整体性能的贡献不一样，贡献大的反向传播的误差应该要稍微小些，贡献小的其反向传播误差应该要大一些。最终的目标都是优化整体的性能。所以，作者提出利用counterfactual baseline来解决该问题
+
+- Counterfactual Multi-Agent Policy Gradients
+
+  - 对智能体 $a$， $u^a$ 表示其动作，$\tau^a$ 是其历史观测-动作序列，$u$ 表示所有智能体的联合动作，$u^{-a}$ 表示除 $a$ 外所有其它智能体的联合动作，$s$ 代表系统全局状态，则智能体 $a$ 的 counterfactual baseline计算公式表示为
+    $$
+    A^a(s,u)=Q(s,u)-\sum_{u^{'a}}\pi^a(u^{'a}|\tau^a)Q(s,(u^{-a},u^{'a}))
+    $$
+    等式右边第二项实际上是在计算关于动作价值函数的期望值，需要遍历智能体 $a$ 动作空间里的所有动作，而保持其它智能体动作 $u^{-a}$ 不变，这个和这个和IAC或者单智能体强化学习中计算优势函数的方式几乎一样，即 $A=Q-V$，但不同的是上式计算的 $A^a(s,u)$ 能够根据每个智能体的策略有所区分，即单个策略对整体策略贡献度大小的评价
+
+  - 有了目标函数，下一步就是计算梯度并优化更新了。COMA的策略梯度计算公式如下
+    $$
+    g_k=\mathbb{E}_\pi\left[\sum_a\nabla_{\theta_k}\log \pi^a(u^a|\tau^a)A^a(s,u)\right]
+    $$
+    其中，$k$ 表示迭代次数，$\theta_k$  表示第 $k$ 次迭代时的参数。此外，$A^a(s,u)$ 的更新采用 $TD(\lambda)$ 方法，并使用周期性更新参数的目标网络来计算目标值
+
+- COMA Architecture
+
+  - <img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/COMA.jpg?raw=true" style="zoom: 50%;" />
+
+    所有的Actor共享一套参数，只是在输入的时候，加上智能体的ID以区分各智能体的动作输出
+
+
+
+# QMIX
+
+- VDN (Value-Decomposition Networks For Cooperative Multi-Agent Learning)
+
+  - VDN 作为 QMIX 的前身，它和 COMA 一样，是考虑协作任务的多智能体强化学习问题，即所有的智能体共享同一个奖励值（或者叫团队奖励），不同的是 VDN 是一种基于值函数的方法，而 COMA 基于策略梯度。VDN 也是想解决协作任务的多智能体强化学习中的 credit assignment 问题
+
+  - 作者认为，由于每个智能体都是局部观测，那么对其中一个智能体来说，其获得的团队奖励很有可能是其队友的行为导致的。也就是说该奖励值对该智能体来说，是“虚假奖励 (spurious reward signals)”。因此，每个智能体独立使用强化学习算法学习 (即independent RL) 往往效果很差。这种虚假奖励还会伴随一种现象，作者称作 “lazy agent (惰性智能体)”。当团队中的部分智能体学习到了比较好的策略并且能够完成任务时，其它智能体不需要做什么也能获得不错的团队奖励，这些智能体就被称作“惰性智能体”
+
+  - 其实不管是“虚假奖励”还是“惰性智能体”，本质上还是credit assignment问题。如果每个智能体都会根据自己对团队的贡献，优化各自的目标函数，就能够解决上述问题。基于这样的动机，作者提出了“值函数分解”的研究思路，将团队整体的值函数分解成N个子值函数，分别作为各智能体执行动作的依据
+
+  - $$
+    Q((h^1,h^2，\cdots,h^d),((a^1,a^2，\cdots,a^d))) \approx \sum_{i=1}^d \tilde{Q}_i(h^i,a^i)
+    $$
+
+    该假设表明团队的 $Q$ 函数可以通过求和的方式近似分解成 $d$ 个子 $Q$ 函数，分别对应 $d$ 个不同的智能体，且每个子 $Q$ 函数的输入为该对应智能体的局部观测序列和动作，互相不受影响。注：此处的 $\tilde{Q}_i(h^i,a^i)$ 并不是任何严格意义上的 $Q$ 值函数，因为并没有理论依据表明一定存在一个reward函数，使得该 $\tilde{Q}_i$ 满足贝尔曼方程
+
+    这样，每个智能体就有了自己的值函数，它们就可以根据自己的局部值函数来进行决策了 
+    $$
+    a^i=\arg \max _{a^{i'}}\tilde{Q}_i(h^i,a^{i'})
+    $$
+    事实上，上述式子的成立至少需要满足一个条件：$r(s,a)=\sum_{i=1}^dr(o^i,a^i)$，表明团队的整体奖励应由所有智能体各自的奖励函数求和得到。然而，即使这个条件成立，根据文章中的证明，$Q$ 函数的分解也应该写成 $Q(s,a)=\sum_{i=1}^dQ_i(s,a)$，不应该是之前给出的那样，作者也因此将每个智能体历史状态、动作、奖励的序列信息作为其值函数 $\tilde{Q}_i$ 的输入，以此弥补局部观测上的不足
+
+- 针对协作任务，CTDE下需要考虑的关键问题就是如何找到最好的分布式策略，使得团队的“状态-联合动作”值函数 $Q_{tot}$ 是最优的。为此 VDN 直接将其分解，并以 $Q_{tot}= \sum_{i=1}^nQ_i$  的分解形式端到端地训练网络。然而，这种以简单的求和方式对整体值函数进行分解，将会导致网络的函数表达能力受到很大限制，难以拟合出真实的 $Q_{tot}$
+
+- 本文提出的 QMIX 方法，与VDN一样，它介于 IQL 和 COMA 这两个极端之间，可以表达更丰富的动作值函数类。**QMIX 的关键是洞察到 VDN 的完全分解对于提取分散策略是不必要的**。相反，只需要确保在 $Q_{tot}$ 上执行的全局 $\arg\max$ 与在每个  $Q_a$ 上执行的一组单独的 $\arg\max$ 操作产生相同的结果。为此，在 $Q_{tot}$ 和每个 $Q_a$ 之间的关系上强制设置一个单调性约束就足够了：
+  $$
+  \frac{\partial Q_{tot}}{\partial Q_a} \geq 0, \forall a \\
+  
+  \underset{u}{\arg\max}Q_{tot}(\tau,u)=
+  \left(\begin{array}{c}
+  \underset{u^1}{\arg\max}Q_1(\tau^1,u^1) \\
+  \vdots \\
+  \underset{u^n}{\arg\max}Q_n(\tau^n,u^n) 
+  \end{array}\right)
+  $$
+  所谓单调性，就是指通过分布式策略计算出来的动作，和通过整体 $Q$ 函数计算出来的动作，在“性能最优”上需要保持一致。其中 $\tau$ 表示历史观测-动作序列，$u$ 表示动作，如果上式不成立，则分布式策略就不能使 $Q_{tot}$ 最大化，自然不会是最优策略，这就是非单调性
+
+  实际上， VDN 的分解式满足 $\frac{\partial Q_{tot}}{\partial Q_a} \geq 1, \forall a$。但是，该式中的关系太强了。事实上，值函数分解的单调性只需要满足 $\frac{\partial Q_{tot}}{\partial Q_a} \geq 0, \forall a$ 即可
+
+  因此，QMIX 的研究目标就是设计一个神经网络，输入为 $\{Q_i\}_{i=1}^N$，输出 $Q_{tot}$，强制满足上述的单调性约束，并在该前提下进行探索，能够增强网络的函数拟合能力，从而弥补VDN算法的不足
+
+- QMIX Architecture
+
+  <img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/QMIX.png?raw=true" style="zoom: 40%;" />
+
+  - 混合网络包含输入层、隐含层、输出层，和普通的单隐层MLP网络不同的是，其隐藏层的权重和偏置均由另外一组网络 (超网络) 计算得出。混合网络隐层的激活函数为 ELU (Exponential Linear Unit)，输出层线性激活 (没有激活函数)。$W_1,W_2$ 由两个单层线性网络经过绝对值函数激活之后得出。**作者如此设计混合网络是为了使混合网络的权重参数都是非负的，从而保证混合网络能够以任意的精度拟合出任意单调函数**。理解如下，首先展开混合网络的表达式
+    $$
+    Q_{tot}(\tau,u)=W_2^\intercal Elu(W_1^\intercal Q+B_1)+B_2
+    $$
+    其中，$Q=[Q_1(\tau^1,u_t^1),\cdots,Q_n(\tau^n,u_t^n)]$ 为 n 维向量，根据链式法则以及线性变换的求导法则，有
+    $$
+    \frac{\partial Q_{tot}}{\partial Q} =
+    \left(\frac{\partial Elu(W_1^\intercal Q+B_1)}{\partial Q}\right)^\intercal W_2 =
+    \left(\frac{\partial Elu(W_1^\intercal Q+B_1)}{\partial (W_1^\intercal Q+B_1)}\cdot W_1 \right)^\intercal W_2
+    $$
+    根据 ELU 激活函数曲线及其一阶导数曲线，我们知道 $0\leq \frac{\partial Elu(x)}{\partial x} \leq 1$，而 $W_1,W_2$ 中的每个元素均为非负，所以上式非负
+
+  - 由于超网络组的输入均为全局状态 $s$，超网络的输出为混合网络的参数。因此，需要被训练的参数包括**超网络组参数**和**智能体网络参数**。作者通过端到端训练的方式，最小化损失函数
+    $$
+    \mathcal{L}(\theta)=\sum_{i=1}^b\left[\left(y_i^{tot}-Q_{tot}(\tau,u,s;\theta)\right)^2\right]
+    $$
+    $b$ 是 batch size，$y^{tot}=r+\gamma \max_{u'}Q_{tot}(\tau',u',s';\theta^-)$，并且 $\theta^-$ 是目标网络参数，与DQN类似。由于混合网络的设计能够保证单调性成立，所以 $ \max_{u'}Q_{tot}(\tau',u',s';\theta^-)$ 的求解就可以通过最大化各智能体的值函数分别得到，大大简化了 $\max$ 函数的求解复杂度
+
+
+
 # TRPO 算法
 
 策略梯度算法和 Actor-Critic 算法这两种基于策略的方法虽然简单、直观，但在实际应用过程中会遇到训练不稳定的情况。这样的算法有一个明显的缺点：当策略网络是深度模型时，沿着策略梯度更新参数，很有可能由于步长太长，策略突然显著变差，进而影响训练效果。
@@ -1033,19 +1131,21 @@ DQN 算法直接估计最优函数 Q，可以做到离线策略学习，但是�
 
 **深度确定性策略梯度（deep deterministic policy gradient，DDPG）算法就是处理动作空间无限的环境并且使用的是离线策略算法，它构造一个确定性策略，用梯度上升的方法来最大化 $Q$ 值。**
 
-**DDPG 也属于一种 Actor-Critic 算法。REINFORCE、TRPO 和 PPO 学习随机性策略，而 DDPG 则学习一个确定性策略。**
+**DDPG 也属于一种 Actor-Critic 算法。REINFORCE、TRPO 和 PPO 学习随机性策略，而 DDPG 则学习一个确定性策略，即将策略函数的输出从一个分布（常用高斯分布）转变为一个唯一确定的动作。**
 
 深度确定性策略梯度算法（DDPG），它是面向连续动作空间的深度确定性策略训练的典型算法。相比于它的先期工作，即确定性梯度算法（DPG），DDPG 加入了目标网络和软更新的方法，这对深度模型构建的价值网络和策略网络的稳定学习起到了关键的作用，DDPG 算法也被引入了多智能体强化学习领域，催生了 MADDPG 算法。
+
+DPG的思路：以往的PG算法思路是建立累计收益(Cumulative Return)与策略的关系函数，随后调整策略以追求更大的收益。而DPG算法在根本上不同，DPG算法可以被视为 Q-learning 的连续动作空间版本，其思想在于直接利用critic(Q函数)找到可能的最优决策，随后用找到的最优决策来优化策略函数(actor)，**也就是说策略调整完全依赖于critic而不用理会实际的收益**
 
 随机性策略可以表示为 $a\sim \pi_\theta(\cdot|s)$；而如果策略是确定性的，则可以记为 $a=\mu_\theta(s)$​。与策略梯度定理类似，可以推导出**确定性策略梯度定理**（deterministic policy gradient theorem）：
 $$
 \nabla_\theta J(\pi_\theta)=E_{s\sim v^{\pi_\beta}}[\nabla_\theta \mu_\theta(s)\nabla_a Q_w^\mu(s,a)|_{a=\mu_{\theta}(s)}]
 $$
-其中，$\pi_\beta$ 是用来收集数据的行为策略。我们可以这样理解这个定理：假设现在已经有函数 $Q$ ，给定一个状态 $s$，但由于现在动作空间是无限的，无法通过遍历所有动作来得到 $Q$ 值最大的动作，因此我们想用策略 $\mu$ 找到使 $Q(s,a)$ 值最大的动作 $a$，即 $\mu(s)=\underset{a}{arg\;max\;}Q(s,a)$。此时，$Q$ 就是 Critic，$\mu$ 就是 Actor，这是一个 Actor-Critic 的框架
+其中，$\pi_\beta$ 是用来收集数据的行为策略。我们可以这样理解这个定理：假设现在已经有函数 $Q$ ，给定一个状态 $s$，但由于现在动作空间是无限的，无法通过遍历所有动作来得到 $Q$ 值最大的动作，因此我们想用策略 $\mu$ 找到使 $Q(s,a)$ 值最大的动作 $a$，即 $\mu(s)=\underset{a}{arg\;max\;}Q(s,a)$。此时，$Q$ 就是 Critic，$\mu$ 就是 Actor，下图是一个 Actor-Critic 的框架
 
 ![](https://hrl.boyuai.com/static/640.a3d586c4.png)
 
-要想得到 $\mu$，首先用 $Q$ 对 $\mu_\theta$ 求导 $\nabla_\theta Q(s,\mu_\theta(s))$，其中会用到梯度的链式法则，先对 $a$ 求导，再对 $\theta$ 求导。然后通过梯度上升的方法来最大化函数 $Q$，得到 $Q$ 值最大的动作
+要想得到 $\mu$，首先用 $Q$ 对 $\mu_\theta$ 求导 $\nabla_\theta Q(s,\mu_\theta(s))$，其中会用到梯度的链式法则，先对 $a$ 求导，再对 $\theta$ 求导。然后通过梯度上升的方法来最大化函数 $Q$，得到 $Q$ 值最大的动作。形象来说，假如我们面临一个需要做决策的情况，而我们知道所有决策的后果（ $Q$ 函数会告诉我们），那么最优决策就是那个可以带来最佳后果的决策，在DPG的目标任务中，动作空间是连续的，所以可以直接让 $Q$ 函数对输入动作 $a$ 求导，这就成了一个将指定的连续可导函数最大化的问题
 
 **DDPG 要用到4个神经网络，其中 Actor 和 Critic 各用一个网络，此外它们都各自有一个目标网络。DDPG 中 Actor 也需要目标网络因为目标网络也会被用来计算目标 $Q$  值。DDPG 中目标网络的更新与 DQN 中略有不同：在 DQN 中，每隔一段时间将 $Q$  网络直接复制给目标 $Q$  网络；而在 DDPG 中，目标 $Q$  网络的更新采取的是一种软更新的方式，即让目标 $Q$  网络缓慢更新，逐渐接近 $Q$  网络，其公式为：$w^- \leftarrow\tau w+(1-\tau)w^-$。通常 $\tau$ 是一个比较小的数，当 $\tau = 1$ 时，就和 DQN 的更新方式一致了。而目标 $\mu$ 网络也使用这种软更新的方式**
 
@@ -1084,6 +1184,10 @@ $$
 # SAC 算法
 
 在线策略算法的采样效率比较低，我们通常更倾向于使用离线策略算法。然而，虽然 DDPG 是离线策略算法，但是它的训练非常不稳定，收敛性较差，对超参数比较敏感，也难以适应不同的复杂环境。2018 年，一个更加稳定的离线策略算法 **Soft Actor-Critic（SAC）**被提出。SAC 的前身是 Soft Q-learning，它们都属于**最大熵强化学习**的范畴。Soft Q-learning 不存在一个显式的策略函数，而是使用一个函数 $Q$ 的波尔兹曼分布，在连续空间下求解非常麻烦。于是 SAC 提出使用一个 Actor 表示策略函数，从而解决这个问题。目前，在无模型的强化学习算法中，SAC 是一个非常高效的算法，它学习一个随机性策略，在不少标准环境中取得了领先的成绩。
+
+SAC是基于最大熵（maximum entropy）这一思想发展的RL算法，其采用与PPO类似的随机分布式策略函数（Stochastic Policy），并且是一个off-policy，actor-critic算法，**与其他RL算法最为不同的地方在于，SAC在优化策略以获取更高累计收益的同时，也会最大化策略的熵。**将熵引入RL算法的好处为，可以让策略（policy）尽可能随机，agent可以更充分地探索状态空间 $S$ ，避免策略早早地落入局部最优点（local optimum），并且可以探索到多个可行方案来完成指定任务，提高抗干扰能力。
+
+[reference blog](https://zhuanlan.zhihu.com/p/85003758)
 
 ## 最大熵强化学习
 
@@ -1171,6 +1275,24 @@ $$
 - end for
 
 **Code is available at [SAC](https://github.com/CorneliusDeng/UESTC/blob/main/Dive%20Into%20RL/SAC.ipynb)**
+
+## Conclusion & Expansion
+
+SAC简单看来就是给RL加个熵正则项，让动作更随机，这个操作在PPO和A3C算法中都有出现过，甚至悠一个说法，”SAC就是给动作加个噪声”。不过实质上SAC有完备的理论作为支撑，熵正则化之于RL就像 $L_2$ 正则项之于机器学习，看上去很简单，确实不加也能用。但是加上了 $L_2$ 正则项，OLS 就成了MAP，不加就是MLE，这里面有巨大的区别
+
+- OLS (Ordinary Least Squares) 是一种估计线性回归模型参数的方法。它通过最小化目标变量和预测变量之间误差的平方和来找到最佳拟合线 $L(\theta)=\sum_{i=1}^n(y_i-\hat{y}_i)^2$
+- MLE (Maximum Likelihood Estimation) 是一种估计统计模型参数的方法。它通过最大化观测数据 $D$ 的似然函数 $P(D|\theta)$ 来估计参数 $\theta_{MLE}=\underset{\theta}{\arg\max}P(D|\theta)$
+- MAP (Maximum A Posteriori) 与MLE类似，但它考虑了参数的先验分布 $P(\theta)$，MAP通过最大化后验概率来估计参数 $\theta_{MAP}=\underset{\theta}{\arg\max}P(\theta|D)=\underset{\theta}{\arg\max}P(D|\theta)P(\theta)$
+- $L_2$ regularization 通过在损失函数中添加一个参数 $\theta$ 的 $L_2$ 范数的平方，以防止过拟合 $\sum_{i=1}^n(y_i-\hat{y}_i)^2+\lambda ||\theta||_2^2$
+
+$L_2$ 正则化通过惩罚模型参数的大小，防止模型过拟合。在贝叶斯视角下，$L_2$ 正则化相当于在模型参数上施加了一个零均值、方差为 $\frac{1}{\lambda}$ 的高斯先验分布。因此，添加 $L_2$ 正则化项后，OLS 就变成了 MAP：
+
+- OLS：最小化 $\sum_{i=1}^n (y_i - \hat{y}_i)^2$
+- MAP：最小化 $\sum_{i=1}^n (y_i - \hat{y}_i)^2 + \lambda ||\theta||_2^2$
+
+从贝叶斯视角来看，$L_2$ 正则化对应于在参数上引入高斯先验，这使得模型在训练过程中不仅关注数据的拟合程度，还考虑参数的整体大小。而在最大熵强化学习中，引入的熵正则化相当于在策略上引入了一种类似的先验，鼓励策略在状态空间中保持探索。
+
+这两种正则化方法都通过添加额外的约束，使得学习过程更加稳健，避免过度拟合（在机器学习中）或过早收敛（在强化学习中）。
 
 
 
@@ -1437,7 +1559,9 @@ HER 算法的具体流程如下，值得注意的是，这里的策略优化算�
 - **完全中心化**（fully centralized）方法：将多个智能体进行决策当作一个超级智能体在进行决策，即把所有智能体的状态聚合在一起当作一个全局的超级状态，把所有智能体的动作连起来作为一个联合动作。这样做的好处是，由于已经知道了所有智能体的状态和动作，因此对这个超级智能体来说，环境依旧是稳态的，一些单智能体的算法的收敛性依旧可以得到保证。然而，这样的做法不能很好地扩展到智能体数量很多或者环境很大的情况，因为这时候将所有的信息简单暴力地拼在一起会导致维度爆炸，训练复杂度巨幅提升的问题往往不可解决。
 - **完全去中心化**（fully decentralized）方法：与完全中心化方法相反的范式便是假设每个智能体都在自身的环境中独立地进行学习，不考虑其他智能体的改变。完全去中心化方法直接对每个智能体用一个单智能体强化学习算法来学习。这样做的缺点是环境是非稳态的，训练的收敛性不能得到保证，但是这种方法的好处在于随着智能体数量的增加有比较好的扩展性，不会遇到维度灾难而导致训练不能进行下去。
 
-## IPPO
+
+
+# IPPO
 
 完全去中心化的算法这类算法被称为**独立学习**（independent learning）。由于对于每个智能体使用单智能体算法 PPO 进行训练，所因此这个算法叫作**独立 PPO**（Independent PPO，IPPO）算法。具体而言，这里使用的 PPO 算法版本为 PPO-截断，其算法流程如下：
 
@@ -1451,7 +1575,9 @@ HER 算法的具体流程如下，值得注意的是，这里的策略优化算�
 
 实验证明，当智能体数量较少的时候，IPPO 这种完全去中心化学习在一定程度上能够取得好的效果，但是最终达到的胜率也比较有限。这可能是因为多个智能体之间无法有效地通过合作来共同完成目标。这时候可能就需要引入更多的算法来考虑多个智能体之间的交互行为，或者使用**中心化训练去中心化执行**（centralized training with decentralized execution，CTDE）的范式来进行多智能体训练。
 
-## MADDPG
+
+
+# MADDPG
 
 所谓中心化训练去中心化执行是指在训练的时候使用一些单个智能体看不到的全局信息而以达到更好的训练效果，而在执行时不使用这些信息，每个智能体完全根据自己的策略直接动作以达到去中心化执行的效果。中心化训练去中心化执行的算法能够在训练时有效地利用全局信息以达到更好且更稳定的训练效果，同时在进行策略模型推断时可以仅利用局部信息，使得算法具有一定的扩展性。CTDE 可以类比成一个足球队的训练和比赛过程：在训练时，11 个球员可以直接获得教练的指导从而完成球队的整体配合，而教练本身掌握着比赛全局信息，教练的指导也是从整支队、整场比赛的角度进行的；而训练好的 11 个球员在上场比赛时，则根据场上的实时情况直接做出决策，不再有教练的指导。
 
@@ -1500,6 +1626,84 @@ MADDPG 的具体算法流程如下：
     - 对每个智能体 $i$，更新目标 Actor 网络和目标 Critic 网络
   - end for
 - end for
+
+
+
+# HAPPO
+
+在单智体强化学习（single-RL）中，置信域方法（trust-region method）有两个比较典型的算法，分别是置信域策略优化算法Trust Region Policy Optimization (TRPO)以及近端策略优化算法Proximal Policy Optimization (PPO)。置信域方法的有效性，很大程度上源于其具有理论保证的策略迭代过程，即通过在当前策略的可信任邻域内做优化策略，使得置信域学习在每次迭代中都享有单调性能改进的保证(monotomic improvement gurantee)，从而避免朝着有风险的方向进行过于激进的策略更新
+
+但是在多智能体强化学习（MARL）中，单调改进的特性并不能简单适用，因为即使在合作游戏中，智能体策略更新方向可能会相互冲突，导致算法陷入次优解。因此，如何在每个智能体单独行动的同时，保证联合策略上实现有理论保证的策略改进仍然是一个挑战。
+
+HATRPO/HAPPO 的核心理论是多智能体优势函数分解引理和序列策略更新方案，它们不需要智能体之间共享参数，也不需要对联合价值函数的可分解性做任何限制性假设（比如QMIX中的单调性和加性）
+
+- 核心要点
+  - HAPPO 采用了 信任域方法，但不需要智能体共享参数，并且不对联合价值函数的分解性做出任何限制性假设 
+  - HAPPO 是一种 无模型(model-free)、基于策略(policy-based)、同策略(on-policy) 的多智能体强化学习方法
+  - HAPPO 支持 离散(discrete)和连续(continuous) 的动作空间。
+  - HAPPO 考虑了 部分可观察(partially observable) 的情景，其中每个智能体的 Actor 网络只获得个体观察
+  - HAPPO 的神经网络模型中可以使用 RNN
+
+## Multi-Agent Advantage Decomposition Lemma
+
+多智能体场景下，对于任意有序的智能体子集 $i_{1:m}=\left( i_1,...,i_m \right)$ 的状态动作值函数定义为
+$$
+Q_{\mathbf{\pi}}(s,\mathbf{a}^{i_{1:m}})\overset{\Delta}{=}\mathbb{E}_{\mathbf{a}^{-i_{1:m}}\sim\mathbf{\pi}^{-i_{1:m}}}[Q_{\mathbf{\pi}}(s,\mathbf{a}^{i_{1:m}},\mathbf{a}^{-i_{1:m}})]
+$$
+其中 $-i_{1:m}$ 表示 $i_{1:m}$ 的补集，简单来说，这个函数表示如果智能体 $i_{1:m}$ 在状态 $s$ 下采取联合动作 $\mathbf{a}^{i_{1:m}}$ 所能获得的平均回报。在此基础上，可定义多智能体优势函数 (Multi-agent Advantage Function) 如下
+$$
+A_\pi^{i_{1:m}}(s,\mathbf{a}^{j_{1:k}},\mathbf{a}^{i_{1:m}})=Q_\mathbf{\pi}^{j_{1:k},i_{1:m}}(s,\mathbf{a}^{j_{1:k}},\mathbf{a}^{i_{1:m}})-Q_\mathbf{\pi}^{j_{1:k}}(s,\mathbf{a}^{j_{1:k}})
+$$
+该函数将智能体 $i_{1:m}$ 的联合动作 $\mathbf{a}^{i_{1:m}}$ 和智能体 $j_{1:k}$ 的联合动作 $\mathbf{a}^{j_{1:k}}$ 的平均回报进行比较，根据 Multi-Agent Advantage Decomposition Lemma，对于任何有序智能体的子集 $i_{1:m}$ 
+$$
+A_\mathbf{\pi}^{i_{1:m}}(s,\mathbf{a}^{i_{1:m}})=\sum_{j=1}^{m}{A_\mathbf{\pi}^{i_j}(s,\mathbf{a}^{i_{1:j-1}},a^{i_j})}
+$$
+如果每个智能体 $i_j$ 都知道智能体 $i_{1:j-1}$ 的动作，那么它便可以做出动作 $a^{i_j}_{*}$ 以最大化自己的multi-agent advantage（其最大值始终为正）。这个基于优势函数的分解天然成立，不需要任何假设，例如智能体共享参数，或者联合Q函数可以被分解成单调函数累加
+
+由于 HAPPO 的近似多智能体信任域目标涉及旧的策略 ${\pi}^{i_m}$ 和候选的策略 $\hat{\pi}^{i_m}$，还涉及多个智能体 $i_{1:m-1}$ 刚更新的联合策略。 所以使用重要性抽样（importance sampling），智能体 $i_{1:m-1}$ 已经进行了更新，则智能体 $i_m$ 则计算如下 ratio
+$$
+\frac{\hat{\pi}^{i_m}(a^{i_m}|s)}{{\pi}^{i_m}(a^{i_m}|s)}\cdot \frac{\bar{\mathbf\pi}^{i_{1:m-1}}(\mathbf{a}^{i_{1:m-1}}|s)}{\mathbf{\pi}^{i_{1:m-1}}(\mathbf{a}^{i_{1:m-1}}|s)}
+$$
+所以对于来自旧的联合策略 $\mathbf\pi^{1:m-1}$ 的数据，计算上述 ratio 即可用于当前策略的训练
+
+## Sequential Policy Update Scheme
+
+<img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/HAPPO_1.png?raw=true" style="zoom: 45%;" />
+
+<img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/HAPPO_2.png?raw=true" style="zoom: 45%;" />
+
+PPO 对 TRPO 做了简化运算；HAPPO 基于同样的道理对 HATRPO 的中二阶微分的编码和计算进行简化，而使用一阶导数。HATRPO 相关由于受约束的HATRPO目标与TRPO具有相同的代数形式，因此可以使用 clip 目标来实现
+$$
+\mathbb{E}_{s\sim\rho^{\mathbf \pi},\mathbf{a}\sim\mathbf{\pi}} \left[\min\left(\frac{\hat{\pi}^{i_m}(a^{i_m}|s)}{{\pi}^{i_m}(a^{i_m}|s)} M_{\mathbf \pi}(s,\mathbf{a}),\text{clip}(\frac{\hat{\pi}^{i_m}(a^{i_m}|s)}{{\pi}^{i_m}(a^{i_m}|s)},1\pm\epsilon)M_{\mathbf \pi}(s,\mathbf{a})\right)\right]
+$$
+其中 $\frac{\hat{\pi}^{i_m}(a^{i_m}|s)}{{\pi}^{i_m}(a^{i_m}|s)}$ 和 PPO 类似，为智能体 $i_m$ 新旧策略 ratio，而 $M_{\mathbf \pi}(s,\mathbf{a})=\frac {\bar {\mathbf \pi }^{i_{1:m-1}}(\mathbf{a}^{i_{1:m-1}}|s)}{\mathbf{\pi}^{i_{1:m-1}}(\mathbf{a}^{i_{1:m-1}}|s)} \cdot A_{\mathbf{\pi}}(s,\mathbf{a})$，其中 $A_{\mathbf{\pi}}(s,\mathbf{a})$ 是联合优势函数， $\frac{\bar {\mathbf \pi }^{i_{1:m-1}}(\mathbf{a}^{i_{1:m-1}}|s)}{\mathbf{\pi}^{i_{1:m-1}}(\mathbf{a}^{i_{1:m-1}}|s)}$ 为智能体 $i_{1:m-1}$ 新旧联合策略的 ratio
+
+这样可以确保进行小步幅地策略更新。clip目标对于策略参数是可微的，所以我们所要做的就是初始化 $\theta^{i_m}=\theta_{old}^{i_m}$，并进行多次更新
+
+算法1 并不是简单的将TRPO应用于联合策略下的多智能体中，首先，算法1 不是直接更新联合策略，而是序列化的更新每个智能体单独的策略，其次，在序列化更新的过程中，每个智能体有唯一的优化目标，这个优化目标结合了在这个智能体之前的所有智能体的策略更新，这一点也是保证单调改进性的关键。
+
+- Sequential Policy Update Scheme 设计动机
+
+  在多智能体环境中，所有智能体的策略更新会导致非平稳性（non-stationarity），即每个智能体的策略更新会影响其他智能体的策略优化过程。这种相互依赖关系使得联合策略的优化变得复杂和不稳定。传统的 CTDE 方法虽然缓解了这一问题，但仍然存在以下缺点：
+
+  - 高计算成本：每个智能体需要维护一个集中的评论器（critic），增加了计算和存储开销
+  - 参数共享问题：某些方法要求智能体共享参数，这在异构智能体环境中不适用
+  - 难以保证单调改善：现有方法缺乏理论上的单调改善保证，即每次策略更新后策略性能不一定单调提升
+
+- Sequential Policy Update Scheme 实现
+
+  - 初始策略：所有智能体的策略均初始化为 $\pi_0$
+  - 逐个更新：在每一轮迭代中，依次选择每个智能体 $i$ 并仅更新其策略 $\pi_i$，保持其他智能体的策略固定
+  - 策略评估：对于每个智能体 $i$，在更新其策略 $\pi_i$ 时，使用当前的联合策略 $\pi=(\pi_1,\cdots,\pi_n)$ 评估其优势函数 $A_i$
+  - 策略优化：根据评估的优势函数，使用 TRPO 或 PPO 方法优化智能体 $i$ 的策略，使其在可信区域内实现性能改善
+  - 重复过程：重复上述过程，直到所有智能体的策略都完成更新
+
+- Sequential Policy Update Scheme 优点
+
+  - 降低非平稳性：通过逐个更新智能体的策略，避免了同时更新带来的非平稳性问题，从而提高了策略优化的稳定性
+  - 计算效率：无需为每个智能体维护一个集中的评论器，减少了计算和存储开销
+  - 适用于异构智能体：不要求智能体共享参数，适用于具有不同动作空间和策略参数的异质智能体环境
+  - 理论保证：通过多智能体优势分解引理和顺序更新方案，理论上保证了每次更新的单调性能改善，即每次策略更新后联合策略的性能不会下降
 
 
 
@@ -1616,109 +1820,3 @@ LLM-based agents can be applied in various domains, including customer service, 
 - Conclusion
 
   In summary, while PBRL and RLHF share a common goal of leveraging human feedback to guide RL agents, they differ in the types of feedback they utilize and their specific methodologies. LLM-based agents, on the other hand, represent a broader class of systems that use language models for various tasks, which may or may not involve RL.
-
-
-
-# Some thoughts on RL
-
-## COMA
-
-CTDE框架下的完全协作多智能体系统，即所有的智能体之间通过合作完成同一个任务，它们共享同一个奖励函数 $r_t$，但是这样存在multi-agent credit assignment (多智能体信用分配)的挑战，意思就是如何去评价某一个智能体的策略对于团队整体的回报值做出的贡献大小。如果我们不去管credit assignment问题，学习到的多智能体策略很有可能就是局部最优的
-
-- COMA基于三个主要的想法
-  - 使用一个集中式critic网络，在训练的过程中可以获取所有智能体的信息
-  - **采用反事实基线（counterfactual baseline）来解决信用分配的问题**。作者受差分奖励 (difference rewards) 思想的启发，即每个智能体在执行完动作 $a_t$ 并获得一个全局奖励 $r_t$ 之后，假设它当初执行的是一个默认动作(default action) $a_{default}$ 并计算出可能会获得的奖励 $\tilde{r}_t$ ，这样就可以通过比较这两个奖励值来判断 $a_t$ 对整体有多大的贡献。差分奖励的思想对解决credit assignment问题是有帮助的，但是它需要系统奖励函数的模型，而且default action往往不好确定。因此，COMA给每个智能体一个特定的优势函数 (advantage function)，在其它智能体动作保持不变的情况下比较该智能体的期望回报和反事实基线，以此估计该智能体的动作对整体任务的贡献
-  - Critic网络要能够对反事实基线进行高效的计算
-
-作者是基于Actor-Critic结构来设计MARL算法的。最直接的方法是每个智能体利用该结构独立学习，称作independent actor-critic (IAC)。但是IAC有个明显的问题，就是不考虑其它智能体的信息，这将导致训练过程不稳定。但是再进一步，如果IAC在训练的过程中考虑所有智能体的信息，利用CTDE训练方法，则和MADDPG方法没有太大区别。在协作任务下的多智能体系统中，智能体之间共享参数，所以只需要一对actor，critic网络就可以了。但是那样的话，所有的智能体优化目标都是同一个。因此，对每个actor网络来说，从critic那边反向传播过来的误差都是一样的。这种“吃大锅饭”式的训练方式显然不是最有效的，因为每个actor网络对整体性能的贡献不一样，贡献大的反向传播的误差应该要稍微小些，贡献小的其反向传播误差应该要大一些。最终的目标都是优化整体的性能。所以，作者提出利用counterfactual baseline来解决该问题
-
-- Counterfactual Multi-Agent Policy Gradients
-
-  - 对智能体 $a$， $u^a$ 表示其动作，$\tau^a$ 是其历史观测-动作序列，$u$ 表示所有智能体的联合动作，$u^{-a}$ 表示除 $a$ 外所有其它智能体的联合动作，$s$ 代表系统全局状态，则智能体 $a$ 的 counterfactual baseline计算公式表示为
-    $$
-    A^a(s,u)=Q(s,u)-\sum_{u^{'a}}\pi^a(u^{'a}|\tau^a)Q(s,(u^{-a},u^{'a}))
-    $$
-    等式右边第二项实际上是在计算关于动作价值函数的期望值，需要遍历智能体 $a$ 动作空间里的所有动作，而保持其它智能体动作 $u^{-a}$ 不变，这个和这个和IAC或者单智能体强化学习中计算优势函数的方式几乎一样，即 $A=Q-V$，但不同的是上式计算的 $A^a(s,u)$ 能够根据每个智能体的策略有所区分，即单个策略对整体策略贡献度大小的评价
-
-  - 有了目标函数，下一步就是计算梯度并优化更新了。COMA的策略梯度计算公式如下
-    $$
-    g_k=\mathbb{E}_\pi\left[\sum_a\nabla_{\theta_k}\log \pi^a(u^a|\tau^a)A^a(s,u)\right]
-    $$
-    其中，$k$ 表示迭代次数，$\theta_k$  表示第 $k$ 次迭代时的参数。此外，$A^a(s,u)$ 的更新采用 $TD(\lambda)$ 方法，并使用周期性更新参数的目标网络来计算目标值
-
-- COMA Architecture
-
-  - <img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/COMA.jpg?raw=true" style="zoom: 50%;" />
-
-    所有的Actor共享一套参数，只是在输入的时候，加上智能体的ID以区分各智能体的动作输出
-
-## QMIX
-
-- VDN (Value-Decomposition Networks For Cooperative Multi-Agent Learning)
-
-  - VDN 作为 QMIX 的前身，它和 COMA 一样，是考虑协作任务的多智能体强化学习问题，即所有的智能体共享同一个奖励值（或者叫团队奖励），不同的是 VDN 是一种基于值函数的方法，而 COMA 基于策略梯度。VDN 也是想解决协作任务的多智能体强化学习中的 credit assignment 问题
-
-  - 作者认为，由于每个智能体都是局部观测，那么对其中一个智能体来说，其获得的团队奖励很有可能是其队友的行为导致的。也就是说该奖励值对该智能体来说，是“虚假奖励 (spurious reward signals)”。因此，每个智能体独立使用强化学习算法学习 (即independent RL) 往往效果很差。这种虚假奖励还会伴随一种现象，作者称作 “lazy agent (惰性智能体)”。当团队中的部分智能体学习到了比较好的策略并且能够完成任务时，其它智能体不需要做什么也能获得不错的团队奖励，这些智能体就被称作“惰性智能体”
-
-  - 其实不管是“虚假奖励”还是“惰性智能体”，本质上还是credit assignment问题。如果每个智能体都会根据自己对团队的贡献，优化各自的目标函数，就能够解决上述问题。基于这样的动机，作者提出了“值函数分解”的研究思路，将团队整体的值函数分解成N个子值函数，分别作为各智能体执行动作的依据
-
-  - $$
-    Q((h^1,h^2，\cdots,h^d),((a^1,a^2，\cdots,a^d))) \approx \sum_{i=1}^d \tilde{Q}_i(h^i,a^i)
-    $$
-
-    该假设表明团队的 $Q$ 函数可以通过求和的方式近似分解成 $d$ 个子 $Q$ 函数，分别对应 $d$ 个不同的智能体，且每个子 $Q$ 函数的输入为该对应智能体的局部观测序列和动作，互相不受影响。注：此处的 $\tilde{Q}_i(h^i,a^i)$ 并不是任何严格意义上的 $Q$ 值函数，因为并没有理论依据表明一定存在一个reward函数，使得该 $\tilde{Q}_i$ 满足贝尔曼方程
-
-    这样，每个智能体就有了自己的值函数，它们就可以根据自己的局部值函数来进行决策了 
-    $$
-    a^i=\arg \max _{a^{i'}}\tilde{Q}_i(h^i,a^{i'})
-    $$
-    事实上，上述式子的成立至少需要满足一个条件：$r(s,a)=\sum_{i=1}^dr(o^i,a^i)$，表明团队的整体奖励应由所有智能体各自的奖励函数求和得到。然而，即使这个条件成立，根据文章中的证明，$Q$ 函数的分解也应该写成 $Q(s,a)=\sum_{i=1}^dQ_i(s,a)$，不应该是之前给出的那样，作者也因此将每个智能体历史状态、动作、奖励的序列信息作为其值函数 $\tilde{Q}_i$ 的输入，以此弥补局部观测上的不足
-
-- 针对协作任务，CTDE下需要考虑的关键问题就是如何找到最好的分布式策略，使得团队的“状态-联合动作”值函数 $Q_{tot}$ 是最优的。为此 VDN 直接将其分解，并以 $Q_{tot}= \sum_{i=1}^nQ_i$  的分解形式端到端地训练网络。然而，这种以简单的求和方式对整体值函数进行分解，将会导致网络的函数表达能力受到很大限制，难以拟合出真实的 $Q_{tot}$
-
-- 本文提出的 QMIX 方法，与VDN一样，它介于 IQL 和 COMA 这两个极端之间，可以表达更丰富的动作值函数类。**QMIX 的关键是洞察到 VDN 的完全分解对于提取分散策略是不必要的**。相反，只需要确保在 $Q_{tot}$ 上执行的全局 $\arg\max$ 与在每个  $Q_a$ 上执行的一组单独的 $\arg\max$ 操作产生相同的结果。为此，在 $Q_{tot}$ 和每个 $Q_a$ 之间的关系上强制设置一个单调性约束就足够了：
-  $$
-  \frac{\partial Q_{tot}}{\partial Q_a} \geq 0, \forall a \\
-  
-  \underset{u}{\arg\max}Q_{tot}(\tau,u)=
-  \left(\begin{array}{c}
-  \underset{u^1}{\arg\max}Q_1(\tau^1,u^1) \\
-  \vdots \\
-  \underset{u^n}{\arg\max}Q_n(\tau^n,u^n) 
-  \end{array}\right)
-  $$
-  所谓单调性，就是指通过分布式策略计算出来的动作，和通过整体 $Q$ 函数计算出来的动作，在“性能最优”上需要保持一致。其中 $\tau$ 表示历史观测-动作序列，$u$ 表示动作，如果上式不成立，则分布式策略就不能使 $Q_{tot}$ 最大化，自然不会是最优策略，这就是非单调性
-
-  实际上， VDN 的分解式满足 $\frac{\partial Q_{tot}}{\partial Q_a} \geq 1, \forall a$。但是，该式中的关系太强了。事实上，值函数分解的单调性只需要满足 $\frac{\partial Q_{tot}}{\partial Q_a} \geq 0, \forall a$ 即可
-
-  因此，QMIX 的研究目标就是设计一个神经网络，输入为 $\{Q_i\}_{i=1}^N$，输出 $Q_{tot}$，强制满足上述的单调性约束，并在该前提下进行探索，能够增强网络的函数拟合能力，从而弥补VDN算法的不足
-
-- QMIX Architecture
-
-  <img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/QMIX.png?raw=true" style="zoom: 40%;" />
-
-  - 混合网络包含输入层、隐含层、输出层，和普通的单隐层MLP网络不同的是，其隐藏层的权重和偏置均由另外一组网络 (超网络) 计算得出。混合网络隐层的激活函数为 ELU (Exponential Linear Unit)，输出层线性激活 (没有激活函数)。$W_1,W_2$ 由两个单层线性网络经过绝对值函数激活之后得出。**作者如此设计混合网络是为了使混合网络的权重参数都是非负的，从而保证混合网络能够以任意的精度拟合出任意单调函数**。理解如下，首先展开混合网络的表达式
-    $$
-    Q_{tot}(\tau,u)=W_2^\intercal Elu(W_1^\intercal Q+B_1)+B_2
-    $$
-    其中，$Q=[Q_1(\tau^1,u_t^1),\cdots,Q_n(\tau^n,u_t^n)]$ 为 n 维向量，根据链式法则以及线性变换的求导法则，有
-    $$
-    \frac{\partial Q_{tot}}{\partial Q} =
-    \left(\frac{\partial Elu(W_1^\intercal Q+B_1)}{\partial Q}\right)^\intercal W_2 =
-    \left(\frac{\partial Elu(W_1^\intercal Q+B_1)}{\partial (W_1^\intercal Q+B_1)}\cdot W_1 \right)^\intercal W_2
-    $$
-    根据 ELU 激活函数曲线及其一阶导数曲线，我们知道 $0\leq \frac{\partial Elu(x)}{\partial x} \leq 1$，而 $W_1,W_2$ 中的每个元素均为非负，所以上式非负
-
-  - 由于超网络组的输入均为全局状态 $s$，超网络的输出为混合网络的参数。因此，需要被训练的参数包括**超网络组参数**和**智能体网络参数**。作者通过端到端训练的方式，最小化损失函数
-    $$
-    \mathcal{L}(\theta)=\sum_{i=1}^b\left[\left(y_i^{tot}-Q_{tot}(\tau,u,s;\theta)\right)^2\right]
-    $$
-    $b$ 是 batch size，$y^{tot}=r+\gamma \max_{u'}Q_{tot}(\tau',u',s';\theta^-)$，并且 $\theta^-$ 是目标网络参数，与DQN类似。由于混合网络的设计能够保证单调性成立，所以 $ \max_{u'}Q_{tot}(\tau',u',s';\theta^-)$ 的求解就可以通过最大化各智能体的值函数分别得到，大大简化了 $\max$ 函数的求解复杂度
-
-## SAC
-
-[参见前文【SAC 算法】](#SAC 算法)
-
-## HAPPO
-
-## HASAC
