@@ -1213,7 +1213,7 @@ V(s_t)=E_{a_t\sim \pi}[Q(s_t,a_t)-\alpha log \pi (a_t|s_t)]=E_{a_t\sim \pi}[Q(s_
 $$
 于是，根据该 Soft 贝尔曼方程，在有限的状态和动作空间情况下，Soft 策略评估可以收敛到策略 $\pi$​ 的 Soft Q 函数。然后，根据如下 Soft 策略提升公式可以改进策略：
 $$
-\pi_{new}=\underset{\pi'}{arg\;min;}D_{KL}(\pi'(\cdot|s),\frac{exp(\frac{1}{\alpha}Q^{\pi_{old}}(s,\cdot))}
+\pi_{new}=\underset{\pi'}{\arg\min;}D_{KL}(\pi'(\cdot|s),\frac{exp(\frac{1}{\alpha}Q^{\pi_{old}}(s,\cdot))}
 {Z^{\pi_{old}}(s,\cdot)})
 $$
 重复交替使用 Soft 策略评估和 Soft 策略提升，最终策略可以收敛到最大熵强化学习目标中的最优策略。但该 Soft 策略迭代方法只适用于**表格型**（tabular）设置的情况，即状态空间和动作空间是有限的情况。在连续空间下，我们需要通过参数化函数 $Q$ 和策略 $\pi$ 来近似这样的迭代。
@@ -1711,7 +1711,36 @@ $$
 
 # HASAC
 
+In a QRE (quantal response equilibrium, 随机最优反映均衡), payoffs are perturbed by additive disturbances (entropy term in SAC) so that players do not deterministically choose the strategy with the highest observed payoff, but rather assign the probability mass in its strategies according to every strategy’s payoff.
 
+In fact, QRE is a generalization of NE. In NE, each player is perfectly rational, deterministically selecting the strategy with highest payoff. In QRE, however, each player is bounded rational, resulting in their strategies being probabilistic distributions related to payoffs. Put simply, QRE represents the equilibria of stochastic behavior, while NE represents the equilibria of deterministic behavior.
+
+## Heterogeneous-Agent Soft Policy Iteration (HASPI)
+
+- In joint soft policy evaluation step of HASPI, compute soft Q-value from any $Q(s,a)$ by repeatedly applying a soft Bellman backup operator $\Gamma_\pi$ :
+  $$
+  \Gamma_\pi Q(s,a)\triangleq r(s,a)+\gamma \mathbb{E}_{s'\sim P}[V(s')]
+  $$
+  where $V(s)=E_{a\sim \pi}\left[Q(s,a)+\alpha \sum_{i=1}^n\mathcal{H}(\pi^i(\cdot^i|s))\right]$ is the soft value function.
+
+- In policy improvement step of HASPI, the joint policy $\pi$ can be updated based on individual policy updates.
+
+  **Joint Soft Policy Decomposition** suggesting that a MaxEnt MARL problem can be considered as a sum of $n$ MaxEnt RL problems.
+  $$
+  \pi_{new}=\underset{\pi\in\Pi}{\arg\min}D_{KL}\left(\pi(\cdot|s)||\frac{exp(\frac{1}{\alpha}Q_{\pi_{old}
+  }(s,\cdot))}{Z_{\pi_{old}}(s)}
+  \right)
+  $$
+
+## Maximum Entropy Heterogeneous-Agent Mirror Learning
+
+In addition to updating policies by directly minimizing the KL-divergence, we aim to propose a generalized HASPI procedure that provides a range of solutions to MaxEnt MARL problem.
+
+<img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/HASAC_1.png?raw=true" style="zoom: 45%;" />
+
+## Algorithm
+
+<img src="https://github.com/CorneliusDeng/Markdown-Photos/blob/main/Reinforcement%20Learning/HASAC_2.png?raw=true" style="zoom: 50%;" />
 
 
 
