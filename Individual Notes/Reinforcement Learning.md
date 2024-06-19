@@ -1744,10 +1744,6 @@ In addition to updating policies by directly minimizing the KL-divergence, we ai
 
 
 
-# HAML
-
-
-
 
 
 # 偏好强化学习
