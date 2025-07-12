@@ -2,8 +2,8 @@
 
 - #### Who am I？
 
-​		Cornelius Deng, CS Master of UESTC.
+  Qi Deng, CS Master of UESTC.
 
 - #### Why did I create this repository？
 
-​		Just record the hard way of my learning.
+​	Just record the hard way of my learning.
